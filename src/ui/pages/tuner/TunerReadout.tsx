@@ -11,11 +11,21 @@ export interface ReadoutData {
 }
 
 export function TunerReadout({ reading }: { reading: ReadoutData | null }) {
+  // The idle state keeps every row of the live layout, so the page doesn't jump as notes come and go.
   if (!reading) {
     return (
       <div className={styles.readout}>
         <div className={styles.note}>–</div>
-        <p className={styles.hint}>Play a note…</p>
+        <div className={styles.scale} aria-hidden>
+          <div className={styles.zone} />
+        </div>
+        <div className={styles.meta} aria-hidden>
+          <span>–¢</span>
+          <span>– Hz</span>
+        </div>
+        <p className={styles.tabs}>
+          <span className={styles.hint}>Play a note…</span>
+        </p>
       </div>
     )
   }

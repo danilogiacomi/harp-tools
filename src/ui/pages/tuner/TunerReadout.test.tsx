@@ -29,4 +29,17 @@ describe('TunerReadout', () => {
     expect(screen.getByText('Not on this harp')).toBeInTheDocument()
     expect(screen.getByText('B3')).toHaveAttribute('data-quality', 'off')
   })
+
+  it('keeps the same rows whether or not a note is playing, so the layout does not jump', () => {
+    const rowClasses = (el: Element) => [...el.children].map((c) => c.className)
+    const idle = render(<TunerReadout reading={null} />)
+    const idleRows = rowClasses(idle.container.firstElementChild!)
+    idle.unmount()
+    const live = render(
+      <TunerReadout
+        reading={{ noteLabel: 'A4', cents: 0, freq: 440, tabs: ['6'], onHarp: true }}
+      />,
+    )
+    expect(rowClasses(live.container.firstElementChild!)).toEqual(idleRows)
+  })
 })
