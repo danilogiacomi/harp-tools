@@ -30,7 +30,7 @@ export function mapMicError(error: unknown): MicErrorKind {
 const FFT_SIZE = 2048
 
 /** Shared, reference-counted mic input: opened on first acquire(), closed on last release(). */
-class Microphone {
+export class Microphone {
   private stream: MediaStream | null = null
   private source: MediaStreamAudioSourceNode | null = null
   private pending: Promise<AnalyserNode> | null = null
