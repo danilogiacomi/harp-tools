@@ -1,0 +1,87 @@
+import { fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { buildHarp, noteId } from '../../core/harmonica/harp'
+import { HarmonicaDiagram } from './HarmonicaDiagram'
+
+const harp = buildHarp('C')
+type Props = Parameters<typeof HarmonicaDiagram>[0]
+const renderDiagram = (props: Partial<Props> = {}) =>
+  render(
+    <HarmonicaDiagram
+      harp={harp}
+      spelling="sharp"
+      labelMode="note"
+      showAdvanced={false}
+      {...props}
+    />,
+  )
+
+describe('HarmonicaDiagram', () => {
+  it('renders the hole numbers', () => {
+    renderDiagram()
+    for (let h = 1; h <= 10; h++)
+      expect(screen.getByTestId(`hole-${h}`)).toHaveTextContent(String(h))
+  })
+
+  it('puts blow notes above the hole numbers and draw notes below', () => {
+    renderDiagram()
+    const hole1 = screen.getByTestId('hole-1')
+    const blow = screen.getByRole('button', { name: '1 C4' })
+    const draw = screen.getByRole('button', { name: '-1 D4' })
+    expect(hole1.compareDocumentPosition(blow) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy()
+    expect(hole1.compareDocumentPosition(draw) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('colour-codes notes by technique', () => {
+    renderDiagram()
+    expect(screen.getByRole('button', { name: '4 C5' })).toHaveAttribute('data-color', 'blow')
+    expect(screen.getByRole('button', { name: '-4 D5' })).toHaveAttribute('data-color', 'draw')
+    expect(screen.getByRole('button', { name: "-3'' A4" })).toHaveAttribute('data-color', 'bend')
+    expect(screen.getByRole('button', { name: "10'' A#6" })).toHaveAttribute('data-color', 'bend')
+    expect(screen.getByRole('button', { name: '6o A#5' })).toHaveAttribute('data-color', 'overblow')
+    expect(screen.getByRole('button', { name: '7od C#6' })).toHaveAttribute(
+      'data-color',
+      'overdraw',
+    )
+  })
+
+  it('hides advanced over-notes unless showAdvanced is on', () => {
+    const { rerender } = renderDiagram()
+    expect(screen.queryByRole('button', { name: '2o G#4' })).toBeNull()
+    rerender(<HarmonicaDiagram harp={harp} spelling="sharp" labelMode="note" showAdvanced />)
+    expect(screen.getByRole('button', { name: '2o G#4' })).toHaveAttribute('data-advanced', 'true')
+  })
+
+  it('shows tab labels in tab mode', () => {
+    renderDiagram({ labelMode: 'tab' })
+    expect(screen.getByRole('button', { name: "-3'' A4" })).toHaveTextContent("-3''")
+  })
+
+  it('uses flat spelling when asked', () => {
+    renderDiagram({ harp: buildHarp('F'), spelling: 'flat' })
+    expect(screen.getByRole('button', { name: '4 F5' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '-4 G5' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '1 F4' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: "-3' Eb5" })).toBeInTheDocument()
+  })
+
+  it('applies highlights by note id', () => {
+    const c4 = harp.find((n) => n.hole === 1 && n.technique === 'blow')!
+    renderDiagram({ highlights: new Map([[noteId(c4), 'detected']]) })
+    expect(screen.getByRole('button', { name: '1 C4' })).toHaveAttribute(
+      'data-highlight',
+      'detected',
+    )
+  })
+
+  it('reports press and release', () => {
+    const onNoteDown = vi.fn()
+    const onNoteUp = vi.fn()
+    renderDiagram({ onNoteDown, onNoteUp })
+    const a4 = screen.getByRole('button', { name: "-3'' A4" })
+    fireEvent.pointerDown(a4)
+    expect(onNoteDown).toHaveBeenCalledWith(expect.objectContaining({ midi: 69 }))
+    fireEvent.pointerUp(a4)
+    expect(onNoteUp).toHaveBeenCalledWith(expect.objectContaining({ midi: 69 }))
+  })
+})
