@@ -35,6 +35,7 @@ export class Microphone {
   private source: MediaStreamAudioSourceNode | null = null
   private pending: Promise<AnalyserNode> | null = null
   private users = 0
+  private endedListeners = new Set<() => void>()
 
   async acquire(): Promise<AnalyserNode> {
     if (!navigator.mediaDevices?.getUserMedia) throw new MicrophoneError('insecure')
@@ -55,6 +56,14 @@ export class Microphone {
     this.close()
   }
 
+  /** Fires when the open mic stops on its own (device unplugged, permission revoked). */
+  onEnded(listener: () => void): () => void {
+    this.endedListeners.add(listener)
+    return () => {
+      this.endedListeners.delete(listener)
+    }
+  }
+
   private async open(): Promise<AnalyserNode> {
     let stream: MediaStream
     try {
@@ -70,13 +79,29 @@ export class Microphone {
       stream.getTracks().forEach((t) => t.stop())
       throw new MicrophoneError('unknown')
     }
-    const ctx = audioEngine.ctx
+    let analyser: AnalyserNode
+    try {
+      const ctx = audioEngine.ctx
+      const source = ctx.createMediaStreamSource(stream)
+      analyser = ctx.createAnalyser()
+      analyser.fftSize = FFT_SIZE
+      source.connect(analyser)
+      this.source = source
+    } catch {
+      stream.getTracks().forEach((t) => t.stop())
+      throw new MicrophoneError('unknown')
+    }
     this.stream = stream
-    this.source = ctx.createMediaStreamSource(stream)
-    const analyser = ctx.createAnalyser()
-    analyser.fftSize = FFT_SIZE
-    this.source.connect(analyser)
+    stream.getTracks().forEach((t) => t.addEventListener('ended', () => this.ended(stream)))
     return analyser
+  }
+
+  private ended(stream: MediaStream): void {
+    if (stream !== this.stream) return
+    // Current users are told via onEnded; their later release() calls become no-ops.
+    this.users = 0
+    this.close()
+    this.endedListeners.forEach((l) => l())
   }
 
   private close(): void {

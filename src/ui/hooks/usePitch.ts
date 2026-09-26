@@ -45,6 +45,7 @@ export function usePitch(enabled: boolean): PitchState {
     const off = detector.onPitch((reading, rms) =>
       setLive({ reading, rms, live: true, error: null }),
     )
+    const offError = detector.onError((error) => setLive({ ...EMPTY, error }))
     detector.start().catch((e: unknown) => {
       if (!cancelled) {
         setLive({ ...EMPTY, error: e instanceof MicrophoneError ? e.kind : 'unknown' })
@@ -53,6 +54,7 @@ export function usePitch(enabled: boolean): PitchState {
     return () => {
       cancelled = true
       off()
+      offError()
       detector.stop()
       setLive(EMPTY)
     }

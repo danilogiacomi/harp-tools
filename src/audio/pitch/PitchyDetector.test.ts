@@ -7,7 +7,7 @@ vi.mock('../Microphone', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../Microphone')>()
   return {
     ...actual,
-    microphone: { acquire: vi.fn(), release: vi.fn() },
+    microphone: { acquire: vi.fn(), release: vi.fn(), onEnded: vi.fn() },
   }
 })
 
@@ -42,6 +42,17 @@ beforeEach(() => {
   cancelAnimationFrame = vi.fn()
   vi.stubGlobal('requestAnimationFrame', requestAnimationFrame)
   vi.stubGlobal('cancelAnimationFrame', cancelAnimationFrame)
+})
+
+let endMic: () => void
+
+beforeEach(() => {
+  vi.mocked(microphone.onEnded).mockImplementation((l) => {
+    endMic = l
+    return () => {
+      endMic = () => {}
+    }
+  })
 })
 
 afterEach(() => {
@@ -116,5 +127,42 @@ describe('PitchyDetector', () => {
     expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
 
     detector.stop()
+  })
+
+  it('runs a single loop after start(), stop(), start() while the first acquire() is pending', async () => {
+    const resolvers: ((a: AnalyserNode) => void)[] = []
+    vi.mocked(microphone.acquire).mockImplementation(
+      () => new Promise((resolve) => resolvers.push(resolve)),
+    )
+    const detector = new PitchyDetector(() => GATE)
+
+    const first = detector.start()
+    detector.stop()
+    const second = detector.start()
+    resolvers[0](fakeAnalyser())
+    resolvers[1](fakeAnalyser())
+    await Promise.all([first, second])
+
+    expect(microphone.acquire).toHaveBeenCalledTimes(2)
+    expect(microphone.release).toHaveBeenCalledTimes(1) // the stale first acquire
+    expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
+
+    detector.stop()
+    expect(microphone.release).toHaveBeenCalledTimes(2)
+  })
+
+  it('stops and reports "no-device" when the mic track ends', async () => {
+    vi.mocked(microphone.acquire).mockResolvedValue(fakeAnalyser())
+    const detector = new PitchyDetector(() => GATE)
+    const onError = vi.fn()
+    detector.onError(onError)
+
+    await detector.start()
+    endMic()
+
+    expect(onError).toHaveBeenCalledWith('no-device')
+    expect(cancelAnimationFrame).toHaveBeenCalledTimes(1)
+    endMic() // unsubscribed on stop
+    expect(onError).toHaveBeenCalledTimes(1)
   })
 })

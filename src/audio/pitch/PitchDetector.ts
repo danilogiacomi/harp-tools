@@ -1,3 +1,5 @@
+import type { MicErrorKind } from '../Microphone'
+
 export interface PitchReading {
   freq: number
   clarity: number
@@ -12,4 +14,6 @@ export interface PitchDetector {
   start(): Promise<void>
   stop(): void
   onPitch(listener: PitchListener): () => void
+  /** Errors after start() resolved, e.g. 'no-device' when the mic is unplugged; detection stops. */
+  onError(listener: (kind: MicErrorKind) => void): () => void
 }

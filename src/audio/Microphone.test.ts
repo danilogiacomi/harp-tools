@@ -29,8 +29,16 @@ function fakeCtx() {
   return { createMediaStreamSource, createAnalyser } as unknown as AudioContext
 }
 
-function fakeStream(): { stream: MediaStream; track: { stop: ReturnType<typeof vi.fn> } } {
-  const track = { stop: vi.fn() }
+function fakeStream() {
+  const endedListeners: (() => void)[] = []
+  const track = {
+    stop: vi.fn(),
+    addEventListener: vi.fn((type: string, l: () => void) => {
+      if (type === 'ended') endedListeners.push(l)
+    }),
+    /** Simulate the device going away (unplugged, permission revoked). */
+    end: () => endedListeners.forEach((l) => l()),
+  }
   const stream = { getTracks: () => [track] } as unknown as MediaStream
   return { stream, track }
 }
@@ -132,5 +140,48 @@ describe('Microphone', () => {
     await expect(acquiring).rejects.toBeInstanceOf(MicrophoneError)
     await expect(acquiring).rejects.toMatchObject({ kind: 'unknown' })
     expect(track.stop).toHaveBeenCalledTimes(1)
+  })
+
+  it('stops the stream and reports "unknown" if the audio graph cannot be built', async () => {
+    const { stream, track } = fakeStream()
+    stubMediaDevices(vi.fn().mockResolvedValue(stream))
+    const ctxGetter = vi.spyOn(audioEngine, 'ctx', 'get').mockImplementation(() => {
+      throw new Error('AudioEngine used before unlock()')
+    })
+    const mic = new Microphone()
+
+    await expect(mic.acquire()).rejects.toMatchObject({ kind: 'unknown' })
+    expect(track.stop).toHaveBeenCalledTimes(1)
+
+    ctxGetter.mockReturnValue(fakeCtx())
+    await expect(mic.acquire()).resolves.toBeDefined()
+  })
+
+  it('notifies onEnded listeners when the mic track ends, and a later acquire() reopens', async () => {
+    const first = fakeStream()
+    const second = fakeStream()
+    const getUserMedia = vi
+      .fn()
+      .mockResolvedValueOnce(first.stream)
+      .mockResolvedValueOnce(second.stream)
+    stubMediaDevices(getUserMedia)
+    vi.spyOn(audioEngine, 'ctx', 'get').mockReturnValue(fakeCtx())
+    const mic = new Microphone()
+    const onEnded = vi.fn()
+    const off = mic.onEnded(onEnded)
+
+    await Promise.all([mic.acquire(), mic.acquire()])
+    first.track.end()
+    expect(onEnded).toHaveBeenCalledTimes(1)
+
+    mic.release() // consumers releasing after the end are no-ops
+    mic.release()
+    await mic.acquire()
+    expect(getUserMedia).toHaveBeenCalledTimes(2)
+
+    off()
+    first.track.end() // a stale stream ending is ignored
+    second.track.end()
+    expect(onEnded).toHaveBeenCalledTimes(1)
   })
 })
