@@ -52,8 +52,8 @@ them and colour-coded by technique.
 
 ```
   overblow        D#4  G#4  C5   D#5  F#5  A#5
-  blow bend                                            D#6  F#6  B6
                                                                  A#6
+  blow bend                                            D#6  F#6  B6
   blow            C4   E4   G4   C5   E5   G5   C6   E6   G6   C7
   ─────────────── 1    2    3    4    5    6    7    8    9    10
   draw            D4   G4   B4   D5   F5   A5   B5   D6   F6   A6

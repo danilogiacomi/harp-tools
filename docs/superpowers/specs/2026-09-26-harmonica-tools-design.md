@@ -135,8 +135,8 @@ Hole-number row in the middle. Blow side above, draw side below. Derived notes a
 
 ```
   overblow        D#4  G#4  C5   D#5  F#5  A#5                       ← blow side
-  blow bend '                                          D#6  F#6  B6
   blow bend ''                                                   A#6
+  blow bend '                                          D#6  F#6  B6
   blow            C4   E4   G4   C5   E5   G5   C6   E6   G6   C7
   ─────────────── 1    2    3    4    5    6    7    8    9    10 ───
   draw            D4   G4   B4   D5   F5   A5   B5   D6   F6   A6
@@ -188,9 +188,10 @@ A small legend is shown under the chart.
 ```ts
 interface PitchReading { freq: number; clarity: number; rms: number }
 interface PitchDetector {
-  start(): void
+  start(): Promise<void>   // resolves once the mic is open; rejects with MicrophoneError
   stop(): void
-  onPitch(cb: (r: PitchReading | null) => void): () => void  // returns unsubscribe
+  // rms is always reported (even when the reading is gated to null) so the UI can draw a level meter
+  onPitch(cb: (r: PitchReading | null, rms: number) => void): () => void  // returns unsubscribe
 }
 ```
 
@@ -290,7 +291,7 @@ Site plays a 2–5 note phrase generated from the pool, biased toward small step
 ## 10. Testing
 
 - **Vitest unit tests for all of `core/`:** MIDI/frequency/cents maths; harp layout for all 12 keys (checked against known charts); bend/overblow/overdraw rules and `common` flags; `findNotes`; `tabLabel`; NoteMatcher timing with fake reading streams and a fake clock; NotePool filters; scale-path generation per position; Session scoring.
-- **Pitch detection test:** generate sine and sawtooth buffers, run them through PitchyDetector's analysis function, assert detection within ±5 cents from G3 to C7.
+- **Pitch detection test:** generate sine and sawtooth buffers, run them through PitchyDetector's analysis function, assert detection within ±5 cents from G3 to G7 (G harp hole 1 blow up to the F# harp's hole 10 overdraw).
 - **React Testing Library:** HarmonicaDiagram rendering (row layout, colours by technique, advanced hiding) and highlight states; KeySelector.
 - **Manual verification with a real harmonica** for each tool and game before it is considered done (performed by the author).
 
