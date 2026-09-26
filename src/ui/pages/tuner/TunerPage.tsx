@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { buildHarp, findNotes, noteId, tabLabel, type HarpNote } from '../../../core/harmonica/harp'
 import { keySpelling } from '../../../core/harmonica/keys'
 import { noteName, type Spelling } from '../../../core/music/noteNames'
@@ -127,18 +127,27 @@ function ListenMode({ harp, spelling }: ModeProps) {
   )
 }
 
-function PlayMode({ harp, spelling }: ModeProps) {
+export function PlayMode({ harp, spelling }: ModeProps) {
   const { settings } = useSettings()
   const player = useNotePlayer()
   const [sustain, setSustain] = useState(false)
   const [playing, setPlaying] = useState<HarpNote | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
+  // A note started under another key or A4 would keep its old pitch: silence it instead.
+  const [tuning, setTuning] = useState({ harp, a4: settings.a4 })
+  if (tuning.harp !== harp || tuning.a4 !== settings.a4) {
+    setTuning({ harp, a4: settings.a4 })
+    setPlaying(null)
+  }
+  useEffect(() => () => player.stop(), [player, harp, settings.a4])
+
   const byPitch = harp
     .filter((n) => settings.showAdvanced || n.common)
     .sort((a, b) => a.midi - b.midi || a.hole - b.hole)
   const selected = byPitch.find((n) => noteId(n) === selectedId) ?? byPitch[0]
 
+  const isPlaying = (note: HarpNote) => playing !== null && noteId(playing) === noteId(note)
   const startNote = (note: HarpNote) => {
     player.start(note.midi)
     setPlaying(note)
@@ -148,11 +157,12 @@ function PlayMode({ harp, spelling }: ModeProps) {
     setPlaying(null)
   }
   const press = (note: HarpNote) => {
-    if (sustain && playing && noteId(playing) === noteId(note)) stopNote()
+    if (sustain && isPlaying(note)) stopNote()
     else startNote(note)
   }
-  const release = () => {
-    if (!sustain) stopNote()
+  // The player is monophonic: lifting a finger only stops the note if it is still the one sounding.
+  const release = (note: HarpNote) => {
+    if (!sustain && isPlaying(note)) stopNote()
   }
 
   const highlights = new Map<string, Highlight>(playing ? [[noteId(playing), 'target']] : [])
