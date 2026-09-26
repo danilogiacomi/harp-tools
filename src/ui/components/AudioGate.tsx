@@ -4,6 +4,8 @@ import styles from './AudioGate.module.css'
 
 export interface UnlockableEngine {
   readonly isUnlocked: boolean
+  /** Not running, and an automatic resume was refused: only a tap can restart audio. */
+  readonly needsGesture: boolean
   unlock(): Promise<void>
   onStateChange(listener: () => void): () => void
 }
@@ -14,7 +16,14 @@ interface Props {
   supported?: boolean
 }
 
-/** Renders its children only once audio is running; otherwise shows a "tap to start" button. */
+/** How long an automatic resume may stay pending before we ask for a tap. */
+const RESUME_GRACE_MS = 300
+
+/**
+ * Renders its children once audio is running; otherwise shows a "tap to start" button. If the
+ * browser suspends audio later, the engine resumes it on its own and the button only comes back
+ * when that fails or takes longer than a short grace period.
+ */
 export function AudioGate({
   children,
   engine = audioEngine,
@@ -23,7 +32,19 @@ export function AudioGate({
   const [unlocked, setUnlocked] = useState(() => engine.isUnlocked)
   const [failed, setFailed] = useState(false)
 
-  useEffect(() => engine.onStateChange(() => setUnlocked(engine.isUnlocked)), [engine])
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const off = engine.onStateChange(() => {
+      clearTimeout(timer)
+      if (engine.isUnlocked) setUnlocked(true)
+      else if (engine.needsGesture) setUnlocked(false)
+      else timer = setTimeout(() => setUnlocked(engine.isUnlocked), RESUME_GRACE_MS)
+    })
+    return () => {
+      off()
+      clearTimeout(timer)
+    }
+  }, [engine])
 
   if (!supported) {
     return (
