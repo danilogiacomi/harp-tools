@@ -1,0 +1,81 @@
+.panel {
+  display: grid;
+  justify-items: center;
+  gap: 1.25rem;
+  max-width: 32rem;
+  margin: 1rem auto;
+}
+
+.tempo {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.tempo button {
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  font-size: 1.5rem;
+  border-radius: 50%;
+}
+
+.bpm {
+  min-width: 5ch;
+  font-size: 4rem;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.slider {
+  width: 100%;
+}
+
+.beats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.dot {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  transition: background 40ms;
+}
+
+.dot[data-accent='bar'] {
+  border-color: var(--accent);
+}
+
+.dot[data-accent='group'] {
+  border-color: var(--text-dim);
+}
+
+.dot[data-active] {
+  background: var(--accent);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+
+.startStop {
+  min-width: 10rem;
+  padding: 0.85rem 2rem;
+  font-size: 1.25rem;
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
