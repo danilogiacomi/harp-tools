@@ -70,6 +70,14 @@
   box-shadow: 0 0 0 3px var(--text);
 }
 
+/* Keep detected labels on the neutral greys at >= 4.5:1 (draw 6.5:1, blow 6.4:1). */
+.cell[data-color='draw'][data-highlight='detected'] {
+  color: var(--text);
+}
+.cell[data-color='blow'][data-highlight='detected'] {
+  background: color-mix(in srgb, var(--c) 70%, var(--text));
+}
+
 .cell[data-highlight='target'] {
   opacity: 1;
   box-shadow: 0 0 0 3px var(--target);

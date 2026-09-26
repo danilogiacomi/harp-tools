@@ -49,7 +49,7 @@ export function MetronomePanel() {
       if (e.target instanceof HTMLElement && e.target.closest('input, select, textarea, button'))
         return
       e.preventDefault()
-      toggle()
+      if (!e.repeat) toggle() // holding Space must not flip it on and off
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)

@@ -1,7 +1,12 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { SettingsProvider } from '../../settings/SettingsContext'
 import { MetronomePanel } from './MetronomePage'
+
+const toggle = vi.hoisted(() => vi.fn())
+vi.mock('../../hooks/useMetronome', () => ({
+  useMetronome: () => ({ running: false, beat: null, toggle }),
+}))
 
 const renderPanel = () =>
   render(
@@ -35,5 +40,15 @@ describe('MetronomePanel', () => {
       'beat',
       'beat',
     ])
+  })
+
+  it('toggles on Space but ignores auto-repeat from a held key', () => {
+    toggle.mockClear()
+    renderPanel()
+    fireEvent.keyDown(window, { code: 'Space', key: ' ' })
+    expect(toggle).toHaveBeenCalledTimes(1)
+    fireEvent.keyDown(window, { code: 'Space', key: ' ', repeat: true })
+    fireEvent.keyDown(window, { code: 'Space', key: ' ', repeat: true })
+    expect(toggle).toHaveBeenCalledTimes(1)
   })
 })
