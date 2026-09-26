@@ -1,0 +1,86 @@
+.readout {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+}
+
+.note {
+  font-size: 4.5rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.note[data-quality='in-tune'] {
+  color: var(--ok);
+}
+.note[data-quality='close'] {
+  color: var(--warn);
+}
+.note[data-quality='off'] {
+  color: var(--bad);
+}
+.needle[data-quality='in-tune'] {
+  background: var(--ok);
+}
+.needle[data-quality='close'] {
+  background: var(--warn);
+}
+.needle[data-quality='off'] {
+  background: var(--bad);
+}
+
+.scale {
+  position: relative;
+  width: min(100%, 24rem);
+  height: 1.25rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.zone {
+  position: absolute;
+  inset: 0 40%;
+  background: color-mix(in srgb, var(--ok) 25%, transparent);
+}
+
+.needle {
+  position: absolute;
+  top: -0.25rem;
+  bottom: -0.25rem;
+  width: 4px;
+  margin-left: -2px;
+  border-radius: 2px;
+  transition: left 60ms linear;
+}
+
+.meta {
+  display: flex;
+  gap: 1.5rem;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  min-height: 1.75rem;
+  margin: 0;
+}
+
+.tab {
+  padding: 0.1rem 0.6rem;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font-weight: 600;
+}
+
+.offHarp {
+  color: var(--bad);
+}

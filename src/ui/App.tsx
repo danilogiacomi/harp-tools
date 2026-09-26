@@ -1,12 +1,14 @@
 import type { ComponentType } from 'react'
 import { Header } from './components/Header'
 import { HomePage } from './pages/HomePage'
+import { TunerPage } from './pages/tuner/TunerPage'
 import { useHashRoute } from './router'
 import { SettingsProvider } from './settings/SettingsContext'
 import styles from './App.module.css'
 
 const ROUTES: Record<string, ComponentType> = {
   '/': HomePage,
+  '/tuner': TunerPage,
 }
 
 function CurrentPage() {
