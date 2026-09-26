@@ -8,6 +8,6 @@
 
 command -v bun >/dev/null 2>&1 || exit 0   # bun not installed → skip silently
 
-bun run --silent scripts/usage-self.ts || exit 0       # never block a commit on this
+bun run --silent usage:self || exit 0       # never block a commit on this
 git add README.md
 exit 0
