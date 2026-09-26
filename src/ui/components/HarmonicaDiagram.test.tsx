@@ -84,4 +84,29 @@ describe('HarmonicaDiagram', () => {
     fireEvent.pointerUp(a4)
     expect(onNoteUp).toHaveBeenCalledWith(expect.objectContaining({ midi: 69 }))
   })
+
+  it('marks cells interactive only when notes can be pressed', () => {
+    const { unmount } = renderDiagram()
+    expect(screen.getByRole('button', { name: '1 C4' })).not.toHaveAttribute('data-interactive')
+    unmount()
+    renderDiagram({ onNoteDown: vi.fn() })
+    expect(screen.getByRole('button', { name: '1 C4' })).toHaveAttribute('data-interactive', 'true')
+  })
+
+  it('releases the note when the browser cancels the pointer (e.g. a scroll gesture)', () => {
+    const onNoteDown = vi.fn()
+    const onNoteUp = vi.fn()
+    renderDiagram({ onNoteDown, onNoteUp })
+    const c4 = screen.getByRole('button', { name: '1 C4' })
+    fireEvent.pointerDown(c4)
+    fireEvent.pointerCancel(c4)
+    expect(onNoteUp).toHaveBeenCalledWith(expect.objectContaining({ midi: 60 }))
+  })
+
+  it('ignores non-primary mouse buttons', () => {
+    const onNoteDown = vi.fn()
+    renderDiagram({ onNoteDown })
+    fireEvent.pointerDown(screen.getByRole('button', { name: '1 C4' }), { button: 2 })
+    expect(onNoteDown).not.toHaveBeenCalled()
+  })
 })

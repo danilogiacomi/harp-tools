@@ -61,9 +61,11 @@ export function HarmonicaDiagram({
         data-color={COLOR[note.technique]}
         data-advanced={note.common ? undefined : 'true'}
         data-highlight={highlights?.get(noteId(note))}
+        data-interactive={onNoteDown ? 'true' : undefined}
         aria-label={`${tab} ${name}`}
-        onPointerDown={() => onNoteDown?.(note)}
+        onPointerDown={(e) => e.button === 0 && onNoteDown?.(note)}
         onPointerUp={() => onNoteUp?.(note)}
+        onPointerCancel={() => onNoteUp?.(note)}
         onPointerLeave={(e: PointerEvent) => e.buttons > 0 && onNoteUp?.(note)}
         onKeyDown={(e) => isKey(e) && !e.repeat && onNoteDown?.(note)}
         onKeyUp={(e) => isKey(e) && onNoteUp?.(note)}

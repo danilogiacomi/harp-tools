@@ -50,8 +50,12 @@
   background: color-mix(in srgb, var(--c) 28%, var(--surface));
   font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
-  touch-action: none;
   user-select: none;
+}
+
+/* A horizontal swipe still scrolls the chart; the browser then cancels the pointer. */
+.cell[data-interactive] {
+  touch-action: pan-x;
 }
 
 .cell[data-advanced] {
