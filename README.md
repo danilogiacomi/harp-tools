@@ -6,7 +6,7 @@
 
 Tuner · Metronome · Bend trainer · Ear games
 
-![Status](https://img.shields.io/badge/status-in%20design-orange)
+![Status](https://img.shields.io/badge/status-in%20development-yellow)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-static%20build-646cff?logo=vite&logoColor=white)
@@ -65,7 +65,7 @@ them and colour-coded by technique.
 
 ## 🚀 Getting started
 
-> The project is currently in the design phase — code is on its way.
+> The tuner and metronome work today; the games are next.
 
 ```sh
 npm install
@@ -96,9 +96,9 @@ for the details.
 
 ## 🗺️ Roadmap
 
-- [ ] Core note model — all 12 keys, bends, overblows, overdraws
-- [ ] Audio engine — mic, pitch detection, synth note player, metronome
-- [ ] Metronome and tuner
+- [x] Core note model — all 12 keys, bends, overblows, overdraws
+- [x] Audio engine — mic, pitch detection, synth note player, metronome
+- [x] Metronome and tuner
 - [ ] Echo the note
 - [ ] Bend trainer
 - [ ] Scale runner
@@ -116,10 +116,10 @@ Codex rollouts) on the machine that generated this section.
 
 | Metric | Value |
 |---|---|
-| **Total tokens** | **3.1M** |
-| Token breakdown | 61.8K output · 104 input · 95.2K cache-write · 3.0M cache-read |
-| Agent time | ~19m active (19m wall-clock) |
-| Turns | 52 assistant turns · 10 tool calls |
+| **Total tokens** | **22.8M** |
+| Token breakdown | 431.8K output · 332 input · 485.7K cache-write · 21.9M cache-read |
+| Agent time | ~1h 0m active (2h 46m wall-clock) |
+| Turns | 142 assistant turns · 56 tool calls |
 | Agents / models | Claude Code — claude-opus-5-5 |
 | As of | 2026-09-26 |
 
