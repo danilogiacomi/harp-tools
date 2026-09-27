@@ -18,7 +18,8 @@ import {
 } from '../../../core/games/notePool'
 import type { Rng } from '../../../core/games/random'
 import { isFinished, type GameMode } from '../../../core/games/session'
-import { buildHarp, findNotes, noteId } from '../../../core/harmonica/harp'
+import { buildHarp, findNotes, noteId, tabLabel } from '../../../core/harmonica/harp'
+import { pickNote } from '../../../core/harmonica/positions'
 import { keySpelling } from '../../../core/harmonica/keys'
 import { noteName } from '../../../core/music/noteNames'
 import { HarmonicaDiagram, type Highlight } from '../../components/HarmonicaDiagram'
@@ -109,9 +110,11 @@ interface View {
   phrase: number[]
   state: MelodyState | null
   points: number
+  /** Practice help: the phrase slots show which hole to play. */
+  showHoles: boolean
 }
 
-const IDLE: View = { phase: 'idle', phrase: [], state: null, points: 0 }
+const IDLE: View = { phase: 'idle', phrase: [], state: null, points: 0, showHoles: false }
 
 interface RunProps {
   audio: GameAudio
@@ -144,10 +147,10 @@ function MelodyRun({ audio, mode, filter, practiceLength, rng }: RunProps) {
   const [length, setLength] = useState(mode === 'scored' ? MIN_PHRASE : practiceLength)
   const [view, setView] = useState<View>(IDLE)
 
-  const playPhrase = async (phrase: number[]) => {
+  const playPhrase = async (phrase: number[], showHoles = false) => {
     timeouts.clear()
     slot.set(null)
-    setView({ ...IDLE, phase: 'prompt', phrase })
+    setView({ ...IDLE, phase: 'prompt', phrase, showHoles })
     if (!(await audio.playSequence(phrase, NOTE_MS, GAP_MS))) return
     const matcher = { toleranceCents: settings.toleranceCents, holdMs: settings.melodyHoldMs }
     const limitMs = mode === 'scored' ? MELODY_NOTE_LIMIT_MS * phrase.length : null
@@ -212,12 +215,26 @@ function MelodyRun({ audio, mode, filter, practiceLength, rng }: RunProps) {
     return 'todo'
   }
 
+  const holeFor = (midi: number) =>
+    pickNote(harp, midi, { includeOver: true, showAdvanced: settings.showAdvanced })
+  const slotLabel = (m: number, i: number) => {
+    const hole = view.showHoles ? holeFor(m) : null
+    if (hole) return tabLabel(hole)
+    return reveal || slotState(i) === 'done' ? noteName(m, spelling) : i + 1
+  }
+
   const highlights = new Map<string, Highlight>()
   if (audio.detectedMidi !== null) {
     for (const n of findNotes(harp, audio.detectedMidi)) highlights.set(noteId(n), 'detected')
   }
   const mark = (midi: number, h: Highlight) =>
     findNotes(harp, midi).forEach((n) => highlights.set(noteId(n), h))
+  if (view.showHoles) {
+    phrase.slice(state?.index ?? 0).forEach((m) => {
+      const hole = holeFor(m)
+      if (hole) highlights.set(noteId(hole), 'target')
+    })
+  }
   phrase.slice(0, state?.index ?? 0).forEach((m) => mark(m, 'correct'))
   if (reveal && state?.wrongIndex != null) {
     mark(phrase[state.wrongIndex], 'target')
@@ -250,9 +267,15 @@ function MelodyRun({ audio, mode, filter, practiceLength, rng }: RunProps) {
                 🔊 Hear again
               </button>
             )}
+            {/* Revealing the holes would give the answer away in scored mode. */}
+            {view.phase === 'listening' && mode === 'practice' && !view.showHoles && (
+              <button type="button" onClick={() => setView((v) => ({ ...v, showHoles: true }))}>
+                👀 Show holes
+              </button>
+            )}
             {mode === 'practice' && reveal && state?.status !== 'success' && (
               <>
-                <button type="button" onClick={() => void playPhrase(phrase)}>
+                <button type="button" onClick={() => void playPhrase(phrase, view.showHoles)}>
                   🔁 Try again
                 </button>
                 <button type="button" onClick={() => newPhrase(length)}>
@@ -293,7 +316,7 @@ function MelodyRun({ audio, mode, filter, practiceLength, rng }: RunProps) {
         {phrase.length > 0
           ? phrase.map((m, i) => (
               <li key={i} className={styles.slot} data-state={slotState(i)}>
-                {reveal || slotState(i) === 'done' ? noteName(m, spelling) : i + 1}
+                {slotLabel(m, i)}
               </li>
             ))
           : Array.from({ length }, (_, i) => (

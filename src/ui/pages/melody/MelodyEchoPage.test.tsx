@@ -46,6 +46,37 @@ describe('MelodyGame', () => {
     expect(slots()).toEqual(['done', 'done', 'done'])
   })
 
+  it('reveals the holes to play in practice mode, and keeps them on Try again', async () => {
+    renderGame()
+    await start()
+    const labels = () =>
+      within(screen.getByRole('list', { name: 'Phrase' }))
+        .getAllByRole('listitem')
+        .map((li) => li.textContent)
+    expect(labels()).toEqual(['1', '2', '3'])
+    fireEvent.click(screen.getByRole('button', { name: /Show holes/ }))
+    // E4 = 2 blow, D4 = 1 draw, G4 = 2 draw (plain, lower hole than 3 blow)
+    expect(labels()).toEqual(['2', '-1', '-2'])
+    expect(screen.getByRole('button', { name: '-1 D4' })).toHaveAttribute(
+      'data-highlight',
+      'target',
+    )
+    expect(screen.queryByRole('button', { name: /Show holes/ })).toBeNull()
+    hold(64, 0, 250)
+    hold(65, 300, 550)
+    fireEvent.click(screen.getByRole('button', { name: /Try again/ }))
+    expect(await screen.findByText('Your turn — play it back')).toBeInTheDocument()
+    expect(labels()).toEqual(['2', '-1', '-2'])
+  })
+
+  it('does not offer "show holes" in scored mode', async () => {
+    renderGame()
+    fireEvent.click(screen.getByRole('button', { name: 'Scored' }))
+    fireEvent.change(screen.getByRole('combobox', { name: /To hole/ }), { target: { value: '2' } })
+    await start()
+    expect(screen.queryByRole('button', { name: /Show holes/ })).toBeNull()
+  })
+
   it('shows which note was wrong and lets the player retry', async () => {
     renderGame()
     await start()
