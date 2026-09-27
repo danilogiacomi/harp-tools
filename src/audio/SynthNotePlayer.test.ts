@@ -73,4 +73,25 @@ describe('SynthNotePlayer', () => {
     // The getter swap didn't replace the player: still the one instance, still sounding.
     expect(player.isSounding).toBe(true)
   })
+
+  it('reports when it starts and stops sounding, not when one note replaces another', () => {
+    const { ctx } = fakeCtx()
+    vi.spyOn(audioEngine, 'ctx', 'get').mockReturnValue(ctx)
+    vi.spyOn(audioEngine, 'master', 'get').mockReturnValue({
+      connect: vi.fn(),
+    } as unknown as GainNode)
+
+    const player = new SynthNotePlayer(() => 440)
+    const events: boolean[] = []
+    const off = player.onSoundingChange((s) => events.push(s))
+    player.start(60)
+    player.start(62)
+    player.stop()
+    player.stop()
+    expect(events).toEqual([true, false])
+
+    off()
+    player.start(60)
+    expect(events).toEqual([true, false])
+  })
 })

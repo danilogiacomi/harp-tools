@@ -15,6 +15,7 @@ interface Voice {
 export class SynthNotePlayer implements NotePlayer {
   private voice: Voice | null = null
   private a4: () => number
+  private soundingListeners = new Set<(sounding: boolean) => void>()
 
   constructor(a4: () => number) {
     this.a4 = a4
@@ -30,8 +31,16 @@ export class SynthNotePlayer implements NotePlayer {
     this.a4 = a4
   }
 
+  onSoundingChange(listener: (sounding: boolean) => void): () => void {
+    this.soundingListeners.add(listener)
+    return () => {
+      this.soundingListeners.delete(listener)
+    }
+  }
+
   start(midi: number): void {
-    this.stop()
+    const wasSounding = this.voice !== null
+    this.release()
     const ctx = audioEngine.ctx
     const t = ctx.currentTime
     const freq = midiToFreq(midi, this.a4())
@@ -60,9 +69,17 @@ export class SynthNotePlayer implements NotePlayer {
     oscillators[0].onended = () => envelope.disconnect()
 
     this.voice = { oscillators, envelope }
+    if (!wasSounding) this.soundingListeners.forEach((l) => l(true))
   }
 
   stop(): void {
+    if (!this.voice) return
+    this.release()
+    this.soundingListeners.forEach((l) => l(false))
+  }
+
+  /** Fades the current voice out without telling listeners (start() uses it to swap notes). */
+  private release(): void {
     const voice = this.voice
     if (!voice) return
     this.voice = null

@@ -6,4 +6,9 @@ export interface NotePlayer {
   start(midi: number): void
   stop(): void
   readonly isSounding: boolean
+  /**
+   * Fires true when the player starts sounding and false when it stops. Replacing one note with
+   * another doesn't fire. Games use it to ignore the mic while their prompt plays (spec §6.6).
+   */
+  onSoundingChange(listener: (sounding: boolean) => void): () => void
 }
