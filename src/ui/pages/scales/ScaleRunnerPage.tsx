@@ -241,7 +241,9 @@ function ScaleSession({ mode, harp, path, direction, withMetronome, bestKey }: S
   const metronome = useMetronome(metronomeConfig)
   const [view, setView] = useState<View>(IDLE)
 
+  // One run is one scored session: a stopped run starts over rather than resuming.
   const start = () => {
+    if (mode === 'scored') scoring.restart()
     const matcher = { toleranceCents: settings.toleranceCents, holdMs: settings.holdMs }
     slot.set(
       new ScaleRun(
@@ -283,11 +285,6 @@ function ScaleSession({ mode, harp, path, direction, withMetronome, bestKey }: S
   }
   useEffect(() => audio.listen(onHeard))
 
-  const restart = () => {
-    scoring.restart()
-    start()
-  }
-
   const highlights = new Map<string, Highlight>()
   if (audio.detectedMidi !== null) {
     for (const n of findNotes(harp, audio.detectedMidi)) highlights.set(noteId(n), 'detected')
@@ -301,7 +298,7 @@ function ScaleSession({ mode, harp, path, direction, withMetronome, bestKey }: S
   return (
     <>
       {audio.error && <MicErrorNotice kind={audio.error} />}
-      <ScorePanel scoring={scoring} onRestart={restart} />
+      <ScorePanel scoring={scoring} onRestart={start} />
       <div className={styles.stage}>
         {view.phase === 'idle' && !audio.error && (
           <button type="button" className={styles.primary} onClick={start}>

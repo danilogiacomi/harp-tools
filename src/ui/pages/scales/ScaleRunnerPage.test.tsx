@@ -73,6 +73,21 @@ describe('ScaleGame', () => {
     expect(screen.getByRole('status')).toHaveTextContent('8 of 8 correct')
   })
 
+  it('starts a fresh session when a stopped scored run is started again', () => {
+    renderGame()
+    fireEvent.click(screen.getByRole('button', { name: 'Scored' }))
+    fireEvent.click(screen.getByRole('button', { name: '▶ Start' }))
+    const midis = [72, 74, 76, 77, 79, 81, 83, 84]
+    midis.slice(0, 5).forEach((midi, k) => hold(midi, k * 1000, k * 1000 + 500))
+    fireEvent.click(screen.getByRole('button', { name: '■ Stop' }))
+    fireEvent.click(screen.getByRole('button', { name: '▶ Start' }))
+    expect(screen.getByRole('status')).toHaveTextContent('Round 1 of 8')
+    midis.slice(0, 3).forEach((midi, k) => hold(midi, 10000 + k * 1000, 10000 + k * 1000 + 500))
+    expect(screen.getByRole('status')).toHaveTextContent('Round 4 of 8')
+    expect(screen.getByText('Next: -5 (F5)')).toBeInTheDocument()
+    expect(localStorage.length).toBe(0)
+  })
+
   it('rewards notes landed on the beat when playing with the metronome', () => {
     renderGame()
     fireEvent.click(screen.getByRole('button', { name: 'Scored' }))
