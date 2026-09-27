@@ -40,7 +40,7 @@ The header nav gains "Log".
 |---|---|---|---|
 | **Richter** (`richter`) | C4 E4 G4 C5 E5 G5 C6 E6 G6 C7 | D4 G4 B4 D5 F5 A5 B5 D6 F6 A6 | — |
 | **Paddy Richter** (`paddy`) | C4 E4 **A4** C5 E5 G5 C6 E6 G6 C7 | D4 G4 B4 D5 F5 A5 B5 D6 F6 A6 | hole 3 blow up to A (tunes for 1st-position melodies) |
-| **Country** (`country`) | Richter | D4 G4 B4 D5 **F#5** A5 B5 D6 F6 A6 | hole 5 draw up to F# (major 3rd in 2nd position) |
+| **Country** (`country`) | Richter | D4 G4 B4 D5 **F#5** A5 B5 D6 F6 A6 | hole 5 draw up to F# (the major 7th in 2nd position, so no bend is needed for it) |
 | **Natural minor** (`naturalMinor`) | C4 **Eb4** G4 C5 **Eb5** G5 C6 **Eb6** G6 C7 | D4 G4 **Bb4** D5 F5 **Ab5** **Bb5** D6 F6 **Ab6** | minor 3rd, 6th and 7th; the harp is labelled by its blow key (1st-position minor) |
 
 **API.** `buildHarp(key, tuning = 'richter')` gains the optional second argument, so existing callers keep working. `TUNINGS` lists id, display name and one-line description.
