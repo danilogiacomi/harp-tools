@@ -15,7 +15,7 @@ import {
 } from '../../../core/games/notePool'
 import type { Rng } from '../../../core/games/random'
 import { isFinished, type GameMode } from '../../../core/games/session'
-import { buildHarp, describeNote, findNotes, noteId, tabLabel } from '../../../core/harmonica/harp'
+import { describeNote, findNotes, noteId, tabLabel } from '../../../core/harmonica/harp'
 import { keySpelling } from '../../../core/harmonica/keys'
 import { noteName } from '../../../core/music/noteNames'
 import { HarmonicaDiagram, type Highlight } from '../../components/HarmonicaDiagram'
@@ -27,10 +27,11 @@ import { PlayAgain, ScorePanel } from '../../components/game/ScorePanel'
 import { Stage } from '../../components/game/Stage'
 import styles from '../../components/game/Game.module.css'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
+import { useHarp } from '../../hooks/useHarp'
 import { useScoring } from '../../hooks/useScoring'
 import { useSlot } from '../../hooks/useSlot'
 import { useTimeouts } from '../../hooks/useTimeouts'
-import { bestScoreKey } from '../../scores/bestScores'
+import { bestScoreKey, tuningPart } from '../../scores/bestScores'
 import { useSettings } from '../../settings/SettingsContext'
 
 const ADVANCE_MS = 1500
@@ -57,6 +58,7 @@ export function EchoGame({ rng = Math.random }: { rng?: Rng }) {
     mode,
     poolLabel(filter),
     settings.key,
+    settings.tuning,
     settings.a4,
     settings.showAdvanced,
     settings.toleranceCents,
@@ -94,7 +96,7 @@ interface RunProps {
 
 function EchoRun({ audio, mode, filter, rng }: RunProps) {
   const { settings } = useSettings()
-  const harp = useMemo(() => buildHarp(settings.key), [settings.key])
+  const harp = useHarp()
   const midis = useMemo(
     () => uniqueMidis(buildPool(harp, filter, settings.showAdvanced)),
     [harp, filter, settings.showAdvanced],
@@ -108,6 +110,7 @@ function EchoRun({ audio, mode, filter, rng }: RunProps) {
       adv: settings.showAdvanced,
       tol: settings.toleranceCents,
       hold: settings.holdMs,
+      ...tuningPart(settings.tuning),
     }),
   )
   const slot = useSlot<ListenRound>()

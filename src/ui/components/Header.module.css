@@ -48,3 +48,13 @@
   border-color: var(--accent);
   color: var(--accent);
 }
+
+.harp {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dot {
+  color: var(--text-dim);
+}

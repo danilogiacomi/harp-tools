@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { scriptedRng } from '../../../core/games/random'
 import { fakeAudio, hold } from '../../../test/fakeGameAudio'
+import { Header } from '../../components/Header'
 import { SettingsProvider } from '../../settings/SettingsContext'
 import { EchoGame } from './EchoNotePage'
 
@@ -158,5 +159,23 @@ describe('EchoGame', () => {
     fireEvent.click(screen.getByRole('button', { name: '▶ Start' }))
     fireEvent.click(screen.getByRole('button', { name: 'Scored' }))
     expect(fakeAudio.cancels).toBe(1)
+  })
+
+  it('follows the tuning and abandons the round when it changes', async () => {
+    render(
+      <SettingsProvider storage={null}>
+        <Header />
+        <EchoGame rng={scriptedRng([0])} />
+      </SettingsProvider>,
+    )
+    expect(screen.queryByRole('button', { name: '-5 F#5' })).toBeNull()
+    await start()
+    fireEvent.change(screen.getByRole('combobox', { name: 'Tuning' }), {
+      target: { value: 'country' },
+    })
+    expect(screen.getByRole('button', { name: '-5 F#5' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '▶ Start' })).toBeInTheDocument()
+    hold(60, 0, 500)
+    expect(screen.queryByText(/Correct/)).toBeNull()
   })
 })

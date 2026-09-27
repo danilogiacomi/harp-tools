@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ScaleRun, runStepPoints } from '../../../core/games/scaleRunner'
 import { isFinished, type GameMode } from '../../../core/games/session'
-import { buildHarp, findNotes, noteId, tabLabel, type HarpNote } from '../../../core/harmonica/harp'
+import { findNotes, noteId, tabLabel, type HarpNote } from '../../../core/harmonica/harp'
 import { keySpelling } from '../../../core/harmonica/keys'
 import {
   POSITIONS,
@@ -23,10 +23,11 @@ import { PlayAgain, ScorePanel } from '../../components/game/ScorePanel'
 import { Stage } from '../../components/game/Stage'
 import styles from '../../components/game/Game.module.css'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
+import { useHarp } from '../../hooks/useHarp'
 import { useMetronome } from '../../hooks/useMetronome'
 import { useScoring } from '../../hooks/useScoring'
 import { useSlot } from '../../hooks/useSlot'
-import { bestScoreKey } from '../../scores/bestScores'
+import { bestScoreKey, tuningPart } from '../../scores/bestScores'
 import { useSettings } from '../../settings/SettingsContext'
 
 const DIRECTIONS: { value: Direction; label: string }[] = [
@@ -59,7 +60,7 @@ export function ScaleGame() {
   const [octaveChoice, setOctaveChoice] = useState<number | null>(null)
   const [withMetronome, setWithMetronome] = useState(false)
 
-  const harp = useMemo(() => buildHarp(settings.key), [settings.key])
+  const harp = useHarp()
   const spelling = keySpelling(settings.key)
   const octaves = useMemo(
     () =>
@@ -91,6 +92,7 @@ export function ScaleGame() {
     octave,
     withMetronome,
     settings.key,
+    settings.tuning,
     settings.a4,
     settings.showAdvanced,
     settings.toleranceCents,
@@ -108,6 +110,7 @@ export function ScaleGame() {
     bpm: withMetronome ? settings.bpm : 0,
     tol: settings.toleranceCents,
     hold: settings.holdMs,
+    ...tuningPart(settings.tuning),
   })
 
   return (

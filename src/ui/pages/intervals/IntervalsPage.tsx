@@ -17,7 +17,7 @@ import {
 } from '../../../core/games/notePool'
 import type { Rng } from '../../../core/games/random'
 import { isFinished, type GameMode } from '../../../core/games/session'
-import { buildHarp, findNotes, noteId } from '../../../core/harmonica/harp'
+import { findNotes, noteId } from '../../../core/harmonica/harp'
 import { keySpelling } from '../../../core/harmonica/keys'
 import { INTERVALS, type IntervalId } from '../../../core/music/intervals'
 import { noteName } from '../../../core/music/noteNames'
@@ -30,10 +30,11 @@ import { PlayAgain, ScorePanel } from '../../components/game/ScorePanel'
 import { Stage } from '../../components/game/Stage'
 import styles from '../../components/game/Game.module.css'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
+import { useHarp } from '../../hooks/useHarp'
 import { useScoring } from '../../hooks/useScoring'
 import { useSlot } from '../../hooks/useSlot'
 import { useTimeouts } from '../../hooks/useTimeouts'
-import { bestScoreKey } from '../../scores/bestScores'
+import { bestScoreKey, tuningPart } from '../../scores/bestScores'
 import { useSettings } from '../../settings/SettingsContext'
 
 const ADVANCE_MS = 1500
@@ -76,6 +77,7 @@ export function IntervalGame({ rng = Math.random }: { rng?: Rng }) {
     allowed.join(','),
     poolLabel(filter),
     settings.key,
+    settings.tuning,
     settings.a4,
     settings.showAdvanced,
     settings.toleranceCents,
@@ -153,7 +155,7 @@ interface RunProps {
 
 function IntervalRun({ audio, mode, task, allowed, filter, rng }: RunProps) {
   const { settings } = useSettings()
-  const harp = useMemo(() => buildHarp(settings.key), [settings.key])
+  const harp = useHarp()
   const midis = useMemo(
     () => uniqueMidis(buildPool(harp, filter, settings.showAdvanced)),
     [harp, filter, settings.showAdvanced],
@@ -169,6 +171,7 @@ function IntervalRun({ audio, mode, task, allowed, filter, rng }: RunProps) {
       adv: settings.showAdvanced,
       tol: settings.toleranceCents,
       hold: settings.holdMs,
+      ...tuningPart(settings.tuning),
     }),
   )
   const slot = useSlot<ListenRound>()
