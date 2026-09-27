@@ -2,7 +2,8 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildHarp } from '../../../core/harmonica/harp'
 import { SettingsProvider, useSettings } from '../../settings/SettingsContext'
-import { PlayMode } from './TunerPage'
+import type { PitchState } from '../../hooks/usePitch'
+import { ListenMode, PlayMode } from './TunerPage'
 
 const player = vi.hoisted(() => ({
   play: vi.fn(async () => {}),
@@ -12,6 +13,11 @@ const player = vi.hoisted(() => ({
 }))
 
 vi.mock('../../hooks/useNotePlayer', () => ({ useNotePlayer: () => player }))
+
+const pitch = vi.hoisted(() => ({
+  state: { reading: null, rms: 0, status: 'starting', error: null } as PitchState,
+}))
+vi.mock('../../hooks/usePitch', () => ({ usePitch: () => pitch.state }))
 
 function SetA4() {
   const { update } = useSettings()
@@ -85,5 +91,44 @@ describe('PlayMode', () => {
     )
     expect(player.stop).toHaveBeenCalled()
     expect(screen.getByRole('button', { name: '▶ Play' })).toBeInTheDocument()
+  })
+})
+
+describe('ListenMode', () => {
+  const renderListen = () =>
+    render(
+      <SettingsProvider storage={null}>
+        <ListenMode harp={buildHarp('C')} spelling="sharp" />
+      </SettingsProvider>,
+    )
+  it('keeps the same layout while the mic starts, while silent and while hearing a note', () => {
+    pitch.state = { reading: null, rms: 0, status: 'starting', error: null }
+    const { container, rerender } = renderListen()
+    expect(screen.getByText('Waiting for microphone permission…')).toBeInTheDocument()
+    const rows = () => [...container.children].map((el) => el.tagName + '.' + el.className)
+    const starting = rows()
+
+    pitch.state = { reading: null, rms: 0.001, status: 'listening', error: null }
+    rerender(
+      <SettingsProvider storage={null}>
+        <ListenMode harp={buildHarp('C')} spelling="sharp" />
+      </SettingsProvider>,
+    )
+    expect(screen.queryByText('Waiting for microphone permission…')).toBeNull()
+    expect(rows()).toEqual(starting)
+
+    pitch.state = {
+      reading: { freq: 440, clarity: 1, rms: 0.1 },
+      rms: 0.1,
+      status: 'listening',
+      error: null,
+    }
+    rerender(
+      <SettingsProvider storage={null}>
+        <ListenMode harp={buildHarp('C')} spelling="sharp" />
+      </SettingsProvider>,
+    )
+    expect(screen.getByText('440.0 Hz')).toBeInTheDocument()
+    expect(rows()).toEqual(starting)
   })
 })

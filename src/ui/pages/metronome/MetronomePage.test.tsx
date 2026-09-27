@@ -4,8 +4,9 @@ import { SettingsProvider } from '../../settings/SettingsContext'
 import { MetronomePanel } from './MetronomePage'
 
 const toggle = vi.hoisted(() => vi.fn())
+const metronome = vi.hoisted(() => ({ running: false, beat: null as number | null }))
 vi.mock('../../hooks/useMetronome', () => ({
-  useMetronome: () => ({ running: false, beat: null, toggle }),
+  useMetronome: () => ({ ...metronome, toggle }),
 }))
 
 const renderPanel = () =>
@@ -50,5 +51,24 @@ describe('MetronomePanel', () => {
     fireEvent.keyDown(window, { code: 'Space', key: ' ', repeat: true })
     fireEvent.keyDown(window, { code: 'Space', key: ' ', repeat: true })
     expect(toggle).toHaveBeenCalledTimes(1)
+  })
+  it('keeps the same layout stopped and running, so nothing moves on Start or Stop', () => {
+    metronome.running = false
+    metronome.beat = null
+    const { container, rerender } = renderPanel()
+    const shape = () =>
+      [...container.querySelectorAll('*')].map((el) => `${el.tagName}.${el.className}`)
+    const stopped = shape()
+    metronome.running = true
+    metronome.beat = 2
+    rerender(
+      <SettingsProvider storage={null}>
+        <MetronomePanel />
+      </SettingsProvider>,
+    )
+    expect(screen.getByRole('button', { name: '■ Stop' })).toBeInTheDocument()
+    expect(shape()).toEqual(stopped)
+    metronome.running = false
+    metronome.beat = null
   })
 })

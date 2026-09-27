@@ -30,3 +30,12 @@
 .hint {
   color: var(--text-dim);
 }
+
+.micStatus {
+  min-height: 1.5em;
+}
+
+/* The same width as "▶ Play" or "■ Stop", so the toolbar doesn't reflow when it flips. */
+.playToggle {
+  min-width: 6.5rem;
+}

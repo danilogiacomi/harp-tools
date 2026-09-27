@@ -86,7 +86,7 @@ function Tuner() {
   )
 }
 
-function ListenMode({ harp, spelling }: ModeProps) {
+export function ListenMode({ harp, spelling }: ModeProps) {
   const { settings, update } = useSettings()
   const { reading, rms, status, error } = usePitch(true)
 
@@ -97,7 +97,10 @@ function ListenMode({ harp, spelling }: ModeProps) {
   return (
     <>
       {error && <MicErrorNotice kind={error} />}
-      {status === 'starting' && <p className={styles.hint}>Waiting for microphone permission…</p>}
+      {/* Always rendered, so the readout doesn't jump down while the mic starts. */}
+      <p className={`${styles.hint} ${styles.micStatus}`}>
+        {status === 'starting' && 'Waiting for microphone permission…'}
+      </p>
       <TunerReadout
         reading={
           reading && detected
@@ -191,7 +194,11 @@ export function PlayMode({ harp, spelling }: ModeProps) {
             ))}
           </select>
         </label>
-        <button type="button" onClick={() => (playing ? stopNote() : startNote(selected))}>
+        <button
+          type="button"
+          className={styles.playToggle}
+          onClick={() => (playing ? stopNote() : startNote(selected))}
+        >
           {playing ? '■ Stop' : '▶ Play'}
         </button>
       </div>
