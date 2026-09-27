@@ -1,6 +1,15 @@
 import { render, screen, within } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
+
+const timers = vi.hoisted(() => ({
+  calls: [] as [string, { requireAudio?: boolean } | undefined][],
+}))
+vi.mock('./hooks/usePracticeTimer', () => ({
+  usePracticeTimer: (pageId: string, opts?: { requireAudio?: boolean }) => {
+    timers.calls.push([pageId, opts])
+  },
+}))
 
 afterEach(() => {
   window.location.hash = ''
@@ -52,5 +61,31 @@ describe('App', () => {
     window.location.hash = '#/nope'
     render(<App />)
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/diatonic harmonica/i)
+  })
+})
+
+describe('practice time', () => {
+  beforeEach(() => {
+    timers.calls = []
+  })
+
+  it.each([
+    ['#/tuner', 'tuner'],
+    ['#/metronome', 'metronome'],
+    ['#/echo', 'echo'],
+    ['#/bend', 'bend'],
+    ['#/scales', 'scales'],
+    ['#/intervals', 'intervals'],
+    ['#/melody', 'melody'],
+  ])('%s counts practice time under "%s", only while audio runs', (hash, pageId) => {
+    window.location.hash = hash
+    render(<App />)
+    expect(timers.calls).toContainEqual([pageId, undefined])
+  })
+
+  it('the home page does not count practice time', () => {
+    window.location.hash = '#/'
+    render(<App />)
+    expect(timers.calls).toEqual([])
   })
 })

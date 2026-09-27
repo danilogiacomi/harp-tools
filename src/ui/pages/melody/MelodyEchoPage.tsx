@@ -32,6 +32,7 @@ import { Stage } from '../../components/game/Stage'
 import styles from '../../components/game/Game.module.css'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
 import { useHarp } from '../../hooks/useHarp'
+import { usePracticeTimer } from '../../hooks/usePracticeTimer'
 import { useScoring } from '../../hooks/useScoring'
 import { useSlot } from '../../hooks/useSlot'
 import { useTimeouts } from '../../hooks/useTimeouts'
@@ -44,6 +45,7 @@ const GAP_MS = 150
 const LENGTHS = Array.from({ length: MAX_PHRASE - MIN_PHRASE + 1 }, (_, i) => MIN_PHRASE + i)
 
 export function MelodyEchoPage() {
+  usePracticeTimer('melody')
   return (
     <GameLayout
       title="Melody echo"

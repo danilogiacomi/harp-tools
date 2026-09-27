@@ -31,6 +31,7 @@ import { Stage } from '../../components/game/Stage'
 import styles from '../../components/game/Game.module.css'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
 import { useHarp } from '../../hooks/useHarp'
+import { usePracticeTimer } from '../../hooks/usePracticeTimer'
 import { useScoring } from '../../hooks/useScoring'
 import { useSlot } from '../../hooks/useSlot'
 import { useTimeouts } from '../../hooks/useTimeouts'
@@ -45,6 +46,7 @@ type Task = 'name' | 'play'
 const article = (word: string) => (/^[aeiou]/i.test(word) ? 'an' : 'a')
 
 export function IntervalsPage() {
+  usePracticeTimer('intervals')
   return (
     <GameLayout
       title="Interval ear training"

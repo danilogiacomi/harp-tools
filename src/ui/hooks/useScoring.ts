@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   SCORED_ROUNDS,
   isFinished,
+  maxScore,
   recordRound,
   sessionScore,
   startSession,
@@ -9,6 +10,7 @@ import {
   type RoundResult,
   type SessionState,
 } from '../../core/games/session'
+import { appendSession } from '../log/practiceLog'
 import { loadBest, saveBestIfHigher } from '../scores/bestScores'
 import { browserStorage } from '../settings/settings'
 import { Slot } from './useSlot'
@@ -38,6 +40,13 @@ export function useScoring(mode: GameMode, bestKey: string, totalRounds = SCORED
     setSession(next)
     if (isFinished(next)) {
       const score = sessionScore(next)
+      // Spec §5: every finished scored session goes to the practice log. The game id is the
+      // best-score key's first segment ("echo|key=C|…" → "echo").
+      appendSession(
+        browserStorage(),
+        { game: bestKey.split('|')[0], score, max: maxScore(next) },
+        Date.now(),
+      )
       if (score > 0 && saveBestIfHigher(browserStorage(), bestKey, score)) {
         setBest(score)
         setNewBest(true)

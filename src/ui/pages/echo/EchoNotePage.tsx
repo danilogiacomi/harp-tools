@@ -28,6 +28,7 @@ import { Stage } from '../../components/game/Stage'
 import styles from '../../components/game/Game.module.css'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
 import { useHarp } from '../../hooks/useHarp'
+import { usePracticeTimer } from '../../hooks/usePracticeTimer'
 import { useScoring } from '../../hooks/useScoring'
 import { useSlot } from '../../hooks/useSlot'
 import { useTimeouts } from '../../hooks/useTimeouts'
@@ -37,6 +38,7 @@ import { useSettings } from '../../settings/SettingsContext'
 const ADVANCE_MS = 1500
 
 export function EchoNotePage() {
+  usePracticeTimer('echo')
   return (
     <GameLayout
       title="Echo the note"

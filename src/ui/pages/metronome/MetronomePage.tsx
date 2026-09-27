@@ -8,6 +8,7 @@ import {
 import { BPM_MAX, BPM_MIN, TapTempo, clampBpm } from '../../../core/rhythm/tempo'
 import { AudioGate } from '../../components/AudioGate'
 import { useMetronome } from '../../hooks/useMetronome'
+import { usePracticeTimer } from '../../hooks/usePracticeTimer'
 import { useSettings } from '../../settings/SettingsContext'
 import styles from './MetronomePage.module.css'
 
@@ -19,6 +20,7 @@ const SUBDIVISIONS: { value: Subdivision; label: string }[] = [
 ]
 
 export function MetronomePage() {
+  usePracticeTimer('metronome')
   return (
     <>
       <h1>Metronome</h1>

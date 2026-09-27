@@ -25,6 +25,7 @@ import styles from '../../components/game/Game.module.css'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
 import { useHarp } from '../../hooks/useHarp'
 import { useMetronome } from '../../hooks/useMetronome'
+import { usePracticeTimer } from '../../hooks/usePracticeTimer'
 import { useScoring } from '../../hooks/useScoring'
 import { useSlot } from '../../hooks/useSlot'
 import { bestScoreKey, tuningPart } from '../../scores/bestScores'
@@ -38,6 +39,7 @@ const DIRECTIONS: { value: Direction; label: string }[] = [
 const ORDINAL: Record<Position, string> = { 1: '1st', 2: '2nd', 3: '3rd' }
 
 export function ScaleRunnerPage() {
+  usePracticeTimer('scales')
   return (
     <GameLayout
       title="Scale runner"

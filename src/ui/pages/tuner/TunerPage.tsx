@@ -10,6 +10,7 @@ import { SoundToggle } from '../../components/SoundToggle'
 import { useHarp } from '../../hooks/useHarp'
 import { useNotePlayer } from '../../hooks/useNotePlayer'
 import { usePitch } from '../../hooks/usePitch'
+import { usePracticeTimer } from '../../hooks/usePracticeTimer'
 import { A4_RANGE } from '../../settings/settings'
 import { useSettings } from '../../settings/SettingsContext'
 import { LevelMeter } from './LevelMeter'
@@ -24,6 +25,7 @@ interface ModeProps {
 }
 
 export function TunerPage() {
+  usePracticeTimer('tuner')
   return (
     <>
       <h1>Tuner</h1>

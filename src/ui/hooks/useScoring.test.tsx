@@ -1,6 +1,8 @@
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { localDate } from '../../core/log/dates'
 import { isFinished, sessionScore } from '../../core/games/session'
+import { loadLog } from '../log/practiceLog'
 import { loadBest } from '../scores/bestScores'
 import { useScoring } from './useScoring'
 
@@ -56,5 +58,44 @@ describe('useScoring', () => {
       zero.result.current.record({ correct: false, points: 0 })
     })
     expect(localStorage.getItem('harp-tools:best-scores')).toBeNull()
+  })
+})
+
+describe('useScoring — practice log', () => {
+  it('logs every finished scored session, including a zero score', () => {
+    const { result } = renderHook(() => useScoring('scored', 'echo|key=C', 2))
+    act(() => {
+      result.current.record({ correct: true, points: 150 })
+    })
+    expect(loadLog(localStorage).sessions).toEqual([])
+    act(() => {
+      result.current.record({ correct: false, points: 0 })
+    })
+    expect(loadLog(localStorage).sessions).toEqual([
+      { date: localDate(Date.now()), game: 'echo', score: 150, max: 400 },
+    ])
+
+    const zero = renderHook(() => useScoring('scored', 'quiz|task=name', 1))
+    act(() => {
+      zero.result.current.record({ correct: false, points: 0 })
+    })
+    expect(loadLog(localStorage).sessions[1]).toMatchObject({ game: 'quiz', score: 0, max: 200 })
+  })
+
+  it('logs a finished session once, even if more rounds are recorded after it', () => {
+    const { result } = renderHook(() => useScoring('scored', 'bend|key=C', 1))
+    act(() => {
+      result.current.record({ correct: true, points: 100 })
+      result.current.record({ correct: true, points: 100 })
+    })
+    expect(loadLog(localStorage).sessions).toHaveLength(1)
+  })
+
+  it('never logs practice', () => {
+    const { result } = renderHook(() => useScoring('practice', 'echo|key=C', 2))
+    act(() => {
+      for (let i = 0; i < 5; i++) result.current.record({ correct: true, points: 100 })
+    })
+    expect(loadLog(localStorage).sessions).toEqual([])
   })
 })
