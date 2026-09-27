@@ -40,16 +40,41 @@ describe('EchoGame', () => {
     )
   })
 
-  it('offers "hear again" and "show me" after 3 s of wrong notes in practice', async () => {
+  it('can replay the note at any time while listening', async () => {
     renderGame()
     await start()
-    hold(62, 0, 2950)
-    expect(screen.queryByRole('button', { name: /Hear again/ })).toBeNull()
-    hold(62, 3000, 3000)
-    fireEvent.click(screen.getByRole('button', { name: /Show me/ }))
-    expect(screen.getByRole('button', { name: '1 C4' })).toHaveAttribute('data-highlight', 'target')
     fireEvent.click(screen.getByRole('button', { name: /Hear again/ }))
     expect(fakeAudio.played).toEqual([[60], [60]])
+  })
+
+  it('reveals how to play the note in practice mode', async () => {
+    renderGame()
+    await start()
+    expect(screen.queryByText(/Hole 1/)).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /Show me/ }))
+    expect(screen.getByText('C4: Hole 1 · blow (1)')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '1 C4' })).toHaveAttribute('data-highlight', 'target')
+    expect(screen.queryByRole('button', { name: /Show me/ })).toBeNull()
+  })
+
+  it('names every hole that plays the note', async () => {
+    render(
+      <SettingsProvider storage={null}>
+        {/* rng 0.2 → G4 in the 19-note C-harp pool, playable as -2 or 3 */}
+        <EchoGame rng={scriptedRng([0.2])} />
+      </SettingsProvider>,
+    )
+    await start()
+    fireEvent.click(screen.getByRole('button', { name: /Show me/ }))
+    expect(screen.getByText(/Hole 2 · draw \(-2\) or Hole 3 · blow \(3\)/)).toBeInTheDocument()
+  })
+
+  it('offers "hear again" but not "show me" in scored mode', async () => {
+    renderGame()
+    fireEvent.click(screen.getByRole('button', { name: 'Scored' }))
+    await start()
+    expect(screen.getByRole('button', { name: /Hear again/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Show me/ })).toBeNull()
   })
 
   it('scores a quick hit in scored mode', async () => {

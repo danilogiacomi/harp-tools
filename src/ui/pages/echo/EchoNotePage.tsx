@@ -15,7 +15,7 @@ import {
 } from '../../../core/games/notePool'
 import type { Rng } from '../../../core/games/random'
 import { isFinished, type GameMode } from '../../../core/games/session'
-import { buildHarp, findNotes, noteId, tabLabel } from '../../../core/harmonica/harp'
+import { buildHarp, describeNote, findNotes, noteId, tabLabel } from '../../../core/harmonica/harp'
 import { keySpelling } from '../../../core/harmonica/keys'
 import { noteName } from '../../../core/music/noteNames'
 import { HarmonicaDiagram, type Highlight } from '../../components/HarmonicaDiagram'
@@ -201,18 +201,25 @@ function EchoRun({ audio, mode, filter, rng }: RunProps) {
             <p className={styles.prompt}>Play it back and hold it</p>
             <HoldMeter progress={view.round?.progress ?? 0} />
             {mode === 'scored' && <p className={styles.hint}>{secondsLeft} s left</p>}
-            {mode === 'practice' && view.round?.helpOffered && (
-              <div className={styles.actions}>
-                <button
-                  type="button"
-                  onClick={() => view.target !== null && void audio.playSequence([view.target])}
-                >
-                  🔊 Hear again
-                </button>
+            <div className={styles.actions}>
+              <button
+                type="button"
+                onClick={() => view.target !== null && void audio.playSequence([view.target])}
+              >
+                🔊 Hear again
+              </button>
+              {/* Revealing the hole would give the answer away in scored mode. */}
+              {mode === 'practice' && !view.showTarget && (
                 <button type="button" onClick={() => setView((v) => ({ ...v, showTarget: true }))}>
                   👀 Show me
                 </button>
-              </div>
+              )}
+            </div>
+            {view.showTarget && view.target !== null && (
+              <p className={styles.hint}>
+                {noteName(view.target, spelling)}:{' '}
+                {visible(view.target).map(describeNote).join(' or ')}
+              </p>
             )}
           </>
         )}

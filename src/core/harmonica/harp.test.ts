@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { buildHarp, findNotes, noteId, tabLabel, type HarpNote, type Technique } from './harp'
+import {
+  buildHarp,
+  describeNote,
+  findNotes,
+  noteId,
+  tabLabel,
+  type HarpNote,
+  type Technique,
+} from './harp'
 import { HARP_KEYS } from './keys'
 
 const c = buildHarp('C')
@@ -104,6 +112,20 @@ describe('tabLabel', () => {
     expect(tabLabel(get(c, 10, 'blowBend', 2))).toBe("10''")
     expect(tabLabel(get(c, 6, 'overblow'))).toBe('6o')
     expect(tabLabel(get(c, 7, 'overdraw'))).toBe('7od')
+  })
+})
+
+describe('describeNote', () => {
+  it('says which hole and how to play it', () => {
+    expect(describeNote(get(c, 4, 'blow'))).toBe('Hole 4 · blow (4)')
+    expect(describeNote(get(c, 2, 'draw'))).toBe('Hole 2 · draw (-2)')
+    expect(describeNote(get(c, 3, 'drawBend', 1))).toBe("Hole 3 · draw, bent a half step (-3')")
+    expect(describeNote(get(c, 3, 'drawBend', 3))).toBe(
+      "Hole 3 · draw, bent a step and a half (-3''')",
+    )
+    expect(describeNote(get(c, 10, 'blowBend', 2))).toBe("Hole 10 · blow, bent a whole step (10'')")
+    expect(describeNote(get(c, 6, 'overblow'))).toBe('Hole 6 · overblow (6o)')
+    expect(describeNote(get(c, 7, 'overdraw'))).toBe('Hole 7 · overdraw (7od)')
   })
 })
 

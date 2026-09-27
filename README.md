@@ -121,10 +121,10 @@ Codex rollouts) on the machine that generated this section.
 
 | Metric | Value |
 |---|---|
-| **Total tokens** | **87.1M** |
-| Token breakdown | 561.0K output · 770 input · 1.8M cache-write · 84.7M cache-read |
-| Agent time | ~2h 36m active (23h 1m wall-clock) |
-| Turns | 315 assistant turns · 152 tool calls |
+| **Total tokens** | **98.3M** |
+| Token breakdown | 575.2K output · 818 input · 2.7M cache-write · 95.0M cache-read |
+| Agent time | ~2h 41m active (24h 39m wall-clock) |
+| Turns | 339 assistant turns · 167 tool calls |
 | Agents / models | Claude Code — claude-opus-5-5 |
 | As of | 2026-09-26 → 2026-09-27 |
 

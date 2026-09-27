@@ -95,6 +95,21 @@ export function tabLabel(note: HarpNote): string {
   }
 }
 
+const BEND_DEPTH = ['', 'a half step', 'a whole step', 'a step and a half']
+
+/** How to play a note in words, e.g. "Hole 3 · draw, bent a whole step (-3'')". */
+export function describeNote(note: HarpNote): string {
+  const how = {
+    blow: 'blow',
+    draw: 'draw',
+    blowBend: `blow, bent ${BEND_DEPTH[note.bendSteps]}`,
+    drawBend: `draw, bent ${BEND_DEPTH[note.bendSteps]}`,
+    overblow: 'overblow',
+    overdraw: 'overdraw',
+  }[note.technique]
+  return `Hole ${note.hole} · ${how} (${tabLabel(note)})`
+}
+
 export function noteId(note: HarpNote): string {
   return `${note.hole}:${note.technique}:${note.bendSteps}`
 }
