@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BEST_SCORES_KEY, bestScoreKey, loadBest, saveBestIfHigher } from './bestScores'
+import { BEST_SCORES_KEY, bestScoreKey, loadBest, saveBestIfHigher, tuningPart } from './bestScores'
 
 function memoryStorage(initial: Record<string, string> = {}) {
   const data = { ...initial }
@@ -62,5 +62,21 @@ describe('best scores', () => {
     expect(loadBest(throwing, 'k')).toBeNull()
     expect(saveBestIfHigher(throwing, 'k', 10)).toBe(false)
     expect(saveBestIfHigher(null, 'k', 10)).toBe(false)
+  })
+})
+
+describe('tuningPart', () => {
+  it('leaves Richter keys exactly as before, so saved bests survive', () => {
+    expect(bestScoreKey('echo', { key: 'C', tol: 25, ...tuningPart('richter') })).toBe(
+      'echo|key=C|tol=25',
+    )
+  })
+  it('adds the tuning for the other tunings', () => {
+    expect(bestScoreKey('echo', { key: 'C', tol: 25, ...tuningPart('paddy') })).toBe(
+      'echo|key=C|tol=25|tuning=paddy',
+    )
+    expect(bestScoreKey('quiz', { key: 'G', ...tuningPart('naturalMinor') })).toBe(
+      'quiz|key=G|tuning=naturalMinor',
+    )
   })
 })

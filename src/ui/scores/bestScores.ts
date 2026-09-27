@@ -1,4 +1,6 @@
-export type GameId = 'echo' | 'bend' | 'scales' | 'intervals' | 'melody'
+import type { TuningId } from '../../core/harmonica/tunings'
+
+export type GameId = 'echo' | 'bend' | 'scales' | 'intervals' | 'melody' | 'hole-finder' | 'quiz'
 
 export const BEST_SCORES_KEY = 'harp-tools:best-scores'
 
@@ -13,6 +15,14 @@ export function bestScoreKey(
     .sort()
     .map((k) => `${k}=${String(parts[k])}`)
   return [game, ...fields].join('|')
+}
+
+/**
+ * The tuning part of a best-score key (spec §1): nothing for Richter, so the keys saved before
+ * tunings existed still match; `{ tuning }` for the others.
+ */
+export function tuningPart(tuning: TuningId): Record<string, string> {
+  return tuning === 'richter' ? {} : { tuning }
 }
 
 function readAll(storage: Pick<Storage, 'getItem'> | null): BestMap {

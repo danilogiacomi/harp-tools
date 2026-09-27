@@ -82,3 +82,19 @@ describe('saveSettings', () => {
     expect(() => saveSettings(full, DEFAULT_SETTINGS)).not.toThrow()
   })
 })
+
+describe('tuning and sound', () => {
+  it('default to Richter and the Reed voice', () => {
+    expect(DEFAULT_SETTINGS).toMatchObject({ tuning: 'richter', sound: 'reed' })
+  })
+  it('keep valid saved values', () => {
+    expect(sanitizeSettings({ tuning: 'naturalMinor', sound: 'pure' })).toMatchObject({
+      tuning: 'naturalMinor',
+      sound: 'pure',
+    })
+  })
+  it('repair unknown or wrongly typed values', () => {
+    expect(sanitizeSettings({ tuning: 'solo', sound: 'organ' })).toEqual(DEFAULT_SETTINGS)
+    expect(sanitizeSettings({ tuning: 3, sound: null })).toEqual(DEFAULT_SETTINGS)
+  })
+})

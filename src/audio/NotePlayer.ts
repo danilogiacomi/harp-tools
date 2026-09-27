@@ -1,3 +1,7 @@
+/** Spec §6: the synth's two reference voices. */
+export type SoundVoice = 'reed' | 'pure'
+export const SOUND_VOICES: readonly SoundVoice[] = ['reed', 'pure']
+
 /** Plays reference notes. SynthNotePlayer now; a sample-based player can replace it later. */
 export interface NotePlayer {
   /** Plays for `durationMs` (default 1000); resolves when the note ends. */

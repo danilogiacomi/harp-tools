@@ -1,10 +1,16 @@
 import { HARP_KEYS, type HarpKey } from '../../core/harmonica/keys'
 import { BPM_MAX, BPM_MIN } from '../../core/rhythm/tempo'
+import { SOUND_VOICES, type SoundVoice } from '../../audio/NotePlayer'
+import { TUNING_IDS, type TuningId } from '../../core/harmonica/tunings'
 
 export type LabelMode = 'note' | 'tab'
 
 export interface Settings {
   key: HarpKey
+  /** Spec §1: the harp's tuning; every harp-using page follows it. */
+  tuning: TuningId
+  /** Spec §6: the reference note voice. */
+  sound: SoundVoice
   /** Reference pitch for A4 in Hz. */
   a4: number
   /** Show over-notes most harps can't play reliably. */
@@ -23,6 +29,8 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   key: 'C',
+  tuning: 'richter',
+  sound: 'reed',
   a4: 440,
   showAdvanced: false,
   labelMode: 'note',
@@ -49,6 +57,8 @@ export function sanitizeSettings(raw: unknown): Settings {
   const d = DEFAULT_SETTINGS
   return {
     key: HARP_KEYS.includes(r.key as HarpKey) ? (r.key as HarpKey) : d.key,
+    tuning: TUNING_IDS.includes(r.tuning as TuningId) ? (r.tuning as TuningId) : d.tuning,
+    sound: SOUND_VOICES.includes(r.sound as SoundVoice) ? (r.sound as SoundVoice) : d.sound,
     a4: inRange(r.a4, A4_RANGE) ? r.a4 : d.a4,
     showAdvanced: typeof r.showAdvanced === 'boolean' ? r.showAdvanced : d.showAdvanced,
     labelMode: r.labelMode === 'note' || r.labelMode === 'tab' ? r.labelMode : d.labelMode,
