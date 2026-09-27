@@ -27,7 +27,7 @@ import { ModeToggle } from '../../components/game/ModeToggle'
 import { PoolFilterPanel } from '../../components/game/PoolFilterPanel'
 import { ScorePanel } from '../../components/game/ScorePanel'
 import styles from '../../components/game/Game.module.css'
-import { useGameAudio, type HeardListener } from '../../hooks/useGameAudio'
+import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
 import { useScoring } from '../../hooks/useScoring'
 import { useSlot } from '../../hooks/useSlot'
 import { useTimeouts } from '../../hooks/useTimeouts'
@@ -51,6 +51,8 @@ export function BendTrainerPage() {
 
 export function BendGame({ rng = Math.random }: { rng?: Rng }) {
   const { settings } = useSettings()
+  // Owned here, not by the keyed run, so a settings change doesn't restart the mic.
+  const audio = useGameAudio(true)
   const [mode, setMode] = useState<GameMode>('practice')
   const [filter, setFilter] = useState<PoolFilter>(BEND_FILTER)
   const runKey = [
@@ -67,7 +69,7 @@ export function BendGame({ rng = Math.random }: { rng?: Rng }) {
         <ModeToggle mode={mode} onChange={setMode} />
       </div>
       <PoolFilterPanel filter={filter} onChange={setFilter} groups={[]} advancedToggle={false} />
-      <BendRun key={runKey} mode={mode} filter={filter} rng={rng} />
+      <BendRun key={runKey} audio={audio} mode={mode} filter={filter} rng={rng} />
     </>
   )
 }
@@ -82,12 +84,13 @@ interface View {
 const IDLE: View = { phase: 'idle', target: null, round: null, points: 0 }
 
 interface RunProps {
+  audio: GameAudio
   mode: GameMode
   filter: PoolFilter
   rng: Rng
 }
 
-function BendRun({ mode, filter, rng }: RunProps) {
+function BendRun({ audio, mode, filter, rng }: RunProps) {
   const { settings } = useSettings()
   const harp = useMemo(() => buildHarp(settings.key), [settings.key])
   const bends = useMemo(() => buildPool(harp, filter, false), [harp, filter])
@@ -103,7 +106,6 @@ function BendRun({ mode, filter, rng }: RunProps) {
   )
   const slot = useSlot<ListenRound>()
   const timeouts = useTimeouts()
-  const audio = useGameAudio(true)
   const [choice, setChoice] = useState('random')
   const [view, setView] = useState<View>(IDLE)
   const [depth, setDepth] = useState<number | null>(null)
@@ -143,10 +145,14 @@ function BendRun({ mode, filter, rng }: RunProps) {
     if (!isFinished(session)) timeouts.after(ADVANCE_MS, () => startRound(target))
   }
   useEffect(() => audio.listen(onHeard))
+  // The prompt player outlives this run; a remount must not leave its prompt sounding.
+  const { cancelPlayback } = audio
+  useEffect(() => cancelPlayback, [cancelPlayback])
 
   const stop = () => {
     timeouts.clear()
     slot.set(null)
+    audio.cancelPlayback()
     setView(IDLE)
   }
   const restart = () => {
@@ -204,11 +210,15 @@ function BendRun({ mode, filter, rng }: RunProps) {
         </div>
       )}
       <div className={styles.stage}>
-        {view.phase === 'idle' && !audio.error && (
-          <button type="button" className={styles.primary} onClick={() => startRound(null)}>
-            ▶ Start
-          </button>
-        )}
+        {view.phase === 'idle' &&
+          !audio.error &&
+          (audio.status === 'listening' ? (
+            <button type="button" className={styles.primary} onClick={() => startRound(null)}>
+              ▶ Start
+            </button>
+          ) : (
+            <p className={styles.hint}>Waiting for microphone…</p>
+          ))}
         {target && view.phase !== 'idle' && (
           <>
             <p className={styles.prompt}>

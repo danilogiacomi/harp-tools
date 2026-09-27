@@ -29,7 +29,7 @@ import { ModeToggle } from '../../components/game/ModeToggle'
 import { PoolFilterPanel } from '../../components/game/PoolFilterPanel'
 import { ScorePanel } from '../../components/game/ScorePanel'
 import styles from '../../components/game/Game.module.css'
-import { useGameAudio, type HeardListener } from '../../hooks/useGameAudio'
+import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
 import { useScoring } from '../../hooks/useScoring'
 import { useSlot } from '../../hooks/useSlot'
 import { useTimeouts } from '../../hooks/useTimeouts'
@@ -55,6 +55,8 @@ export function MelodyEchoPage() {
 
 export function MelodyGame({ rng = Math.random }: { rng?: Rng }) {
   const { settings } = useSettings()
+  // Owned here, not by the keyed run, so a settings change doesn't restart the mic.
+  const audio = useGameAudio(true)
   const [mode, setMode] = useState<GameMode>('practice')
   const [filter, setFilter] = useState<PoolFilter>(DEFAULT_POOL_FILTER)
   const [practiceLength, setPracticeLength] = useState(3)
@@ -92,6 +94,7 @@ export function MelodyGame({ rng = Math.random }: { rng?: Rng }) {
       <PoolFilterPanel filter={filter} onChange={setFilter} />
       <MelodyRun
         key={runKey}
+        audio={audio}
         mode={mode}
         filter={filter}
         practiceLength={practiceLength}
@@ -111,13 +114,14 @@ interface View {
 const IDLE: View = { phase: 'idle', phrase: [], state: null, points: 0 }
 
 interface RunProps {
+  audio: GameAudio
   mode: GameMode
   filter: PoolFilter
   practiceLength: number
   rng: Rng
 }
 
-function MelodyRun({ mode, filter, practiceLength, rng }: RunProps) {
+function MelodyRun({ audio, mode, filter, practiceLength, rng }: RunProps) {
   const { settings } = useSettings()
   const harp = useMemo(() => buildHarp(settings.key), [settings.key])
   const midis = useMemo(
@@ -137,7 +141,6 @@ function MelodyRun({ mode, filter, practiceLength, rng }: RunProps) {
   )
   const slot = useSlot<MelodyRound>()
   const timeouts = useTimeouts()
-  const audio = useGameAudio(true)
   const [length, setLength] = useState(mode === 'scored' ? MIN_PHRASE : practiceLength)
   const [view, setView] = useState<View>(IDLE)
 
@@ -176,6 +179,9 @@ function MelodyRun({ mode, filter, practiceLength, rng }: RunProps) {
     }
   }
   useEffect(() => audio.listen(onHeard))
+  // The prompt player outlives this run; a remount must not leave its prompt sounding.
+  const { cancelPlayback } = audio
+  useEffect(() => cancelPlayback, [cancelPlayback])
 
   const stop = () => {
     timeouts.clear()
@@ -226,11 +232,15 @@ function MelodyRun({ mode, filter, practiceLength, rng }: RunProps) {
         <p className={styles.hint}>Phrase length: {length}</p>
       )}
       <div className={styles.stage}>
-        {view.phase === 'idle' && !audio.error && (
-          <button type="button" className={styles.primary} onClick={() => newPhrase(length)}>
-            ▶ Start
-          </button>
-        )}
+        {view.phase === 'idle' &&
+          !audio.error &&
+          (audio.status === 'listening' ? (
+            <button type="button" className={styles.primary} onClick={() => newPhrase(length)}>
+              ▶ Start
+            </button>
+          ) : (
+            <p className={styles.hint}>Waiting for microphone…</p>
+          ))}
         {view.phase === 'prompt' && <p className={styles.prompt}>Listen…</p>}
         {view.phase === 'listening' && (
           <>

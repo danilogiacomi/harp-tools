@@ -115,4 +115,18 @@ describe('ScaleGame', () => {
     expect(screen.getByText('✓ Run complete!')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '▶ Again' })).toBeInTheDocument()
   })
+
+  it('keeps the mic on when a setting change restarts the run', () => {
+    renderGame()
+    fireEvent.click(screen.getByRole('button', { name: 'Scored' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Practice' }))
+    expect(fakeAudio.micStarts).toBe(1)
+  })
+
+  it('waits for the microphone before offering Start', () => {
+    fakeAudio.micStatus = 'starting'
+    renderGame()
+    expect(screen.getByText('Waiting for microphone…')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '▶ Start' })).toBeNull()
+  })
 })

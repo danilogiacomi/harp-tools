@@ -20,8 +20,11 @@ export interface GameAudio {
   detectedMidi: number | null
   /** The clock the listener's timestamps use; call it from handlers, never during render. */
   now: () => number
-  /** Registers the function that receives every gated frame. Call it from an effect. */
-  listen: (listener: HeardListener) => void
+  /**
+   * Registers the function that receives every gated frame; returns its unregister. Call it
+   * from an effect.
+   */
+  listen: (listener: HeardListener) => () => void
   playSequence: (midis: readonly number[], noteMs?: number, gapMs?: number) => Promise<boolean>
   cancelPlayback: () => void
 }
@@ -37,8 +40,11 @@ class HeardRouter {
 
   constructor(private readonly onDetected: (midi: number | null) => void) {}
 
-  listen = (listener: HeardListener): void => {
+  listen = (listener: HeardListener): (() => void) => {
     this.listener = listener
+    return () => {
+      if (this.listener === listener) this.listener = () => {}
+    }
   }
 
   setA4(a4: number): void {

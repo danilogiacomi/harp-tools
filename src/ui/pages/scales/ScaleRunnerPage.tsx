@@ -22,7 +22,7 @@ import { HoldMeter } from '../../components/game/HoldMeter'
 import { ModeToggle } from '../../components/game/ModeToggle'
 import { ScorePanel } from '../../components/game/ScorePanel'
 import styles from '../../components/game/Game.module.css'
-import { useGameAudio, type HeardListener } from '../../hooks/useGameAudio'
+import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
 import { useMetronome } from '../../hooks/useMetronome'
 import { useScoring } from '../../hooks/useScoring'
 import { useSlot } from '../../hooks/useSlot'
@@ -49,6 +49,8 @@ export function ScaleRunnerPage() {
 
 export function ScaleGame() {
   const { settings } = useSettings()
+  // Owned here, not by the keyed run, so a settings change doesn't restart the mic.
+  const audio = useGameAudio(true)
   const [mode, setMode] = useState<GameMode>('practice')
   const [scaleId, setScaleId] = useState<ScaleId>('major')
   const [position, setPosition] = useState<Position>(1)
@@ -192,6 +194,7 @@ export function ScaleGame() {
       {path ? (
         <ScaleSession
           key={runKey}
+          audio={audio}
           mode={mode}
           harp={harp}
           path={path}
@@ -210,6 +213,7 @@ export function ScaleGame() {
 }
 
 interface SessionProps {
+  audio: GameAudio
   mode: GameMode
   harp: HarpNote[]
   path: HarpNote[]
@@ -227,13 +231,20 @@ interface View {
 
 const IDLE: View = { phase: 'idle', index: 0, progress: 0, lastPoints: null }
 
-function ScaleSession({ mode, harp, path, direction, withMetronome, bestKey }: SessionProps) {
+function ScaleSession({
+  audio,
+  mode,
+  harp,
+  path,
+  direction,
+  withMetronome,
+  bestKey,
+}: SessionProps) {
   const { settings } = useSettings()
   const spelling = keySpelling(settings.key)
   const sequence = useMemo(() => runSequence(path, direction), [path, direction])
   const scoring = useScoring(mode, bestKey, sequence.length)
   const slot = useSlot<ScaleRun>()
-  const audio = useGameAudio(true)
   const metronomeConfig = useMemo<MetronomeConfig>(
     () => ({ bpm: settings.bpm, signature: TIME_SIGNATURES[2], subdivision: 1 }),
     [settings.bpm],
@@ -300,11 +311,15 @@ function ScaleSession({ mode, harp, path, direction, withMetronome, bestKey }: S
       {audio.error && <MicErrorNotice kind={audio.error} />}
       <ScorePanel scoring={scoring} onRestart={start} />
       <div className={styles.stage}>
-        {view.phase === 'idle' && !audio.error && (
-          <button type="button" className={styles.primary} onClick={start}>
-            ▶ Start
-          </button>
-        )}
+        {view.phase === 'idle' &&
+          !audio.error &&
+          (audio.status === 'listening' ? (
+            <button type="button" className={styles.primary} onClick={start}>
+              ▶ Start
+            </button>
+          ) : (
+            <p className={styles.hint}>Waiting for microphone…</p>
+          ))}
         {next && (
           <>
             <p className={styles.prompt}>

@@ -29,7 +29,7 @@ import { ModeToggle } from '../../components/game/ModeToggle'
 import { PoolFilterPanel } from '../../components/game/PoolFilterPanel'
 import { ScorePanel } from '../../components/game/ScorePanel'
 import styles from '../../components/game/Game.module.css'
-import { useGameAudio, type HeardListener } from '../../hooks/useGameAudio'
+import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
 import { useScoring } from '../../hooks/useScoring'
 import { useSlot } from '../../hooks/useSlot'
 import { useTimeouts } from '../../hooks/useTimeouts'
@@ -58,6 +58,8 @@ export function IntervalGame({ rng = Math.random }: { rng?: Rng }) {
   const { settings } = useSettings()
   const [mode, setMode] = useState<GameMode>('practice')
   const [task, setTask] = useState<Task>('name')
+  // Owned here, not by the keyed run, so a settings change doesn't restart the mic.
+  const audio = useGameAudio(task === 'play')
   const [allowed, setAllowed] = useState<readonly IntervalId[]>(ALL_INTERVALS)
   const [filter, setFilter] = useState<PoolFilter>(DEFAULT_POOL_FILTER)
 
@@ -109,6 +111,7 @@ export function IntervalGame({ rng = Math.random }: { rng?: Rng }) {
       <PoolFilterPanel filter={filter} onChange={setFilter} />
       <IntervalRun
         key={runKey}
+        audio={audio}
         mode={mode}
         task={task}
         allowed={allowed}
@@ -140,6 +143,7 @@ const IDLE: View = {
 }
 
 interface RunProps {
+  audio: GameAudio
   mode: GameMode
   task: Task
   allowed: readonly IntervalId[]
@@ -147,7 +151,7 @@ interface RunProps {
   rng: Rng
 }
 
-function IntervalRun({ mode, task, allowed, filter, rng }: RunProps) {
+function IntervalRun({ audio, mode, task, allowed, filter, rng }: RunProps) {
   const { settings } = useSettings()
   const harp = useMemo(() => buildHarp(settings.key), [settings.key])
   const midis = useMemo(
@@ -169,7 +173,6 @@ function IntervalRun({ mode, task, allowed, filter, rng }: RunProps) {
   )
   const slot = useSlot<ListenRound>()
   const timeouts = useTimeouts()
-  const audio = useGameAudio(task === 'play')
   const [view, setView] = useState<View>(IDLE)
 
   const promptNotes = (q: IntervalQuestion) => (task === 'name' ? [q.low, q.high] : [q.low])
@@ -220,6 +223,9 @@ function IntervalRun({ mode, task, allowed, filter, rng }: RunProps) {
     conclude(correct, points)
   }
   useEffect(() => audio.listen(onHeard))
+  // The prompt player outlives this run; a remount must not leave its prompt sounding.
+  const { cancelPlayback } = audio
+  useEffect(() => cancelPlayback, [cancelPlayback])
 
   const stop = () => {
     timeouts.clear()
@@ -266,11 +272,15 @@ function IntervalRun({ mode, task, allowed, filter, rng }: RunProps) {
       {task === 'play' && audio.error && <MicErrorNotice kind={audio.error} />}
       <ScorePanel scoring={scoring} onRestart={restart} />
       <div className={styles.stage}>
-        {view.phase === 'idle' && !(task === 'play' && audio.error) && (
-          <button type="button" className={styles.primary} onClick={() => void startRound()}>
-            ▶ Start
-          </button>
-        )}
+        {view.phase === 'idle' &&
+          !(task === 'play' && audio.error) &&
+          (task === 'name' || audio.status === 'listening' ? (
+            <button type="button" className={styles.primary} onClick={() => void startRound()}>
+              ▶ Start
+            </button>
+          ) : (
+            <p className={styles.hint}>Waiting for microphone…</p>
+          ))}
         {view.phase === 'prompt' && (
           <p className={styles.prompt}>
             {task === 'play' ? `Listen… then play ${playTask}` : 'Listen…'}

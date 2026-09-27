@@ -118,4 +118,23 @@ describe('IntervalGame', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('No enabled interval fits these notes')
     expect(screen.queryByRole('button', { name: '▶ Start' })).toBeNull()
   })
+
+  it('uses the mic only in play mode, and keeps it on across setting changes', () => {
+    renderGame()
+    fireEvent.click(screen.getByRole('button', { name: 'Scored' }))
+    expect(fakeAudio.micStarts).toBe(0)
+    fireEvent.click(screen.getByRole('button', { name: 'Play it' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Practice' }))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Tritone' }))
+    expect(fakeAudio.micStarts).toBe(1)
+  })
+
+  it('waits for the microphone only in play mode', () => {
+    fakeAudio.micStatus = 'starting'
+    renderGame()
+    expect(screen.getByRole('button', { name: '▶ Start' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Play it' }))
+    expect(screen.getByText('Waiting for microphone…')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '▶ Start' })).toBeNull()
+  })
 })

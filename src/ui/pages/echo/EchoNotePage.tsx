@@ -26,7 +26,7 @@ import { ModeToggle } from '../../components/game/ModeToggle'
 import { PoolFilterPanel } from '../../components/game/PoolFilterPanel'
 import { ScorePanel } from '../../components/game/ScorePanel'
 import styles from '../../components/game/Game.module.css'
-import { useGameAudio, type HeardListener } from '../../hooks/useGameAudio'
+import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
 import { useScoring } from '../../hooks/useScoring'
 import { useSlot } from '../../hooks/useSlot'
 import { useTimeouts } from '../../hooks/useTimeouts'
@@ -48,6 +48,8 @@ export function EchoNotePage() {
 
 export function EchoGame({ rng = Math.random }: { rng?: Rng }) {
   const { settings } = useSettings()
+  // Owned here, not by the keyed run, so a settings change doesn't restart the mic.
+  const audio = useGameAudio(true)
   const [mode, setMode] = useState<GameMode>('practice')
   const [filter, setFilter] = useState<PoolFilter>(DEFAULT_POOL_FILTER)
   // Any change here remounts the run: timers stop, the prompt is cancelled, the score resets.
@@ -66,7 +68,7 @@ export function EchoGame({ rng = Math.random }: { rng?: Rng }) {
         <ModeToggle mode={mode} onChange={setMode} />
       </div>
       <PoolFilterPanel filter={filter} onChange={setFilter} />
-      <EchoRun key={runKey} mode={mode} filter={filter} rng={rng} />
+      <EchoRun key={runKey} audio={audio} mode={mode} filter={filter} rng={rng} />
     </>
   )
 }
@@ -84,12 +86,13 @@ interface View {
 const IDLE: View = { phase: 'idle', target: null, round: null, showTarget: false, points: 0 }
 
 interface RunProps {
+  audio: GameAudio
   mode: GameMode
   filter: PoolFilter
   rng: Rng
 }
 
-function EchoRun({ mode, filter, rng }: RunProps) {
+function EchoRun({ audio, mode, filter, rng }: RunProps) {
   const { settings } = useSettings()
   const harp = useMemo(() => buildHarp(settings.key), [settings.key])
   const midis = useMemo(
@@ -109,7 +112,6 @@ function EchoRun({ mode, filter, rng }: RunProps) {
   )
   const slot = useSlot<ListenRound>()
   const timeouts = useTimeouts()
-  const audio = useGameAudio(true)
   const [view, setView] = useState<View>(IDLE)
 
   const startRound = async (previous: number | null) => {
@@ -138,6 +140,9 @@ function EchoRun({ mode, filter, rng }: RunProps) {
     if (!isFinished(session)) timeouts.after(ADVANCE_MS, () => void startRound(round.target))
   }
   useEffect(() => audio.listen(onHeard))
+  // The prompt player outlives this run; a remount must not leave its prompt sounding.
+  const { cancelPlayback } = audio
+  useEffect(() => cancelPlayback, [cancelPlayback])
 
   const stop = () => {
     timeouts.clear()
@@ -181,11 +186,15 @@ function EchoRun({ mode, filter, rng }: RunProps) {
       {audio.error && <MicErrorNotice kind={audio.error} />}
       <ScorePanel scoring={scoring} onRestart={restart} />
       <div className={styles.stage}>
-        {view.phase === 'idle' && !audio.error && (
-          <button type="button" className={styles.primary} onClick={() => void startRound(null)}>
-            ▶ Start
-          </button>
-        )}
+        {view.phase === 'idle' &&
+          !audio.error &&
+          (audio.status === 'listening' ? (
+            <button type="button" className={styles.primary} onClick={() => void startRound(null)}>
+              ▶ Start
+            </button>
+          ) : (
+            <p className={styles.hint}>Waiting for microphone…</p>
+          ))}
         {view.phase === 'prompt' && <p className={styles.prompt}>Listen…</p>}
         {view.phase === 'listening' && (
           <>

@@ -71,4 +71,18 @@ describe('MelodyGame', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Round 2 of 10 · Score 191')
     expect(screen.getByText('Phrase length: 3')).toBeInTheDocument()
   })
+
+  it('keeps the mic on when a setting change restarts the run', () => {
+    renderGame()
+    fireEvent.click(screen.getByRole('button', { name: 'Scored' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Practice' }))
+    expect(fakeAudio.micStarts).toBe(1)
+  })
+
+  it('waits for the microphone before offering Start', () => {
+    fakeAudio.micStatus = 'starting'
+    renderGame()
+    expect(screen.getByText('Waiting for microphone…')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '▶ Start' })).toBeNull()
+  })
 })

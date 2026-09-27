@@ -84,4 +84,26 @@ describe('BendGame', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('These holes have no bends')
     expect(screen.queryByRole('button', { name: '▶ Start' })).toBeNull()
   })
+
+  it('keeps the mic on when a setting change restarts the run', () => {
+    renderGame()
+    fireEvent.click(screen.getByRole('button', { name: 'Scored' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Practice' }))
+    expect(fakeAudio.micStarts).toBe(1)
+  })
+
+  it('waits for the microphone before offering Start', () => {
+    fakeAudio.micStatus = 'starting'
+    renderGame()
+    expect(screen.getByText('Waiting for microphone…')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '▶ Start' })).toBeNull()
+  })
+
+  it('silences the target when stopped', () => {
+    renderGame()
+    fireEvent.click(screen.getByRole('button', { name: '▶ Start' }))
+    fireEvent.click(screen.getByRole('button', { name: /Hear target/ }))
+    fireEvent.click(screen.getByRole('button', { name: '■ Stop' }))
+    expect(fakeAudio.cancels).toBe(1)
+  })
 })
