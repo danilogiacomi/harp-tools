@@ -6,6 +6,7 @@ import { HomePage } from './pages/HomePage'
 import { IntervalsPage } from './pages/intervals/IntervalsPage'
 import { MelodyEchoPage } from './pages/melody/MelodyEchoPage'
 import { MetronomePage } from './pages/metronome/MetronomePage'
+import { PositionsPage } from './pages/positions/PositionsPage'
 import { ScaleRunnerPage } from './pages/scales/ScaleRunnerPage'
 import { TunerPage } from './pages/tuner/TunerPage'
 import { useHashRoute } from './router'
@@ -16,6 +17,7 @@ const ROUTES: Record<string, ComponentType> = {
   '/': HomePage,
   '/tuner': TunerPage,
   '/metronome': MetronomePage,
+  '/positions': PositionsPage,
   '/echo': EchoNotePage,
   '/bend': BendTrainerPage,
   '/scales': ScaleRunnerPage,

@@ -32,6 +32,12 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
         title: 'Metronome',
         text: 'Steady time with tap tempo, accents and subdivisions.',
       },
+      {
+        id: 'positions',
+        icon: '🧭',
+        title: 'Positions & keys',
+        text: 'Which harp to use for a song, and what each harp plays in every position.',
+      },
     ],
   },
   {

@@ -97,4 +97,11 @@ describe('practice time', () => {
     render(<App />)
     expect(timers.calls).toEqual([])
   })
+
+  it('#/positions counts visible time without audio', () => {
+    window.location.hash = '#/positions'
+    render(<App />)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Positions & keys')
+    expect(timers.calls).toContainEqual(['positions', { requireAudio: false }])
+  })
 })
