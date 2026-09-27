@@ -77,6 +77,21 @@ describe('EchoGame', () => {
     expect(screen.queryByRole('button', { name: /Show me/ })).toBeNull()
   })
 
+  it.each(['Practice', 'Scored'])(
+    'keeps the same stage rows in every phase (%s), so the layout does not jump',
+    async (mode) => {
+      const { container } = renderGame()
+      fireEvent.click(screen.getByRole('button', { name: mode }))
+      const rows = () => container.querySelector('.status')!.children.length
+      expect(rows()).toBe(3)
+      await start()
+      expect(rows()).toBe(3)
+      hold(60, 0, 500)
+      expect(screen.getByText(/Correct — C4/)).toBeInTheDocument()
+      expect(rows()).toBe(3)
+    },
+  )
+
   it('scores a quick hit in scored mode', async () => {
     renderGame()
     fireEvent.click(screen.getByRole('button', { name: 'Scored' }))
