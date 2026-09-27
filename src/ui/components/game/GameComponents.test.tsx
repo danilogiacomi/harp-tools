@@ -164,6 +164,12 @@ describe('MatchSettings', () => {
     withSettings(<MatchSettings />)
     expect(screen.queryByRole('slider', { name: /Melody hold/ })).toBeNull()
   })
+
+  it('offers the reference sound toggle', () => {
+    withSettings(<MatchSettings />)
+    fireEvent.click(screen.getByRole('button', { name: 'Pure' }))
+    expect(screen.getByRole('button', { name: 'Pure' })).toHaveAttribute('aria-pressed', 'true')
+  })
 })
 
 describe('HoldMeter', () => {

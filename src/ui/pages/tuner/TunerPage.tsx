@@ -6,6 +6,7 @@ import { freqToMidi } from '../../../core/music/pitch'
 import { AudioGate } from '../../components/AudioGate'
 import { HarmonicaDiagram, type Highlight } from '../../components/HarmonicaDiagram'
 import { MicErrorNotice } from '../../components/MicErrorNotice'
+import { SoundToggle } from '../../components/SoundToggle'
 import { useHarp } from '../../hooks/useHarp'
 import { useNotePlayer } from '../../hooks/useNotePlayer'
 import { usePitch } from '../../hooks/usePitch'
@@ -202,6 +203,7 @@ export function PlayMode({ harp, spelling }: ModeProps) {
         >
           {playing ? '■ Stop' : '▶ Play'}
         </button>
+        <SoundToggle />
       </div>
       <p className={styles.hint}>
         {sustain ? 'Click a hole to start or stop its note.' : 'Press and hold a hole to hear it.'}

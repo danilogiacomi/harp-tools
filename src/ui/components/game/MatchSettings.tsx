@@ -1,5 +1,6 @@
 import { HOLD_RANGE, MELODY_HOLD_RANGE, TOLERANCE_RANGE } from '../../settings/settings'
 import { useSettings } from '../../settings/SettingsContext'
+import { SoundToggle } from '../SoundToggle'
 import styles from './Game.module.css'
 
 /** Spec §3/§8.1: the matcher thresholds, shared by all games and saved with the settings. */
@@ -46,6 +47,10 @@ export function MatchSettings({ melodyHold = false }: { melodyHold?: boolean }) 
           <span>{settings.melodyHoldMs} ms</span>
         </label>
       )}
+      <div className={styles.field}>
+        Reference sound
+        <SoundToggle />
+      </div>
       <p className={styles.hint}>Changing these restarts the current game.</p>
     </details>
   )

@@ -92,6 +92,12 @@ describe('PlayMode', () => {
     expect(player.stop).toHaveBeenCalled()
     expect(screen.getByRole('button', { name: '▶ Play' })).toBeInTheDocument()
   })
+
+  it('offers the Reed / Pure reference sound in the Play toolbar', () => {
+    renderPlay()
+    expect(screen.getByRole('group', { name: 'Reference sound' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reed' })).toHaveAttribute('aria-pressed', 'true')
+  })
 })
 
 describe('ListenMode', () => {
