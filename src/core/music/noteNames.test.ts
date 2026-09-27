@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { noteName } from './noteNames'
+import { noteName, pitchClassName } from './noteNames'
 
 describe('noteName', () => {
   it('names natural notes with octave numbers', () => {
@@ -12,5 +12,15 @@ describe('noteName', () => {
     expect(noteName(61)).toBe('C#4')
     expect(noteName(61, 'flat')).toBe('Db4')
     expect(noteName(70, 'flat')).toBe('Bb4')
+  })
+})
+
+describe('pitchClassName', () => {
+  it('names a pitch class without an octave, in either spelling', () => {
+    expect(pitchClassName(0)).toBe('C')
+    expect(pitchClassName(1, 'sharp')).toBe('C#')
+    expect(pitchClassName(1, 'flat')).toBe('Db')
+    expect(pitchClassName(10, 'flat')).toBe('Bb')
+    expect(pitchClassName(13)).toBe('C#')
   })
 })

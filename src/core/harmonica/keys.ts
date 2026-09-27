@@ -29,3 +29,13 @@ export function keyOffset(key: HarpKey): number {
 export function keySpelling(key: HarpKey): Spelling {
   return FLAT_KEYS.has(key) ? 'flat' : 'sharp'
 }
+
+const mod12 = (n: number) => ((n % 12) + 12) % 12
+
+/** The key whose harp is pitched on pitch class `pc` (0 = C); any integer is taken mod 12. */
+export function keyForPitchClass(pc: number): HarpKey {
+  const target = mod12(pc)
+  const key = HARP_KEYS.find((k) => mod12(OFFSETS[k]) === target)
+  if (!key) throw new Error(`no harp key for pitch class ${pc}`) // unreachable: offsets cover all 12
+  return key
+}

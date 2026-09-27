@@ -1,13 +1,58 @@
 import { scaleOctave, type Scale } from '../music/scales'
 import type { HarpNote, Technique } from './harp'
-import { keyOffset, type HarpKey } from './keys'
+import { keyForPitchClass, keyOffset, type HarpKey } from './keys'
 
 export type Position = 1 | 2 | 3
 export const POSITIONS: readonly Position[] = [1, 2, 3]
 
-/** Tonic pitch class (0 = C) for `key` played in `position`: each position is a fifth higher. */
+/** Tonic pitch class (0 = C) of `position` (1–12) on a `harpKey` harp: each is a fifth higher. */
+export function positionTonicPc(harpKey: HarpKey, position: number): number {
+  return (((keyOffset(harpKey) + 7 * (position - 1)) % 12) + 12) % 12
+}
+
+/** Tonic pitch class for `key` played in `position`: each position is a fifth higher. */
 export function positionRootPc(key: HarpKey, position: Position): number {
-  return (((keyOffset(key) + 7 * (position - 1)) % 12) + 12) % 12
+  return positionTonicPc(key, position)
+}
+
+/** The harp to play a song whose tonic is `songTonicPc` in `position`. */
+export function harpForPosition(songTonicPc: number, position: number): HarpKey {
+  return keyForPitchClass(songTonicPc - 7 * (position - 1))
+}
+
+export interface PositionInfo {
+  readonly position: number
+  readonly mode: string
+  /** Spec §2's "typical use"; null where it has none. */
+  readonly use: string | null
+  /** One word after the tonic in "2nd G blues". */
+  readonly short: string
+}
+
+export const POSITION_INFO: readonly PositionInfo[] = [
+  { position: 1, mode: 'Ionian', use: 'major, folk', short: 'major' },
+  { position: 2, mode: 'Mixolydian', use: 'blues, rock, country', short: 'blues' },
+  { position: 3, mode: 'Dorian', use: 'minor blues', short: 'minor' },
+  { position: 4, mode: 'Aeolian', use: 'natural minor', short: 'minor' },
+  { position: 5, mode: 'Phrygian', use: null, short: 'Phrygian' },
+  { position: 12, mode: 'Lydian', use: null, short: 'Lydian' },
+]
+
+/** '1st', '2nd', '3rd', '4th' … '11th', '12th'. */
+export function positionLabel(position: number): string {
+  const tens = position % 100
+  const ones = position % 10
+  const suffix =
+    tens >= 11 && tens <= 13
+      ? 'th'
+      : ones === 1
+        ? 'st'
+        : ones === 2
+          ? 'nd'
+          : ones === 3
+            ? 'rd'
+            : 'th'
+  return `${position}${suffix}`
 }
 
 export interface PathOptions {

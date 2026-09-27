@@ -3,9 +3,13 @@ import { scaleById } from '../music/scales'
 import { buildHarp, tabLabel, type HarpNote } from './harp'
 import { HARP_KEYS } from './keys'
 import {
+  POSITION_INFO,
   easiestOctave,
+  harpForPosition,
   pickNote,
+  positionLabel,
   positionRootPc,
+  positionTonicPc,
   runSequence,
   scaleOctaves,
   type PathOptions,
@@ -115,5 +119,61 @@ describe('runSequence', () => {
     expect(runSequence([1, 2, 3], 'up')).toEqual([1, 2, 3])
     expect(runSequence([1, 2, 3], 'down')).toEqual([3, 2, 1])
     expect(runSequence([1, 2, 3], 'upDown')).toEqual([1, 2, 3, 2, 1])
+  })
+})
+
+describe('positionTonicPc', () => {
+  it('moves up a fifth per position, through 12th', () => {
+    expect([1, 2, 3, 4, 5, 12].map((p) => positionTonicPc('C', p))).toEqual([0, 7, 2, 9, 4, 5])
+    expect(positionTonicPc('G', 2)).toBe(2)
+    expect(positionTonicPc('F#', 12)).toBe(11)
+  })
+  it('agrees with positionRootPc for 1st–3rd', () => {
+    for (const key of HARP_KEYS)
+      for (const p of [1, 2, 3] as const)
+        expect(positionRootPc(key, p)).toBe(positionTonicPc(key, p))
+  })
+})
+
+describe('harpForPosition', () => {
+  it('round-trips every key and listed position', () => {
+    for (const key of HARP_KEYS) {
+      for (const { position } of POSITION_INFO) {
+        expect(harpForPosition(positionTonicPc(key, position), position)).toBe(key)
+      }
+    }
+  })
+  it('knows the classic choices', () => {
+    expect(harpForPosition(7, 2)).toBe('C') // G blues → C harp
+    expect(harpForPosition(9, 3)).toBe('G') // A minor in 3rd → G harp
+    expect(harpForPosition(0, 1)).toBe('C') // C major in 1st → C harp
+    expect(harpForPosition(9, 4)).toBe('C') // A natural minor in 4th → C harp
+  })
+})
+
+describe('POSITION_INFO', () => {
+  it('gives the mode and typical use of 1st–5th and 12th', () => {
+    expect(POSITION_INFO.map((i) => [i.position, i.mode, i.use, i.short])).toEqual([
+      [1, 'Ionian', 'major, folk', 'major'],
+      [2, 'Mixolydian', 'blues, rock, country', 'blues'],
+      [3, 'Dorian', 'minor blues', 'minor'],
+      [4, 'Aeolian', 'natural minor', 'minor'],
+      [5, 'Phrygian', null, 'Phrygian'],
+      [12, 'Lydian', null, 'Lydian'],
+    ])
+  })
+})
+
+describe('positionLabel', () => {
+  it('writes English ordinals', () => {
+    expect([1, 2, 3, 4, 5, 11, 12].map(positionLabel)).toEqual([
+      '1st',
+      '2nd',
+      '3rd',
+      '4th',
+      '5th',
+      '11th',
+      '12th',
+    ])
   })
 })

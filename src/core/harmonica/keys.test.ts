@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { HARP_KEYS, keyOffset, keySpelling } from './keys'
+import { HARP_KEYS, keyForPitchClass, keyOffset, keySpelling } from './keys'
 
 describe('harp keys', () => {
   it('lists all 12 keys from lowest to highest', () => {
@@ -16,5 +16,17 @@ describe('harp keys', () => {
     for (const k of ['F', 'Bb', 'Eb', 'Ab', 'Db'] as const) expect(keySpelling(k)).toBe('flat')
     for (const k of ['C', 'G', 'D', 'A', 'E', 'B', 'F#'] as const)
       expect(keySpelling(k)).toBe('sharp')
+  })
+})
+
+describe('keyForPitchClass', () => {
+  it('finds the harp key for each pitch class, wrapping any integer', () => {
+    expect(keyForPitchClass(0)).toBe('C')
+    expect(keyForPitchClass(7)).toBe('G')
+    expect(keyForPitchClass(1)).toBe('Db')
+    expect(keyForPitchClass(6)).toBe('F#')
+    expect(keyForPitchClass(10)).toBe('Bb')
+    expect(keyForPitchClass(-5)).toBe('G')
+    expect(keyForPitchClass(19)).toBe('G')
   })
 })
