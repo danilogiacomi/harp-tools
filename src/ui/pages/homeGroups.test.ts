@@ -4,7 +4,7 @@ import { HOME_GROUPS, entryHref, pageTitle } from './homeGroups'
 describe('HOME_GROUPS', () => {
   it('lists the pages in four groups', () => {
     expect(HOME_GROUPS.map((g) => [g.id, g.title, g.entries.map((e) => e.id)])).toEqual([
-      ['tools', 'Tools', ['tuner', 'metronome', 'positions']],
+      ['tools', 'Tools', ['tuner', 'metronome', 'health', 'positions']],
       ['games', 'Games', ['echo', 'bend', 'scales', 'intervals', 'melody', 'hole-finder', 'quiz']],
       ['jam', 'Jam', []],
       ['progress', 'Progress', ['log']],

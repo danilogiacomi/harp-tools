@@ -51,6 +51,7 @@ describe('App', () => {
     ['#/scales', 'Scale runner'],
     ['#/intervals', 'Interval ear training'],
     ['#/melody', 'Melody echo'],
+    ['#/health', 'Harp health check'],
   ])('routes %s to its game', (hash, title) => {
     window.location.hash = hash
     render(<App />)

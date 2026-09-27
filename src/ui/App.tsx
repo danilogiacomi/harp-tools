@@ -2,6 +2,7 @@ import type { ComponentType } from 'react'
 import { Header } from './components/Header'
 import { BendTrainerPage } from './pages/bend/BendTrainerPage'
 import { EchoNotePage } from './pages/echo/EchoNotePage'
+import { HealthCheckPage } from './pages/health/HealthCheckPage'
 import { HomePage } from './pages/HomePage'
 import { HoleFinderPage } from './pages/holeFinder/HoleFinderPage'
 import { IntervalsPage } from './pages/intervals/IntervalsPage'
@@ -20,6 +21,7 @@ const ROUTES: Record<string, ComponentType> = {
   '/': HomePage,
   '/tuner': TunerPage,
   '/metronome': MetronomePage,
+  '/health': HealthCheckPage,
   '/positions': PositionsPage,
   '/echo': EchoNotePage,
   '/bend': BendTrainerPage,

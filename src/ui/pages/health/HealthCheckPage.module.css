@@ -1,0 +1,65 @@
+.tableWrap {
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.table {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: separate;
+  border-spacing: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.caption {
+  margin-bottom: 0.25rem;
+  color: var(--text-dim);
+  text-align: left;
+}
+
+.table th {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.cell {
+  height: 3rem;
+  padding: 0.25rem;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.cell > span,
+.delta {
+  display: block;
+  line-height: 1.2rem;
+  white-space: nowrap;
+}
+
+.delta {
+  height: 1.2rem;
+  color: var(--text-dim);
+  font-size: 0.7rem;
+}
+
+.cell[data-quality='in-tune'] {
+  border-color: var(--ok);
+}
+.cell[data-quality='close'] {
+  border-color: var(--warn);
+}
+.cell[data-quality='off'] {
+  border-color: var(--bad);
+}
+.cell[data-current] {
+  box-shadow: 0 0 0 3px var(--target);
+}
+
+/* Fixed lines, so the summary never pushes the page around as results come in. */
+.summary > p {
+  min-height: 1.5em;
+  margin: 0 0 0.5rem;
+}
