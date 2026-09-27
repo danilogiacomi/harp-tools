@@ -39,6 +39,15 @@ describe('App', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(title)
   })
 
+  it('links to the GitHub repo from the header, in a new tab', () => {
+    window.location.hash = '#/'
+    render(<App />)
+    const star = screen.getByRole('link', { name: /Star on GitHub/ })
+    expect(star).toHaveAttribute('href', 'https://github.com/danilogiacomi/harp-tools')
+    expect(star).toHaveAttribute('target', '_blank')
+    expect(star).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
   it('falls back to the home page for unknown routes', () => {
     window.location.hash = '#/nope'
     render(<App />)
