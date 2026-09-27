@@ -105,4 +105,11 @@ describe('practice time', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Positions & keys')
     expect(timers.calls).toContainEqual(['positions', { requireAudio: false }])
   })
+
+  it('#/quiz counts visible time without audio', () => {
+    window.location.hash = '#/quiz'
+    render(<App />)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Note quiz')
+    expect(timers.calls).toContainEqual(['quiz', { requireAudio: false }])
+  })
 })

@@ -75,6 +75,12 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
         title: 'Hole finder',
         text: 'See a note name, find it on your harp and play it.',
       },
+      {
+        id: 'quiz',
+        icon: '🎓',
+        title: 'Note quiz',
+        text: 'Name the highlighted hole, or find the hole for a note. No mic needed.',
+      },
     ],
   },
   { id: 'jam', title: 'Jam', entries: [] },

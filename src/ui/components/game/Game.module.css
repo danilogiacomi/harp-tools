@@ -218,3 +218,8 @@ strong.scoreLine {
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
+
+/* The quiz's 12 note names: two fixed rows of six, at any width. */
+.noteAnswers {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}

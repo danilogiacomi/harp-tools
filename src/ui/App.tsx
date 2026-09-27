@@ -8,6 +8,7 @@ import { IntervalsPage } from './pages/intervals/IntervalsPage'
 import { MelodyEchoPage } from './pages/melody/MelodyEchoPage'
 import { MetronomePage } from './pages/metronome/MetronomePage'
 import { PositionsPage } from './pages/positions/PositionsPage'
+import { NoteQuizPage } from './pages/quiz/NoteQuizPage'
 import { ScaleRunnerPage } from './pages/scales/ScaleRunnerPage'
 import { TunerPage } from './pages/tuner/TunerPage'
 import { useHashRoute } from './router'
@@ -25,6 +26,7 @@ const ROUTES: Record<string, ComponentType> = {
   '/intervals': IntervalsPage,
   '/melody': MelodyEchoPage,
   '/hole-finder': HoleFinderPage,
+  '/quiz': NoteQuizPage,
 }
 
 function CurrentPage() {
