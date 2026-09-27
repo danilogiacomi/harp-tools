@@ -4,6 +4,7 @@ import { BendTrainerPage } from './pages/bend/BendTrainerPage'
 import { EchoNotePage } from './pages/echo/EchoNotePage'
 import { HomePage } from './pages/HomePage'
 import { IntervalsPage } from './pages/intervals/IntervalsPage'
+import { MelodyEchoPage } from './pages/melody/MelodyEchoPage'
 import { MetronomePage } from './pages/metronome/MetronomePage'
 import { ScaleRunnerPage } from './pages/scales/ScaleRunnerPage'
 import { TunerPage } from './pages/tuner/TunerPage'
@@ -19,6 +20,7 @@ const ROUTES: Record<string, ComponentType> = {
   '/bend': BendTrainerPage,
   '/scales': ScaleRunnerPage,
   '/intervals': IntervalsPage,
+  '/melody': MelodyEchoPage,
 }
 
 function CurrentPage() {

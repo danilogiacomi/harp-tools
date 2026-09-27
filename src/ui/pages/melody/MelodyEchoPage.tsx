@@ -1,0 +1,298 @@
+import { useEffect, useMemo, useState } from 'react'
+import {
+  MAX_PHRASE,
+  MELODY_NOTE_LIMIT_MS,
+  MIN_PHRASE,
+  MelodyRound,
+  generatePhrase,
+  melodyPoints,
+  nextPhraseLength,
+  type MelodyState,
+} from '../../../core/games/melodyEcho'
+import {
+  DEFAULT_POOL_FILTER,
+  buildPool,
+  poolLabel,
+  uniqueMidis,
+  type PoolFilter,
+} from '../../../core/games/notePool'
+import type { Rng } from '../../../core/games/random'
+import { isFinished, type GameMode } from '../../../core/games/session'
+import { buildHarp, findNotes, noteId } from '../../../core/harmonica/harp'
+import { keySpelling } from '../../../core/harmonica/keys'
+import { noteName } from '../../../core/music/noteNames'
+import { HarmonicaDiagram, type Highlight } from '../../components/HarmonicaDiagram'
+import { MicErrorNotice } from '../../components/MicErrorNotice'
+import { GameLayout } from '../../components/game/GameLayout'
+import { HoldMeter } from '../../components/game/HoldMeter'
+import { ModeToggle } from '../../components/game/ModeToggle'
+import { PoolFilterPanel } from '../../components/game/PoolFilterPanel'
+import { ScorePanel } from '../../components/game/ScorePanel'
+import styles from '../../components/game/Game.module.css'
+import { useGameAudio, type HeardListener } from '../../hooks/useGameAudio'
+import { useScoring } from '../../hooks/useScoring'
+import { useSlot } from '../../hooks/useSlot'
+import { useTimeouts } from '../../hooks/useTimeouts'
+import { bestScoreKey } from '../../scores/bestScores'
+import { useSettings } from '../../settings/SettingsContext'
+
+const ADVANCE_MS = 1500
+const NOTE_MS = 600
+const GAP_MS = 150
+const LENGTHS = Array.from({ length: MAX_PHRASE - MIN_PHRASE + 1 }, (_, i) => MIN_PHRASE + i)
+
+export function MelodyEchoPage() {
+  return (
+    <GameLayout
+      title="Melody echo"
+      intro="Listen to a short phrase, then play it back note by note."
+      melodyHold
+    >
+      <MelodyGame />
+    </GameLayout>
+  )
+}
+
+export function MelodyGame({ rng = Math.random }: { rng?: Rng }) {
+  const { settings } = useSettings()
+  const [mode, setMode] = useState<GameMode>('practice')
+  const [filter, setFilter] = useState<PoolFilter>(DEFAULT_POOL_FILTER)
+  const [practiceLength, setPracticeLength] = useState(3)
+  const runKey = [
+    mode,
+    mode === 'practice' ? practiceLength : 'grow',
+    poolLabel(filter),
+    settings.key,
+    settings.a4,
+    settings.showAdvanced,
+    settings.toleranceCents,
+    settings.melodyHoldMs,
+  ].join('|')
+  return (
+    <>
+      <div className={styles.toolbar}>
+        <ModeToggle mode={mode} onChange={setMode} />
+        {mode === 'practice' && (
+          <label className={styles.field}>
+            Phrase length
+            <select
+              aria-label="Phrase length"
+              value={practiceLength}
+              onChange={(e) => setPracticeLength(Number(e.target.value))}
+            >
+              {LENGTHS.map((n) => (
+                <option key={n} value={n}>
+                  {n} notes
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
+      <PoolFilterPanel filter={filter} onChange={setFilter} />
+      <MelodyRun
+        key={runKey}
+        mode={mode}
+        filter={filter}
+        practiceLength={practiceLength}
+        rng={rng}
+      />
+    </>
+  )
+}
+
+interface View {
+  phase: 'idle' | 'prompt' | 'listening' | 'result'
+  phrase: number[]
+  state: MelodyState | null
+  points: number
+}
+
+const IDLE: View = { phase: 'idle', phrase: [], state: null, points: 0 }
+
+interface RunProps {
+  mode: GameMode
+  filter: PoolFilter
+  practiceLength: number
+  rng: Rng
+}
+
+function MelodyRun({ mode, filter, practiceLength, rng }: RunProps) {
+  const { settings } = useSettings()
+  const harp = useMemo(() => buildHarp(settings.key), [settings.key])
+  const midis = useMemo(
+    () => uniqueMidis(buildPool(harp, filter, settings.showAdvanced)),
+    [harp, filter, settings.showAdvanced],
+  )
+  const spelling = keySpelling(settings.key)
+  const scoring = useScoring(
+    mode,
+    bestScoreKey('melody', {
+      key: settings.key,
+      pool: poolLabel(filter),
+      adv: settings.showAdvanced,
+      tol: settings.toleranceCents,
+      hold: settings.melodyHoldMs,
+    }),
+  )
+  const slot = useSlot<MelodyRound>()
+  const timeouts = useTimeouts()
+  const audio = useGameAudio(true)
+  const [length, setLength] = useState(mode === 'scored' ? MIN_PHRASE : practiceLength)
+  const [view, setView] = useState<View>(IDLE)
+
+  const playPhrase = async (phrase: number[]) => {
+    timeouts.clear()
+    slot.set(null)
+    setView({ ...IDLE, phase: 'prompt', phrase })
+    if (!(await audio.playSequence(phrase, NOTE_MS, GAP_MS))) return
+    const matcher = { toleranceCents: settings.toleranceCents, holdMs: settings.melodyHoldMs }
+    const limitMs = mode === 'scored' ? MELODY_NOTE_LIMIT_MS * phrase.length : null
+    slot.set(new MelodyRound(phrase, { matcher, a4: settings.a4 }, audio.now(), limitMs))
+    setView((v) => ({ ...v, phase: 'listening' }))
+  }
+  const newPhrase = (len: number) => void playPhrase(generatePhrase(midis, len, rng))
+
+  const onHeard: HeardListener = (freq, timeMs) => {
+    const round = slot.get()
+    if (!round) return
+    const state = round.push(freq, timeMs)
+    if (state.status === 'listening') {
+      setView((v) => ({ ...v, state }))
+      return
+    }
+    slot.set(null)
+    const phraseLength = view.phrase.length
+    const success = state.status === 'success'
+    const points = melodyPoints(state, phraseLength)
+    const session = scoring.record({ correct: success, points })
+    setView((v) => ({ ...v, phase: 'result', state, points }))
+    if (mode === 'scored') {
+      const next = nextPhraseLength(phraseLength, success)
+      setLength(next)
+      if (!isFinished(session)) timeouts.after(ADVANCE_MS, () => newPhrase(next))
+    } else if (success) {
+      timeouts.after(ADVANCE_MS, () => newPhrase(length))
+    }
+  }
+  useEffect(() => audio.listen(onHeard))
+
+  const stop = () => {
+    timeouts.clear()
+    slot.set(null)
+    audio.cancelPlayback()
+    setView(IDLE)
+  }
+  const restart = () => {
+    scoring.restart()
+    setLength(MIN_PHRASE)
+    newPhrase(MIN_PHRASE)
+  }
+
+  if (midis.length === 0) {
+    return (
+      <p role="alert" className="notice">
+        No notes match these filters. Choose more holes or techniques.
+      </p>
+    )
+  }
+
+  const { phrase, state } = view
+  const reveal = view.phase === 'result'
+  const slotState = (i: number) => {
+    if (state?.wrongIndex === i) return 'wrong'
+    if (i < (state?.index ?? 0)) return 'done'
+    if (view.phase === 'listening' && i === (state?.index ?? 0)) return 'current'
+    return 'todo'
+  }
+
+  const highlights = new Map<string, Highlight>()
+  if (audio.detectedMidi !== null) {
+    for (const n of findNotes(harp, audio.detectedMidi)) highlights.set(noteId(n), 'detected')
+  }
+  const mark = (midi: number, h: Highlight) =>
+    findNotes(harp, midi).forEach((n) => highlights.set(noteId(n), h))
+  phrase.slice(0, state?.index ?? 0).forEach((m) => mark(m, 'correct'))
+  if (reveal && state?.wrongIndex != null) {
+    mark(phrase[state.wrongIndex], 'target')
+    if (state.wrongMidi !== null) mark(state.wrongMidi, 'wrong')
+  }
+
+  return (
+    <>
+      {audio.error && <MicErrorNotice kind={audio.error} />}
+      <ScorePanel scoring={scoring} onRestart={restart} />
+      {mode === 'scored' && !isFinished(scoring.session) && (
+        <p className={styles.hint}>Phrase length: {length}</p>
+      )}
+      <div className={styles.stage}>
+        {view.phase === 'idle' && !audio.error && (
+          <button type="button" className={styles.primary} onClick={() => newPhrase(length)}>
+            ▶ Start
+          </button>
+        )}
+        {view.phase === 'prompt' && <p className={styles.prompt}>Listen…</p>}
+        {view.phase === 'listening' && (
+          <>
+            <p className={styles.prompt}>Your turn — play it back</p>
+            <HoldMeter progress={state?.progress ?? 0} />
+          </>
+        )}
+        {phrase.length > 0 && (
+          <ol className={styles.slots} aria-label="Phrase">
+            {phrase.map((m, i) => (
+              <li key={i} className={styles.slot} data-state={slotState(i)}>
+                {reveal || slotState(i) === 'done' ? noteName(m, spelling) : i + 1}
+              </li>
+            ))}
+          </ol>
+        )}
+        {reveal && state && (
+          <p className={styles.feedback} data-result={state.status === 'success' ? 'ok' : 'bad'}>
+            {state.status === 'success' && '✓ Well done!'}
+            {state.status === 'wrong' &&
+              state.wrongIndex !== null &&
+              state.wrongMidi !== null &&
+              `✗ Note ${state.wrongIndex + 1}: you played ${noteName(state.wrongMidi, spelling)}, it was ${noteName(phrase[state.wrongIndex], spelling)}`}
+            {state.status === 'timeout' && "✗ Time's up"}
+            {mode === 'scored' && ` · +${view.points}`}
+          </p>
+        )}
+        {view.phase !== 'idle' && (
+          <div className={styles.actions}>
+            {mode === 'practice' && reveal && state?.status !== 'success' && (
+              <>
+                <button type="button" onClick={() => void playPhrase(phrase)}>
+                  🔁 Try again
+                </button>
+                <button type="button" onClick={() => newPhrase(length)}>
+                  ▶ New phrase
+                </button>
+              </>
+            )}
+            {view.phase === 'listening' && (
+              <button
+                type="button"
+                onClick={() => void audio.playSequence(phrase, NOTE_MS, GAP_MS)}
+              >
+                🔊 Hear again
+              </button>
+            )}
+            {!isFinished(scoring.session) && (
+              <button type="button" onClick={stop}>
+                ■ Stop
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+      <HarmonicaDiagram
+        harp={harp}
+        spelling={spelling}
+        labelMode={settings.labelMode}
+        showAdvanced={settings.showAdvanced}
+        highlights={highlights}
+      />
+    </>
+  )
+}
