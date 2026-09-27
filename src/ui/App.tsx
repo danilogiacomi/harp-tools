@@ -3,6 +3,7 @@ import { Header } from './components/Header'
 import { BendTrainerPage } from './pages/bend/BendTrainerPage'
 import { EchoNotePage } from './pages/echo/EchoNotePage'
 import { HomePage } from './pages/HomePage'
+import { HoleFinderPage } from './pages/holeFinder/HoleFinderPage'
 import { IntervalsPage } from './pages/intervals/IntervalsPage'
 import { MelodyEchoPage } from './pages/melody/MelodyEchoPage'
 import { MetronomePage } from './pages/metronome/MetronomePage'
@@ -23,6 +24,7 @@ const ROUTES: Record<string, ComponentType> = {
   '/scales': ScaleRunnerPage,
   '/intervals': IntervalsPage,
   '/melody': MelodyEchoPage,
+  '/hole-finder': HoleFinderPage,
 }
 
 function CurrentPage() {

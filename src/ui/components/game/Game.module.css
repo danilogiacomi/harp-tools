@@ -211,3 +211,10 @@ strong.scoreLine {
   border-color: var(--bad);
   background: color-mix(in srgb, var(--bad) 20%, var(--surface));
 }
+
+/* A note name as the whole prompt (hole finder, note quiz); fits the 3.6rem headline row. */
+.bigNote {
+  font-size: 2.4rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}

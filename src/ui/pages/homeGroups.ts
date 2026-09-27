@@ -69,6 +69,12 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
         title: 'Melody echo',
         text: 'Repeat phrases that grow as you improve.',
       },
+      {
+        id: 'hole-finder',
+        icon: '🔎',
+        title: 'Hole finder',
+        text: 'See a note name, find it on your harp and play it.',
+      },
     ],
   },
   { id: 'jam', title: 'Jam', entries: [] },

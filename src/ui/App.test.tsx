@@ -86,6 +86,7 @@ describe('practice time', () => {
     ['#/scales', 'scales'],
     ['#/intervals', 'intervals'],
     ['#/melody', 'melody'],
+    ['#/hole-finder', 'hole-finder'],
   ])('%s counts practice time under "%s", only while audio runs', (hash, pageId) => {
     window.location.hash = hash
     render(<App />)
