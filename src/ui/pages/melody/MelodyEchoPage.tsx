@@ -231,6 +231,8 @@ function MelodyRun({ audio, mode, filter, practiceLength, rng }: RunProps) {
       <Stage
         controls={
           <>
+            {/* The primary action always comes first. */}
+            {isFinished(scoring.session) && <PlayAgain onClick={restart} />}
             {view.phase === 'idle' &&
               !audio.error &&
               (audio.status === 'listening' ? (
@@ -263,7 +265,6 @@ function MelodyRun({ audio, mode, filter, practiceLength, rng }: RunProps) {
                 ■ Stop
               </button>
             )}
-            {isFinished(scoring.session) && <PlayAgain onClick={restart} />}
           </>
         }
         headline={

@@ -313,6 +313,8 @@ function ScaleSession({
       <Stage
         controls={
           <>
+            {/* The primary action always comes first. */}
+            {isFinished(scoring.session) && <PlayAgain onClick={start} />}
             {view.phase === 'idle' &&
               !audio.error &&
               (audio.status === 'listening' ? (
@@ -332,7 +334,6 @@ function ScaleSession({
                 ▶ Again
               </button>
             )}
-            {isFinished(scoring.session) && <PlayAgain onClick={start} />}
           </>
         }
         headline={

@@ -274,6 +274,8 @@ function IntervalRun({ audio, mode, task, allowed, filter, rng }: RunProps) {
       <Stage
         controls={
           <>
+            {/* The primary action always comes first. */}
+            {isFinished(scoring.session) && <PlayAgain onClick={restart} />}
             {view.phase === 'idle' &&
               !(task === 'play' && audio.error) &&
               (task === 'name' || audio.status === 'listening' ? (
@@ -293,7 +295,6 @@ function IntervalRun({ audio, mode, task, allowed, filter, rng }: RunProps) {
                 ■ Stop
               </button>
             )}
-            {isFinished(scoring.session) && <PlayAgain onClick={restart} />}
           </>
         }
         headline={
