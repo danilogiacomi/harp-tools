@@ -288,7 +288,7 @@ function QuizRun({ mode, task, filter, rng, now }: RunProps) {
         labelMode="tab"
         showAdvanced={settings.showAdvanced}
         highlights={highlights}
-        onNoteDown={task === 'find' ? answerHole : undefined}
+        onNoteDown={task === 'find' && view.phase === 'answer' ? answerHole : undefined}
         concealNotes
       />
     </>

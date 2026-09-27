@@ -170,6 +170,16 @@ describe('MatchSettings', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Pure' }))
     expect(screen.getByRole('button', { name: 'Pure' })).toHaveAttribute('aria-pressed', 'true')
   })
+
+  it('does not claim the reference sound toggle restarts the game', () => {
+    const { container } = withSettings(<MatchSettings />)
+    const details = container.querySelector('details')!
+    const hint = screen.getByText('Changing these restarts the current game.')
+    const soundField = screen.getByRole('group', { name: 'Reference sound' }).parentElement!
+    const children = [...details.children]
+    // The hint must come before the sound toggle, so it isn't read as covering it too.
+    expect(children.indexOf(hint)).toBeLessThan(children.indexOf(soundField))
+  })
 })
 
 describe('HoldMeter', () => {

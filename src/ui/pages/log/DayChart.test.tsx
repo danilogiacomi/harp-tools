@@ -22,6 +22,21 @@ describe('DayChart', () => {
     expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
   })
 
+  it('draws a minimal bar for a day under 30 s, instead of none', () => {
+    const { container } = render(
+      <DayChart
+        days={[
+          { date: '2026-09-26', seconds: 0 },
+          { date: '2026-09-27', seconds: 10 },
+        ]}
+      />,
+    )
+    const bars = [...container.querySelectorAll('[data-testid="day-bar"]')]
+    const heights = bars.map((g) => Number(g.querySelector('rect')!.getAttribute('height')))
+    expect(heights[0]).toBe(0) // truly no practice: no bar
+    expect(heights[1]).toBeGreaterThan(0) // some seconds, even under a minute: a minimal bar
+  })
+
   it('has a table with the same numbers for screen readers', () => {
     render(<DayChart days={days} />)
     const table = screen.getByRole('table', { name: 'Minutes practised per day' })

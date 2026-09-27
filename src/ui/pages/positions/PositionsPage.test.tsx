@@ -15,6 +15,15 @@ function SetHeaderKey() {
   )
 }
 
+function SetTuning({ tuning }: { tuning: 'paddy' | 'country' | 'naturalMinor' }) {
+  const { update } = useSettings()
+  return (
+    <button type="button" onClick={() => update({ tuning })}>
+      set tuning {tuning}
+    </button>
+  )
+}
+
 const renderPage = () =>
   render(
     <SettingsProvider storage={null}>
@@ -126,6 +135,24 @@ describe('PositionsPage — I have a … harp', () => {
     expect(screen.getByTestId('harp-summary')).toHaveTextContent(
       'F harp: 1st F major · 2nd C blues · 3rd G minor · 4th D minor · 5th A Phrygian · 12th Bb Lydian',
     )
+  })
+})
+
+describe('PositionsPage — tuning', () => {
+  it('says nothing about tuning on a Richter harp', () => {
+    renderPage()
+    expect(screen.queryByText(/tuned/i)).toBeNull()
+  })
+
+  it('notes that positions assume a Richter harp when the tuning is something else', () => {
+    render(
+      <SettingsProvider storage={null}>
+        <SetTuning tuning="naturalMinor" />
+        <PositionsPage />
+      </SettingsProvider>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'set tuning naturalMinor' }))
+    expect(screen.getByText(/Richter harp/)).toHaveTextContent('Natural minor')
   })
 })
 

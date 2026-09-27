@@ -5,12 +5,14 @@ import {
   keySpelling,
   type HarpKey,
 } from '../../../core/harmonica/keys'
+import { PITCH_CLASSES } from '../../../core/games/noteQuiz'
 import {
   POSITION_INFO,
   harpForPosition,
   positionLabel,
   positionTonicPc,
 } from '../../../core/harmonica/positions'
+import { tuningById } from '../../../core/harmonica/tunings'
 import { pitchClassName } from '../../../core/music/noteNames'
 import { usePracticeTimer } from '../../hooks/usePracticeTimer'
 import { useSettings } from '../../settings/SettingsContext'
@@ -26,7 +28,6 @@ const STYLES: readonly { id: Style; label: string; position: number | null }[] =
   { id: 'all', label: 'Show all', position: null },
 ]
 
-const PITCH_CLASSES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 /** Offered when the style is "Show all". */
 const MOST_PLAYED = [1, 2, 3]
 
@@ -34,12 +35,19 @@ const infoFor = (position: number) => POSITION_INFO.find((i) => i.position === p
 
 export function PositionsPage() {
   usePracticeTimer('positions', { requireAudio: false })
+  const { settings } = useSettings()
   return (
     <>
       <h1>Positions &amp; keys</h1>
       <p className={styles.intro}>
         Which harp to grab for a song, and what each harp plays in each position.
       </p>
+      {settings.tuning !== 'richter' && (
+        <p className={styles.intro}>
+          Positions are shown for a Richter harp; your harp is tuned{' '}
+          {tuningById(settings.tuning).name}, so what each position actually plays may differ.
+        </p>
+      )}
       <div className={styles.panels}>
         <SongPanel />
         <HarpPanel />

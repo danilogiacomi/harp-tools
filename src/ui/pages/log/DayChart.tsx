@@ -28,7 +28,10 @@ export function DayChart({ days }: Props) {
         focusable="false"
       >
         {days.map((d, i) => {
-          const h = minutes[i] === 0 ? 0 : Math.max(2, (minutes[i] / max) * PLOT_H)
+          // Under 30 s still rounds to 0 minutes; draw a sliver rather than nothing, so any
+          // practice at all is visible (only truly 0 s draws no bar).
+          const h =
+            minutes[i] === 0 ? (d.seconds > 0 ? 2 : 0) : Math.max(2, (minutes[i] / max) * PLOT_H)
           const x = i * SLOT + GAP / 2
           return (
             <g key={d.date} data-testid="day-bar">

@@ -192,6 +192,16 @@ describe('QuizGame — find the hole', () => {
     expect(screen.queryByRole('group', { name: 'Answers' })).toBeNull()
   })
 
+  it('only makes the chart interactive while a question is open', () => {
+    renderGame()
+    findTask()
+    expect(box('1 blow')).not.toHaveAttribute('data-interactive')
+    start()
+    expect(box('1 blow')).toHaveAttribute('data-interactive', 'true')
+    fireEvent.pointerDown(box('1 blow'))
+    expect(box('-1 draw')).not.toHaveAttribute('data-interactive')
+  })
+
   it('never lets a chart button announce the asked note, even the right one', () => {
     renderGame()
     findTask()

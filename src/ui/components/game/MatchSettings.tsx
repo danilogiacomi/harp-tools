@@ -47,11 +47,11 @@ export function MatchSettings({ melodyHold = false }: { melodyHold?: boolean }) 
           <span>{settings.melodyHoldMs} ms</span>
         </label>
       )}
+      <p className={styles.hint}>Changing these restarts the current game.</p>
       <div className={styles.field}>
         Reference sound
         <SoundToggle />
       </div>
-      <p className={styles.hint}>Changing these restarts the current game.</p>
     </details>
   )
 }
