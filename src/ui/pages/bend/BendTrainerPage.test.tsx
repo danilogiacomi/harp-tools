@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { scriptedRng } from '../../../core/games/random'
 import { fakeAudio, hold } from '../../../test/fakeGameAudio'
+import { layoutShape } from '../../../test/layout'
 import { SettingsProvider } from '../../settings/SettingsContext'
 import { BendGame } from './BendTrainerPage'
 
@@ -84,6 +85,25 @@ describe('BendGame', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('These holes have no bends')
     expect(screen.queryByRole('button', { name: '▶ Start' })).toBeNull()
   })
+
+  it.each(['Practice', 'Scored'])(
+    'keeps the same stage rows and bend meter in every phase (%s)',
+    (mode) => {
+      const { container } = renderGame()
+      onlyHole3()
+      fireEvent.click(screen.getByRole('button', { name: mode }))
+      const shape = () => layoutShape(container, ['[aria-label="Bend meter"]'])
+      const idle = shape()
+      expect(idle.stageRows).toHaveLength(3)
+      expect(idle.areas['[aria-label="Bend meter"]']).toBe(1)
+      fireEvent.click(screen.getByRole('button', { name: '▶ Start' }))
+      expect(screen.getByText("Bend to -3'' (A4)")).toBeInTheDocument()
+      expect(shape()).toEqual(idle)
+      hold(69, 0, 500)
+      expect(screen.getByText(/Got it/)).toBeInTheDocument()
+      expect(shape()).toEqual(idle)
+    },
+  )
 
   it('keeps the mic on when a setting change restarts the run', () => {
     renderGame()

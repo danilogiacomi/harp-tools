@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { scriptedRng } from '../../../core/games/random'
-import { fakeAudio, hold } from '../../../test/fakeGameAudio'
+import { fakeAudio, finishPlayback, hold } from '../../../test/fakeGameAudio'
+import { layoutShape } from '../../../test/layout'
 import { SettingsProvider } from '../../settings/SettingsContext'
 import { MelodyGame } from './MelodyEchoPage'
 
@@ -10,12 +11,13 @@ vi.mock('../../hooks/useGameAudio', () => import('../../../test/fakeGameAudio'))
 // Holes 1–2 on a C harp: pool [60, 62, 64, 67]. rng [0.5, 0.4, 0.9]:
 // start at index 2 (64); from 2, 0.4 × 10 = 4 → index 1 (62); from 1, 0.9 × 10 = 9 → index 3 (67).
 const renderGame = () => {
-  render(
+  const result = render(
     <SettingsProvider storage={null}>
       <MelodyGame rng={scriptedRng([0.5, 0.4, 0.9])} />
     </SettingsProvider>,
   )
   fireEvent.change(screen.getByRole('combobox', { name: /To hole/ }), { target: { value: '2' } })
+  return result
 }
 const start = async () => {
   fireEvent.click(screen.getByRole('button', { name: '▶ Start' }))
@@ -70,6 +72,34 @@ describe('MelodyGame', () => {
     // 1 + (1 − 550 / 6000) = 1.9083 → 191
     expect(screen.getByRole('status')).toHaveTextContent('Round 2 of 10 · Score 191')
     expect(screen.getByText('Phrase length: 3')).toBeInTheDocument()
+  })
+
+  it.each(['Practice', 'Scored'])(
+    'keeps the same stage rows and phrase slots in every phase (%s)',
+    async (mode) => {
+      fakeAudio.deferPlayback = true
+      const { container } = renderGame()
+      fireEvent.click(screen.getByRole('button', { name: mode }))
+      const shape = () => layoutShape(container, ['[aria-label="Phrase"]', 'p.hint'])
+      const idle = shape()
+      expect(idle.stageRows).toHaveLength(3)
+      expect(idle.areas['[aria-label="Phrase"]']).toBe(1)
+      fireEvent.click(screen.getByRole('button', { name: '▶ Start' }))
+      expect(screen.getByText('Listen…')).toBeInTheDocument()
+      expect(shape()).toEqual(idle)
+      await finishPlayback()
+      expect(screen.getByText('Your turn — play it back')).toBeInTheDocument()
+      expect(shape()).toEqual(idle)
+      hold(64, 0, 250)
+      hold(65, 300, 550)
+      expect(screen.getByText(/✗ Note 2/)).toBeInTheDocument()
+      expect(shape()).toEqual(idle)
+    },
+  )
+
+  it('shows the phrase length as numbered slots before the first phrase', () => {
+    renderGame()
+    expect(slots()).toEqual(['todo', 'todo', 'todo'])
   })
 
   it('keeps the mic on when a setting change restarts the run', () => {

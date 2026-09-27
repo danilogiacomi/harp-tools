@@ -22,10 +22,10 @@ import { noteName } from '../../../core/music/noteNames'
 import { HarmonicaDiagram, type Highlight } from '../../components/HarmonicaDiagram'
 import { MicErrorNotice } from '../../components/MicErrorNotice'
 import { GameLayout } from '../../components/game/GameLayout'
-import { HoldMeter } from '../../components/game/HoldMeter'
 import { ModeToggle } from '../../components/game/ModeToggle'
 import { PoolFilterPanel } from '../../components/game/PoolFilterPanel'
-import { ScorePanel } from '../../components/game/ScorePanel'
+import { PlayAgain, ScorePanel } from '../../components/game/ScorePanel'
+import { Stage } from '../../components/game/Stage'
 import styles from '../../components/game/Game.module.css'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
 import { useScoring } from '../../hooks/useScoring'
@@ -193,7 +193,7 @@ function BendRun({ audio, mode, filter, rng }: RunProps) {
   return (
     <>
       {audio.error && <MicErrorNotice kind={audio.error} />}
-      <ScorePanel scoring={scoring} onRestart={restart} />
+      <ScorePanel scoring={scoring} />
       {mode === 'practice' && (
         <div className={styles.toolbar}>
           <label className={styles.field}>
@@ -209,49 +209,55 @@ function BendRun({ audio, mode, filter, rng }: RunProps) {
           </label>
         </div>
       )}
-      <div className={styles.stage}>
-        {view.phase === 'idle' &&
-          !audio.error &&
-          (audio.status === 'listening' ? (
-            <button type="button" className={styles.primary} onClick={() => startRound(null)}>
-              ▶ Start
-            </button>
-          ) : (
-            <p className={styles.hint}>Waiting for microphone…</p>
-          ))}
-        {target && view.phase !== 'idle' && (
+      <Stage
+        controls={
           <>
-            <p className={styles.prompt}>
-              Bend to {tabLabel(target)} ({noteName(target.midi, spelling)})
-            </p>
-            <div className={styles.actions}>
+            {view.phase === 'idle' &&
+              !audio.error &&
+              (audio.status === 'listening' ? (
+                <button type="button" className={styles.primary} onClick={() => startRound(null)}>
+                  ▶ Start
+                </button>
+              ) : (
+                <p className={styles.hint}>Waiting for microphone…</p>
+              ))}
+            {target && view.phase !== 'idle' && (
               <button type="button" onClick={() => void audio.playSequence([target.midi])}>
                 🔊 Hear target
               </button>
-              {!isFinished(scoring.session) && (
-                <button type="button" onClick={stop}>
-                  ■ Stop
-                </button>
-              )}
-            </div>
-            <BendMeter labels={meterNotes.map(label)} target={target.bendSteps} depth={depth} />
+            )}
+            {view.phase !== 'idle' && !isFinished(scoring.session) && (
+              <button type="button" onClick={stop}>
+                ■ Stop
+              </button>
+            )}
+            {isFinished(scoring.session) && <PlayAgain onClick={restart} />}
           </>
-        )}
-        {view.phase === 'listening' && (
-          <>
-            <HoldMeter progress={view.round?.progress ?? 0} />
-            {mode === 'scored' && <p className={styles.hint}>{secondsLeft} s left</p>}
-          </>
-        )}
-        {view.phase === 'result' && (
-          <p className={styles.feedback} data-result={hit ? 'ok' : 'bad'}>
-            {hit
-              ? `✓ Got it — stability ${Math.round((view.round?.stability ?? 0) * 100)}%`
-              : "✗ Time's up"}
-            {mode === 'scored' && hit && ` · +${view.points}`}
-          </p>
-        )}
-      </div>
+        }
+        headline={
+          view.phase === 'result' ? (
+            <>
+              {hit
+                ? `✓ Got it — stability ${Math.round((view.round?.stability ?? 0) * 100)}%`
+                : "✗ Time's up"}
+              {mode === 'scored' && hit && ` · +${view.points}`}
+            </>
+          ) : (
+            target &&
+            view.phase === 'listening' &&
+            `Bend to ${tabLabel(target)} (${noteName(target.midi, spelling)})`
+          )
+        }
+        result={view.phase === 'result' ? (hit ? 'ok' : 'bad') : undefined}
+        progress={view.phase === 'listening' ? (view.round?.progress ?? 0) : undefined}
+        detail={view.phase === 'listening' && mode === 'scored' && `${secondsLeft} s left`}
+      />
+      {/* Always rendered (empty before the first round), so starting doesn't push the chart down. */}
+      <BendMeter
+        labels={meterNotes.map(label)}
+        target={target?.bendSteps ?? -1}
+        depth={target && view.phase !== 'idle' ? depth : null}
+      />
       <HarmonicaDiagram
         harp={harp}
         spelling={spelling}

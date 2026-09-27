@@ -9,7 +9,8 @@ import { HoldMeter } from './HoldMeter'
 import { MatchSettings } from './MatchSettings'
 import { ModeToggle } from './ModeToggle'
 import { PoolFilterPanel } from './PoolFilterPanel'
-import { ScorePanel } from './ScorePanel'
+import { PlayAgain, ScorePanel } from './ScorePanel'
+import { Stage } from './Stage'
 
 const withSettings = (ui: ReactNode) =>
   render(<SettingsProvider storage={null}>{ui}</SettingsProvider>)
@@ -74,7 +75,7 @@ describe('PoolFilterPanel', () => {
 describe('ScorePanel', () => {
   it('shows the round and score while playing', () => {
     const s = recordRound(startSession('scored'), { correct: true, points: 150 })
-    render(<ScorePanel scoring={scoring(s, { best: 900 })} onRestart={vi.fn()} />)
+    render(<ScorePanel scoring={scoring(s, { best: 900 })} />)
     expect(screen.getByRole('status')).toHaveTextContent('Round 2 of 10 · Score 150 · Best 900')
   })
 
@@ -82,20 +83,68 @@ describe('ScorePanel', () => {
     let s = startSession('scored', 2)
     s = recordRound(s, { correct: true, points: 150 })
     s = recordRound(s, { correct: false, points: 0 })
-    const onRestart = vi.fn()
-    render(<ScorePanel scoring={scoring(s, { best: 150, newBest: true })} onRestart={onRestart} />)
+    render(<ScorePanel scoring={scoring(s, { best: 150, newBest: true })} />)
     expect(screen.getByRole('status')).toHaveTextContent('Final score: 150 / 400')
     expect(screen.getByRole('status')).toHaveTextContent('1 of 2 correct')
     expect(screen.getByRole('status')).toHaveTextContent('New best score!')
-    fireEvent.click(screen.getByRole('button', { name: 'Play again' }))
-    expect(onRestart).toHaveBeenCalled()
+  })
+
+  it('keeps the same two lines while playing and once finished, so the stage does not move', () => {
+    const lines = (session: SessionState) => {
+      const { container, unmount } = render(<ScorePanel scoring={scoring(session)} />)
+      const panel = container.firstElementChild!
+      const shape = [panel.className, [...panel.children].map((c) => c.className.split(' ')[0])]
+      unmount()
+      return shape
+    }
+    let s = startSession('scored', 2)
+    const playing = lines(s)
+    expect(playing[1]).toHaveLength(2)
+    s = recordRound(s, { correct: true, points: 150 })
+    s = recordRound(s, { correct: false, points: 0 })
+    expect(lines(s)).toEqual(playing)
   })
 
   it('renders nothing in practice', () => {
-    const { container } = render(
-      <ScorePanel scoring={scoring(startSession('practice'))} onRestart={vi.fn()} />,
-    )
+    const { container } = render(<ScorePanel scoring={scoring(startSession('practice'))} />)
     expect(container).toBeEmptyDOMElement()
+  })
+})
+
+describe('PlayAgain', () => {
+  it('restarts the session', () => {
+    const onClick = vi.fn()
+    render(<PlayAgain onClick={onClick} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Play again' }))
+    expect(onClick).toHaveBeenCalled()
+  })
+})
+
+describe('Stage', () => {
+  const rows = (container: HTMLElement) =>
+    [...container.querySelector('.status')!.children].map((c) => c.tagName)
+
+  it('renders every row even when empty', () => {
+    const { container } = render(<Stage controls={null} />)
+    expect(rows(container)).toEqual(['P', 'DIV', 'P'])
+    expect(screen.queryByRole('progressbar')).toBeNull()
+  })
+
+  it('fills the rows without changing their structure', () => {
+    const { container } = render(
+      <Stage
+        controls={<button type="button">■ Stop</button>}
+        headline="✓ Correct"
+        result="ok"
+        progress={0.5}
+        detail="3 s left"
+      />,
+    )
+    expect(rows(container)).toEqual(['P', 'DIV', 'P'])
+    expect(screen.getByText('✓ Correct')).toHaveAttribute('data-result', 'ok')
+    expect(screen.getByRole('progressbar', { name: 'Hold' })).toHaveAttribute('aria-valuenow', '50')
+    expect(screen.getByText('3 s left')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '■ Stop' })).toBeInTheDocument()
   })
 })
 

@@ -24,10 +24,10 @@ import { noteName } from '../../../core/music/noteNames'
 import { HarmonicaDiagram, type Highlight } from '../../components/HarmonicaDiagram'
 import { MicErrorNotice } from '../../components/MicErrorNotice'
 import { GameLayout } from '../../components/game/GameLayout'
-import { HoldMeter } from '../../components/game/HoldMeter'
 import { ModeToggle } from '../../components/game/ModeToggle'
 import { PoolFilterPanel } from '../../components/game/PoolFilterPanel'
-import { ScorePanel } from '../../components/game/ScorePanel'
+import { PlayAgain, ScorePanel } from '../../components/game/ScorePanel'
+import { Stage } from '../../components/game/Stage'
 import styles from '../../components/game/Game.module.css'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
 import { useScoring } from '../../hooks/useScoring'
@@ -270,68 +270,75 @@ function IntervalRun({ audio, mode, task, allowed, filter, rng }: RunProps) {
   return (
     <>
       {task === 'play' && audio.error && <MicErrorNotice kind={audio.error} />}
-      <ScorePanel scoring={scoring} onRestart={restart} />
-      <div className={styles.stage}>
-        {view.phase === 'idle' &&
-          !(task === 'play' && audio.error) &&
-          (task === 'name' || audio.status === 'listening' ? (
-            <button type="button" className={styles.primary} onClick={() => void startRound()}>
-              ▶ Start
-            </button>
-          ) : (
-            <p className={styles.hint}>Waiting for microphone…</p>
-          ))}
-        {view.phase === 'prompt' && (
-          <p className={styles.prompt}>
-            {task === 'play' ? `Listen… then play ${playTask}` : 'Listen…'}
-          </p>
-        )}
-        {view.phase === 'answer' && (
+      <ScorePanel scoring={scoring} />
+      <Stage
+        controls={
           <>
-            <p className={styles.prompt}>Which interval?</p>
-            <div className={styles.answers}>
-              {offered.map((i) => (
-                <button key={i.id} type="button" onClick={() => answer(i.id)}>
-                  {i.name}
+            {view.phase === 'idle' &&
+              !(task === 'play' && audio.error) &&
+              (task === 'name' || audio.status === 'listening' ? (
+                <button type="button" className={styles.primary} onClick={() => void startRound()}>
+                  ▶ Start
                 </button>
+              ) : (
+                <p className={styles.hint}>Waiting for microphone…</p>
               ))}
-            </div>
-          </>
-        )}
-        {view.phase === 'listening' && (
-          <>
-            <p className={styles.prompt}>Play {playTask}</p>
-            <HoldMeter progress={view.round?.progress ?? 0} />
-            {mode === 'scored' && <p className={styles.hint}>{secondsLeft} s left</p>}
-          </>
-        )}
-        {view.phase === 'result' && q && (
-          <p className={styles.feedback} data-result={view.correct ? 'ok' : 'bad'}>
-            {task === 'name'
-              ? view.correct
-                ? `✓ ${q.interval.name}`
-                : `✗ It was: ${q.interval.name}`
-              : view.correct
-                ? `✓ ${noteName(q.high, spelling)} — ${q.interval.name}`
-                : `✗ It was ${noteName(q.high, spelling)} — ${q.interval.name}`}
-            {mode === 'scored' && view.correct && ` · +${view.points}`}
-          </p>
-        )}
-        {view.phase !== 'idle' && (
-          <div className={styles.actions}>
-            {q && view.phase !== 'prompt' && (
+            {q && view.phase !== 'idle' && view.phase !== 'prompt' && (
               <button type="button" onClick={() => void audio.playSequence(promptNotes(q))}>
                 🔊 Replay
               </button>
             )}
-            {!isFinished(scoring.session) && (
+            {view.phase !== 'idle' && !isFinished(scoring.session) && (
               <button type="button" onClick={stop}>
                 ■ Stop
               </button>
             )}
-          </div>
-        )}
-      </div>
+            {isFinished(scoring.session) && <PlayAgain onClick={restart} />}
+          </>
+        }
+        headline={
+          view.phase === 'result' && q ? (
+            <>
+              {task === 'name'
+                ? view.correct
+                  ? `✓ ${q.interval.name}`
+                  : `✗ It was: ${q.interval.name}`
+                : view.correct
+                  ? `✓ ${noteName(q.high, spelling)} — ${q.interval.name}`
+                  : `✗ It was ${noteName(q.high, spelling)} — ${q.interval.name}`}
+              {mode === 'scored' && view.correct && ` · +${view.points}`}
+            </>
+          ) : view.phase === 'prompt' ? (
+            task === 'play' ? (
+              `Listen… then play ${playTask}`
+            ) : (
+              'Listen…'
+            )
+          ) : view.phase === 'answer' ? (
+            'Which interval?'
+          ) : (
+            view.phase === 'listening' && `Play ${playTask}`
+          )
+        }
+        result={view.phase === 'result' && q ? (view.correct ? 'ok' : 'bad') : undefined}
+        progress={view.phase === 'listening' ? (view.round?.progress ?? 0) : undefined}
+        detail={view.phase === 'listening' && mode === 'scored' && `${secondsLeft} s left`}
+      />
+      {/* Always rendered in "Name it", so the chart below doesn't move when the question comes. */}
+      {task === 'name' && (
+        <div role="group" aria-label="Answers" className={styles.answers}>
+          {offered.map((i) => (
+            <button
+              key={i.id}
+              type="button"
+              disabled={view.phase !== 'answer'}
+              onClick={() => answer(i.id)}
+            >
+              {i.name}
+            </button>
+          ))}
+        </div>
+      )}
       <HarmonicaDiagram
         harp={harp}
         spelling={spelling}

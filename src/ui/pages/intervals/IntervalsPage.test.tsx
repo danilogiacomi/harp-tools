@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { scriptedRng } from '../../../core/games/random'
 import { fakeAudio, finishPlayback, hold } from '../../../test/fakeGameAudio'
+import { layoutShape } from '../../../test/layout'
 import { SettingsProvider } from '../../settings/SettingsContext'
 import { IntervalGame } from './IntervalsPage'
 
@@ -99,6 +100,55 @@ describe('IntervalGame', () => {
     await finishPlayback()
     expect(screen.getByText('Which interval?')).toBeInTheDocument()
     expect(fakeAudio.played).toHaveLength(2)
+  })
+
+  it.each(['Practice', 'Scored'])(
+    'keeps the same stage rows and answer grid in every phase (%s, name it)',
+    async (mode) => {
+      fakeAudio.deferPlayback = true
+      const { container } = renderGame()
+      fireEvent.click(screen.getByRole('button', { name: mode }))
+      const shape = () => layoutShape(container, ['[aria-label="Answers"] button'])
+      const idle = shape()
+      expect(idle.stageRows).toHaveLength(3)
+      expect(idle.areas['[aria-label="Answers"] button']).toBe(12)
+      start()
+      expect(screen.getByText('Listen…')).toBeInTheDocument()
+      expect(shape()).toEqual(idle)
+      await finishPlayback()
+      expect(screen.getByText('Which interval?')).toBeInTheDocument()
+      expect(shape()).toEqual(idle)
+      fireEvent.click(screen.getByRole('button', { name: 'Minor 2nd' }))
+      expect(screen.getByText(/✓ Minor 2nd/)).toBeInTheDocument()
+      expect(shape()).toEqual(idle)
+    },
+  )
+
+  it('only lets the answer buttons be pressed while answering', async () => {
+    fakeAudio.deferPlayback = true
+    renderGame()
+    expect(screen.getByRole('button', { name: 'Minor 2nd' })).toBeDisabled()
+    start()
+    expect(screen.getByRole('button', { name: 'Minor 2nd' })).toBeDisabled()
+    await finishPlayback()
+    fireEvent.click(screen.getByRole('button', { name: 'Minor 2nd' }))
+    expect(screen.getByRole('button', { name: 'Minor 2nd' })).toBeDisabled()
+  })
+
+  it('keeps the same stage rows in every phase (play it)', async () => {
+    fakeAudio.deferPlayback = true
+    const { container } = renderGame()
+    fireEvent.click(screen.getByRole('button', { name: 'Play it' }))
+    const idle = layoutShape(container)
+    expect(idle.stageRows).toHaveLength(3)
+    start()
+    expect(layoutShape(container)).toEqual(idle)
+    await finishPlayback()
+    expect(screen.getByText('Play a minor 2nd above B4')).toBeInTheDocument()
+    expect(layoutShape(container)).toEqual(idle)
+    hold(72, 0, 500)
+    expect(screen.getByText(/✓ C5/)).toBeInTheDocument()
+    expect(layoutShape(container)).toEqual(idle)
   })
 
   it('offers only the enabled intervals', async () => {

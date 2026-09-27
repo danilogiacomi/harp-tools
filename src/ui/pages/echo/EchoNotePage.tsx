@@ -21,10 +21,10 @@ import { noteName } from '../../../core/music/noteNames'
 import { HarmonicaDiagram, type Highlight } from '../../components/HarmonicaDiagram'
 import { MicErrorNotice } from '../../components/MicErrorNotice'
 import { GameLayout } from '../../components/game/GameLayout'
-import { HoldMeter } from '../../components/game/HoldMeter'
 import { ModeToggle } from '../../components/game/ModeToggle'
 import { PoolFilterPanel } from '../../components/game/PoolFilterPanel'
-import { ScorePanel } from '../../components/game/ScorePanel'
+import { PlayAgain, ScorePanel } from '../../components/game/ScorePanel'
+import { Stage } from '../../components/game/Stage'
 import styles from '../../components/game/Game.module.css'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
 import { useScoring } from '../../hooks/useScoring'
@@ -184,71 +184,71 @@ function EchoRun({ audio, mode, filter, rng }: RunProps) {
   return (
     <>
       {audio.error && <MicErrorNotice kind={audio.error} />}
-      <ScorePanel scoring={scoring} onRestart={restart} />
-      {/* Every row is always rendered at a fixed size, so the stage never changes height. */}
-      <div className={styles.stageSplit}>
-        <div className={styles.controls}>
-          {view.phase === 'idle' &&
-            !audio.error &&
-            (audio.status === 'listening' ? (
+      <ScorePanel scoring={scoring} />
+      <Stage
+        controls={
+          <>
+            {view.phase === 'idle' &&
+              !audio.error &&
+              (audio.status === 'listening' ? (
+                <button
+                  type="button"
+                  className={styles.primary}
+                  onClick={() => void startRound(null)}
+                >
+                  ▶ Start
+                </button>
+              ) : (
+                <p className={styles.hint}>Waiting for microphone…</p>
+              ))}
+            {view.phase === 'listening' && (
               <button
                 type="button"
-                className={styles.primary}
-                onClick={() => void startRound(null)}
+                onClick={() => view.target !== null && void audio.playSequence([view.target])}
               >
-                ▶ Start
+                🔊 Hear again
               </button>
-            ) : (
-              <p className={styles.hint}>Waiting for microphone…</p>
-            ))}
-          {view.phase === 'listening' && (
-            <button
-              type="button"
-              onClick={() => view.target !== null && void audio.playSequence([view.target])}
-            >
-              🔊 Hear again
-            </button>
-          )}
-          {/* Revealing the hole would give the answer away in scored mode. */}
-          {view.phase === 'listening' && mode === 'practice' && !view.showTarget && (
-            <button type="button" onClick={() => setView((v) => ({ ...v, showTarget: true }))}>
-              👀 Show me
-            </button>
-          )}
-          {view.phase !== 'idle' && !isFinished(scoring.session) && (
-            <button type="button" onClick={stop}>
-              ■ Stop
-            </button>
-          )}
-        </div>
-        <div className={styles.status}>
-          {view.phase === 'result' && view.target !== null ? (
-            <p className={`${styles.headline} ${styles.feedback}`} data-result={hit ? 'ok' : 'bad'}>
+            )}
+            {/* Revealing the hole would give the answer away in scored mode. */}
+            {view.phase === 'listening' && mode === 'practice' && !view.showTarget && (
+              <button type="button" onClick={() => setView((v) => ({ ...v, showTarget: true }))}>
+                👀 Show me
+              </button>
+            )}
+            {view.phase !== 'idle' && !isFinished(scoring.session) && (
+              <button type="button" onClick={stop}>
+                ■ Stop
+              </button>
+            )}
+            {isFinished(scoring.session) && <PlayAgain onClick={restart} />}
+          </>
+        }
+        headline={
+          view.phase === 'result' && view.target !== null ? (
+            <>
               {hit
                 ? `✓ Correct — ${labelOf(view.target)}`
                 : `✗ Time's up — it was ${labelOf(view.target)}`}
               {mode === 'scored' && hit && ` · +${view.points}`}
-            </p>
-          ) : (
-            <p className={styles.headline}>
-              {view.phase === 'prompt' && 'Listen…'}
-              {view.phase === 'listening' && 'Play it back and hold it'}
-            </p>
-          )}
-          {view.phase === 'listening' ? (
-            <HoldMeter progress={view.round?.progress ?? 0} />
-          ) : (
-            <div aria-hidden />
-          )}
-          <p className={styles.detail}>
+            </>
+          ) : view.phase === 'prompt' ? (
+            'Listen…'
+          ) : view.phase === 'listening' ? (
+            'Play it back and hold it'
+          ) : null
+        }
+        result={view.phase === 'result' && view.target !== null ? (hit ? 'ok' : 'bad') : undefined}
+        progress={view.phase === 'listening' ? (view.round?.progress ?? 0) : undefined}
+        detail={
+          <>
             {view.phase === 'listening' && mode === 'scored' && `${secondsLeft} s left`}
             {view.phase === 'listening' &&
               view.showTarget &&
               view.target !== null &&
               `${noteName(view.target, spelling)}: ${visible(view.target).map(describeNote).join(' or ')}`}
-          </p>
-        </div>
-      </div>
+          </>
+        }
+      />
       <HarmonicaDiagram
         harp={harp}
         spelling={spelling}

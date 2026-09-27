@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ScaleRun, runStepPoints } from '../../../core/games/scaleRunner'
-import type { GameMode } from '../../../core/games/session'
+import { isFinished, type GameMode } from '../../../core/games/session'
 import { buildHarp, findNotes, noteId, tabLabel, type HarpNote } from '../../../core/harmonica/harp'
 import { keySpelling } from '../../../core/harmonica/keys'
 import {
@@ -18,9 +18,9 @@ import { TIME_SIGNATURES, type MetronomeConfig } from '../../../core/rhythm/sche
 import { HarmonicaDiagram, type Highlight } from '../../components/HarmonicaDiagram'
 import { MicErrorNotice } from '../../components/MicErrorNotice'
 import { GameLayout } from '../../components/game/GameLayout'
-import { HoldMeter } from '../../components/game/HoldMeter'
 import { ModeToggle } from '../../components/game/ModeToggle'
-import { ScorePanel } from '../../components/game/ScorePanel'
+import { PlayAgain, ScorePanel } from '../../components/game/ScorePanel'
+import { Stage } from '../../components/game/Stage'
 import styles from '../../components/game/Game.module.css'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
 import { useMetronome } from '../../hooks/useMetronome'
@@ -309,43 +309,48 @@ function ScaleSession({
   return (
     <>
       {audio.error && <MicErrorNotice kind={audio.error} />}
-      <ScorePanel scoring={scoring} onRestart={start} />
-      <div className={styles.stage}>
-        {view.phase === 'idle' &&
-          !audio.error &&
-          (audio.status === 'listening' ? (
-            <button type="button" className={styles.primary} onClick={start}>
-              ▶ Start
-            </button>
-          ) : (
-            <p className={styles.hint}>Waiting for microphone…</p>
-          ))}
-        {next && (
+      <ScorePanel scoring={scoring} />
+      <Stage
+        controls={
           <>
-            <p className={styles.prompt}>
-              Next: {tabLabel(next)} ({noteName(next.midi, spelling)})
-            </p>
-            <p className={styles.hint}>
+            {view.phase === 'idle' &&
+              !audio.error &&
+              (audio.status === 'listening' ? (
+                <button type="button" className={styles.primary} onClick={start}>
+                  ▶ Start
+                </button>
+              ) : (
+                <p className={styles.hint}>Waiting for microphone…</p>
+              ))}
+            {next && (
+              <button type="button" onClick={() => finish('idle')}>
+                ■ Stop
+              </button>
+            )}
+            {view.phase === 'done' && mode === 'practice' && (
+              <button type="button" className={styles.primary} onClick={start}>
+                ▶ Again
+              </button>
+            )}
+            {isFinished(scoring.session) && <PlayAgain onClick={start} />}
+          </>
+        }
+        headline={
+          next
+            ? `Next: ${tabLabel(next)} (${noteName(next.midi, spelling)})`
+            : view.phase === 'done' && mode === 'practice' && '✓ Run complete!'
+        }
+        result={view.phase === 'done' && mode === 'practice' ? 'ok' : undefined}
+        progress={next ? view.progress : undefined}
+        detail={
+          next && (
+            <>
               Note {view.index + 1} of {sequence.length}
               {mode === 'scored' && view.lastPoints !== null && ` · last +${view.lastPoints}`}
-            </p>
-            <HoldMeter progress={view.progress} />
-            <button type="button" onClick={() => finish('idle')}>
-              ■ Stop
-            </button>
-          </>
-        )}
-        {view.phase === 'done' && mode === 'practice' && (
-          <>
-            <p className={styles.feedback} data-result="ok">
-              ✓ Run complete!
-            </p>
-            <button type="button" className={styles.primary} onClick={start}>
-              ▶ Again
-            </button>
-          </>
-        )}
-      </div>
+            </>
+          )
+        }
+      />
       <HarmonicaDiagram
         harp={harp}
         spelling={spelling}

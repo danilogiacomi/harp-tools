@@ -24,10 +24,10 @@ import { noteName } from '../../../core/music/noteNames'
 import { HarmonicaDiagram, type Highlight } from '../../components/HarmonicaDiagram'
 import { MicErrorNotice } from '../../components/MicErrorNotice'
 import { GameLayout } from '../../components/game/GameLayout'
-import { HoldMeter } from '../../components/game/HoldMeter'
 import { ModeToggle } from '../../components/game/ModeToggle'
 import { PoolFilterPanel } from '../../components/game/PoolFilterPanel'
-import { ScorePanel } from '../../components/game/ScorePanel'
+import { PlayAgain, ScorePanel } from '../../components/game/ScorePanel'
+import { Stage } from '../../components/game/Stage'
 import styles from '../../components/game/Game.module.css'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
 import { useScoring } from '../../hooks/useScoring'
@@ -227,49 +227,27 @@ function MelodyRun({ audio, mode, filter, practiceLength, rng }: RunProps) {
   return (
     <>
       {audio.error && <MicErrorNotice kind={audio.error} />}
-      <ScorePanel scoring={scoring} onRestart={restart} />
-      {mode === 'scored' && !isFinished(scoring.session) && (
-        <p className={styles.hint}>Phrase length: {length}</p>
-      )}
-      <div className={styles.stage}>
-        {view.phase === 'idle' &&
-          !audio.error &&
-          (audio.status === 'listening' ? (
-            <button type="button" className={styles.primary} onClick={() => newPhrase(length)}>
-              ▶ Start
-            </button>
-          ) : (
-            <p className={styles.hint}>Waiting for microphone…</p>
-          ))}
-        {view.phase === 'prompt' && <p className={styles.prompt}>Listen…</p>}
-        {view.phase === 'listening' && (
+      <ScorePanel scoring={scoring} />
+      <Stage
+        controls={
           <>
-            <p className={styles.prompt}>Your turn — play it back</p>
-            <HoldMeter progress={state?.progress ?? 0} />
-          </>
-        )}
-        {phrase.length > 0 && (
-          <ol className={styles.slots} aria-label="Phrase">
-            {phrase.map((m, i) => (
-              <li key={i} className={styles.slot} data-state={slotState(i)}>
-                {reveal || slotState(i) === 'done' ? noteName(m, spelling) : i + 1}
-              </li>
-            ))}
-          </ol>
-        )}
-        {reveal && state && (
-          <p className={styles.feedback} data-result={state.status === 'success' ? 'ok' : 'bad'}>
-            {state.status === 'success' && '✓ Well done!'}
-            {state.status === 'wrong' &&
-              state.wrongIndex !== null &&
-              state.wrongMidi !== null &&
-              `✗ Note ${state.wrongIndex + 1}: you played ${noteName(state.wrongMidi, spelling)}, it was ${noteName(phrase[state.wrongIndex], spelling)}`}
-            {state.status === 'timeout' && "✗ Time's up"}
-            {mode === 'scored' && ` · +${view.points}`}
-          </p>
-        )}
-        {view.phase !== 'idle' && (
-          <div className={styles.actions}>
+            {view.phase === 'idle' &&
+              !audio.error &&
+              (audio.status === 'listening' ? (
+                <button type="button" className={styles.primary} onClick={() => newPhrase(length)}>
+                  ▶ Start
+                </button>
+              ) : (
+                <p className={styles.hint}>Waiting for microphone…</p>
+              ))}
+            {view.phase === 'listening' && (
+              <button
+                type="button"
+                onClick={() => void audio.playSequence(phrase, NOTE_MS, GAP_MS)}
+              >
+                🔊 Hear again
+              </button>
+            )}
             {mode === 'practice' && reveal && state?.status !== 'success' && (
               <>
                 <button type="button" onClick={() => void playPhrase(phrase)}>
@@ -280,22 +258,49 @@ function MelodyRun({ audio, mode, filter, practiceLength, rng }: RunProps) {
                 </button>
               </>
             )}
-            {view.phase === 'listening' && (
-              <button
-                type="button"
-                onClick={() => void audio.playSequence(phrase, NOTE_MS, GAP_MS)}
-              >
-                🔊 Hear again
-              </button>
-            )}
-            {!isFinished(scoring.session) && (
+            {view.phase !== 'idle' && !isFinished(scoring.session) && (
               <button type="button" onClick={stop}>
                 ■ Stop
               </button>
             )}
-          </div>
-        )}
-      </div>
+            {isFinished(scoring.session) && <PlayAgain onClick={restart} />}
+          </>
+        }
+        headline={
+          reveal && state ? (
+            <>
+              {state.status === 'success' && '✓ Well done!'}
+              {state.status === 'wrong' &&
+                state.wrongIndex !== null &&
+                state.wrongMidi !== null &&
+                `✗ Note ${state.wrongIndex + 1}: you played ${noteName(state.wrongMidi, spelling)}, it was ${noteName(phrase[state.wrongIndex], spelling)}`}
+              {state.status === 'timeout' && "✗ Time's up"}
+              {mode === 'scored' && ` · +${view.points}`}
+            </>
+          ) : view.phase === 'prompt' ? (
+            'Listen…'
+          ) : (
+            view.phase === 'listening' && 'Your turn — play it back'
+          )
+        }
+        result={reveal && state ? (state.status === 'success' ? 'ok' : 'bad') : undefined}
+        progress={view.phase === 'listening' ? (state?.progress ?? 0) : undefined}
+        detail={mode === 'scored' && !isFinished(scoring.session) && `Phrase length: ${length}`}
+      />
+      {/* Always rendered: before the first phrase, numbered slots show how long it will be. */}
+      <ol className={styles.slots} aria-label="Phrase">
+        {phrase.length > 0
+          ? phrase.map((m, i) => (
+              <li key={i} className={styles.slot} data-state={slotState(i)}>
+                {reveal || slotState(i) === 'done' ? noteName(m, spelling) : i + 1}
+              </li>
+            ))
+          : Array.from({ length }, (_, i) => (
+              <li key={i} className={styles.slot} data-state="todo">
+                {i + 1}
+              </li>
+            ))}
+      </ol>
       <HarmonicaDiagram
         harp={harp}
         spelling={spelling}

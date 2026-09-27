@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fakeAudio, hold } from '../../../test/fakeGameAudio'
+import { layoutShape } from '../../../test/layout'
 import { SettingsProvider } from '../../settings/SettingsContext'
 import { ScaleGame } from './ScaleRunnerPage'
 
@@ -114,6 +115,19 @@ describe('ScaleGame', () => {
     ;[84, 83, 81, 79, 77, 76, 74, 72].forEach((midi, k) => hold(midi, k * 1000, k * 1000 + 500))
     expect(screen.getByText('✓ Run complete!')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '▶ Again' })).toBeInTheDocument()
+  })
+
+  it.each(['Practice', 'Scored'])('keeps the same stage rows in every phase (%s)', (mode) => {
+    const { container } = renderGame()
+    fireEvent.click(screen.getByRole('button', { name: mode }))
+    const idle = layoutShape(container)
+    expect(idle.stageRows).toHaveLength(3)
+    fireEvent.click(screen.getByRole('button', { name: '▶ Start' }))
+    expect(screen.getByText('Next: 4 (C5)')).toBeInTheDocument()
+    expect(layoutShape(container)).toEqual(idle)
+    ;[72, 74, 76, 77, 79, 81, 83, 84].forEach((midi, k) => hold(midi, k * 1000, k * 1000 + 500))
+    expect(screen.queryByText(/^Next:/)).toBeNull()
+    expect(layoutShape(container)).toEqual(idle)
   })
 
   it('keeps the mic on when a setting change restarts the run', () => {
