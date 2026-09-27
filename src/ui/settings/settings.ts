@@ -13,6 +13,12 @@ export interface Settings {
   bpm: number
   /** Linear RMS below which mic input counts as silence. */
   noiseFloor: number
+  /** NoteMatcher: how far from the target still counts (cents, either way). */
+  toleranceCents: number
+  /** NoteMatcher: how long a note must be held. */
+  holdMs: number
+  /** NoteMatcher hold for melody echo, where notes follow each other quickly. */
+  melodyHoldMs: number
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -22,11 +28,17 @@ export const DEFAULT_SETTINGS: Settings = {
   labelMode: 'note',
   bpm: 90,
   noiseFloor: 0.01,
+  toleranceCents: 25,
+  holdMs: 500,
+  melodyHoldMs: 250,
 }
 
 export const STORAGE_KEY = 'harp-tools:settings'
 export const A4_RANGE = [430, 450] as const
 export const NOISE_FLOOR_RANGE = [0.001, 0.1] as const
+export const TOLERANCE_RANGE = [5, 50] as const
+export const HOLD_RANGE = [100, 2000] as const
+export const MELODY_HOLD_RANGE = [100, 1000] as const
 
 const inRange = (v: unknown, [lo, hi]: readonly [number, number]): v is number =>
   typeof v === 'number' && Number.isFinite(v) && v >= lo && v <= hi
@@ -42,6 +54,11 @@ export function sanitizeSettings(raw: unknown): Settings {
     labelMode: r.labelMode === 'note' || r.labelMode === 'tab' ? r.labelMode : d.labelMode,
     bpm: inRange(r.bpm, [BPM_MIN, BPM_MAX]) ? r.bpm : d.bpm,
     noiseFloor: inRange(r.noiseFloor, NOISE_FLOOR_RANGE) ? r.noiseFloor : d.noiseFloor,
+    toleranceCents: inRange(r.toleranceCents, TOLERANCE_RANGE)
+      ? r.toleranceCents
+      : d.toleranceCents,
+    holdMs: inRange(r.holdMs, HOLD_RANGE) ? r.holdMs : d.holdMs,
+    melodyHoldMs: inRange(r.melodyHoldMs, MELODY_HOLD_RANGE) ? r.melodyHoldMs : d.melodyHoldMs,
   }
 }
 

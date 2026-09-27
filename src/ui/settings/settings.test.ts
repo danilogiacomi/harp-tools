@@ -49,6 +49,24 @@ describe('sanitizeSettings', () => {
   })
 })
 
+describe('matcher thresholds', () => {
+  it('default to ±25 cents, 500 ms and 250 ms for melodies', () => {
+    expect(DEFAULT_SETTINGS).toMatchObject({ toleranceCents: 25, holdMs: 500, melodyHoldMs: 250 })
+  })
+  it('keep valid saved values', () => {
+    expect(sanitizeSettings({ toleranceCents: 10, holdMs: 800, melodyHoldMs: 150 })).toMatchObject({
+      toleranceCents: 10,
+      holdMs: 800,
+      melodyHoldMs: 150,
+    })
+  })
+  it('repair out-of-range or wrongly typed values', () => {
+    expect(sanitizeSettings({ toleranceCents: 0, holdMs: 99999, melodyHoldMs: '250' })).toEqual(
+      DEFAULT_SETTINGS,
+    )
+  })
+})
+
 describe('saveSettings', () => {
   it('writes JSON under the storage key', () => {
     const written: Record<string, string> = {}
