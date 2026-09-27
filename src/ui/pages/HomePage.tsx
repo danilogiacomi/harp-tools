@@ -1,6 +1,13 @@
 import styles from './HomePage.module.css'
 
-const TOOLS = [
+interface Card {
+  href: string
+  icon: string
+  title: string
+  text: string
+}
+
+const TOOLS: Card[] = [
   {
     href: '#/tuner',
     icon: '🎯',
@@ -15,13 +22,51 @@ const TOOLS = [
   },
 ]
 
-const GAMES = [
-  { icon: '👂', title: 'Echo the note', text: 'Hear a note, then play it back.' },
-  { icon: '〰️', title: 'Bend trainer', text: 'Hit and hold a target bend on a live meter.' },
-  { icon: '🪜', title: 'Scale runner', text: 'Scales in 1st, 2nd and 3rd position.' },
-  { icon: '🎼', title: 'Interval training', text: 'Name or play the interval you hear.' },
-  { icon: '🔁', title: 'Melody echo', text: 'Repeat phrases that grow as you improve.' },
+const GAMES: Card[] = [
+  { href: '#/echo', icon: '👂', title: 'Echo the note', text: 'Hear a note, then play it back.' },
+  {
+    href: '#/bend',
+    icon: '〰️',
+    title: 'Bend trainer',
+    text: 'Hit and hold a target bend on a live meter.',
+  },
+  {
+    href: '#/scales',
+    icon: '🪜',
+    title: 'Scale runner',
+    text: 'Scales in 1st, 2nd and 3rd position.',
+  },
+  {
+    href: '#/intervals',
+    icon: '🎼',
+    title: 'Interval training',
+    text: 'Name or play the interval you hear.',
+  },
+  {
+    href: '#/melody',
+    icon: '🔁',
+    title: 'Melody echo',
+    text: 'Repeat phrases that grow as you improve.',
+  },
 ]
+
+function CardList({ label, cards }: { label: string; cards: Card[] }) {
+  return (
+    <ul className={styles.cards} aria-label={label}>
+      {cards.map((c) => (
+        <li key={c.href}>
+          <a href={c.href} className={styles.card}>
+            <span className={styles.icon} aria-hidden>
+              {c.icon}
+            </span>
+            <strong>{c.title}</strong>
+            <span className={styles.text}>{c.text}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  )
+}
 
 export function HomePage() {
   return (
@@ -32,35 +77,10 @@ export function HomePage() {
       </p>
 
       <h2>Tools</h2>
-      <ul className={styles.cards} aria-label="Tools">
-        {TOOLS.map((t) => (
-          <li key={t.href}>
-            <a href={t.href} className={styles.card}>
-              <span className={styles.icon} aria-hidden>
-                {t.icon}
-              </span>
-              <strong>{t.title}</strong>
-              <span className={styles.text}>{t.text}</span>
-            </a>
-          </li>
-        ))}
-      </ul>
+      <CardList label="Tools" cards={TOOLS} />
 
       <h2>Games</h2>
-      <ul className={styles.cards} aria-label="Games">
-        {GAMES.map((g) => (
-          <li key={g.title}>
-            <div className={styles.card} data-disabled="true">
-              <span className={styles.icon} aria-hidden>
-                {g.icon}
-              </span>
-              <strong>{g.title}</strong>
-              <span className={styles.text}>{g.text}</span>
-              <span className={styles.badge}>Coming soon</span>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <CardList label="Games" cards={GAMES} />
     </>
   )
 }

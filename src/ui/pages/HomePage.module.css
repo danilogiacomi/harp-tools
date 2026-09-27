@@ -33,10 +33,6 @@ a.card:hover {
   border-color: var(--accent);
 }
 
-.card[data-disabled] {
-  opacity: 0.6;
-}
-
 .icon {
   font-size: 1.75rem;
 }
@@ -44,14 +40,4 @@ a.card:hover {
 .text {
   color: var(--text-dim);
   font-size: 0.9rem;
-}
-
-.badge {
-  align-self: flex-start;
-  margin-top: auto;
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-  background: var(--surface-2);
-  font-size: 0.75rem;
-  color: var(--text-dim);
 }

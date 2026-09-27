@@ -65,7 +65,8 @@ them and colour-coded by technique.
 
 ## 🚀 Getting started
 
-> The tuner and metronome work today; the games are next.
+> Everything listed above works today. Each game has a relaxed practice mode and a scored
+> mode; best scores are kept in your browser.
 
 ```sh
 npm install
@@ -99,11 +100,11 @@ for the details.
 - [x] Core note model — all 12 keys, bends, overblows, overdraws
 - [x] Audio engine — mic, pitch detection, synth note player, metronome
 - [x] Metronome and tuner
-- [ ] Echo the note
-- [ ] Bend trainer
-- [ ] Scale runner
-- [ ] Interval training
-- [ ] Melody echo
+- [x] Echo the note
+- [x] Bend trainer
+- [x] Scale runner
+- [x] Interval training
+- [x] Melody echo
 - [ ] Later: hole finder, tab reader, alternate tunings, recorded harp samples
 
 <!-- usage:self:start -->
@@ -116,12 +117,12 @@ Codex rollouts) on the machine that generated this section.
 
 | Metric | Value |
 |---|---|
-| **Total tokens** | **40.5M** |
-| Token breakdown | 472.2K output · 476 input · 581.5K cache-write · 39.4M cache-read |
-| Agent time | ~1h 28m active (3h 36m wall-clock) |
-| Turns | 198 assistant turns · 86 tool calls |
+| **Total tokens** | **71.7M** |
+| Token breakdown | 541.6K output · 680 input · 1.3M cache-write · 69.9M cache-read |
+| Agent time | ~2h 9m active (20h 7m wall-clock) |
+| Turns | 281 assistant turns · 134 tool calls |
 | Agents / models | Claude Code — claude-opus-5-5 |
-| As of | 2026-09-26 |
+| As of | 2026-09-26 → 2026-09-27 |
 
 > 💡 Most of those tokens are *cache reads* — re-reading the growing conversation each
 > turn — which is why the total dwarfs the tokens actually written.

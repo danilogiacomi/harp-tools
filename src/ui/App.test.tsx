@@ -7,18 +7,36 @@ afterEach(() => {
 })
 
 describe('App', () => {
-  it('shows the home page with the tools and upcoming games', () => {
+  it('shows the home page with links to the tools and games', () => {
     window.location.hash = '#/'
     render(<App />)
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/diatonic harmonica/i)
-    // The header nav also links to the tools, so look inside the Tools card list.
+    // The header nav also links to the tools, so look inside the card lists.
     const tools = screen.getByRole('list', { name: 'Tools' })
     expect(within(tools).getByRole('link', { name: /Tuner/ })).toHaveAttribute('href', '#/tuner')
     expect(within(tools).getByRole('link', { name: /Metronome/ })).toHaveAttribute(
       'href',
       '#/metronome',
     )
-    expect(screen.getAllByText('Coming soon')).toHaveLength(5)
+    const games = screen.getByRole('list', { name: 'Games' })
+    expect(
+      within(games)
+        .getAllByRole('link')
+        .map((a) => a.getAttribute('href')),
+    ).toEqual(['#/echo', '#/bend', '#/scales', '#/intervals', '#/melody'])
+    expect(screen.queryByText('Coming soon')).toBeNull()
+  })
+
+  it.each([
+    ['#/echo', 'Echo the note'],
+    ['#/bend', 'Bend trainer'],
+    ['#/scales', 'Scale runner'],
+    ['#/intervals', 'Interval ear training'],
+    ['#/melody', 'Melody echo'],
+  ])('routes %s to its game', (hash, title) => {
+    window.location.hash = hash
+    render(<App />)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(title)
   })
 
   it('falls back to the home page for unknown routes', () => {
