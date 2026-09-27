@@ -204,4 +204,17 @@ describe('AudioEngine', () => {
       expect(engine.isUnlocked).toBe(true)
     })
   })
+
+  it('tells listeners when unlock() succeeds, even if the context starts out running', async () => {
+    class RunningContext extends FakeAudioContext {
+      state: AudioContextState = 'running'
+    }
+    vi.stubGlobal('AudioContext', RunningContext)
+    const engine = new AudioEngine()
+    const listener = vi.fn()
+    engine.onStateChange(listener)
+    await engine.unlock()
+    expect(engine.isUnlocked).toBe(true)
+    expect(listener).toHaveBeenCalled()
+  })
 })

@@ -56,6 +56,8 @@ export class AudioEngine {
     }
     if (this.context.state !== 'running') await this.context.resume()
     this.resumeFailed = false
+    // A context created already running fires no statechange; tell listeners either way.
+    this.notify()
   }
 
   onStateChange(listener: Listener): () => void {
