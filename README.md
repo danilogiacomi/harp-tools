@@ -6,6 +6,8 @@
 
 Tuner · Metronome · Bend trainer · Ear games
 
+**[▶ Try it live](https://danilogiacomi.github.io/harp-tools/)**
+
 ![Status](https://img.shields.io/badge/status-in%20development-yellow)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=black)
@@ -82,6 +84,8 @@ permission the first time.
 
 `npm run build` outputs a plain static site. Serve `dist/` from any web server with HTTPS,
 or publish it to GitHub Pages (the app uses hash-based routing, so no rewrite rules are needed).
+This repo deploys itself: every push to `main` runs the tests, builds and publishes to
+[danilogiacomi.github.io/harp-tools](https://danilogiacomi.github.io/harp-tools/) via GitHub Actions.
 
 ## 🏗️ How it's built
 
@@ -117,10 +121,10 @@ Codex rollouts) on the machine that generated this section.
 
 | Metric | Value |
 |---|---|
-| **Total tokens** | **71.7M** |
-| Token breakdown | 541.6K output · 680 input · 1.3M cache-write · 69.9M cache-read |
-| Agent time | ~2h 9m active (20h 7m wall-clock) |
-| Turns | 281 assistant turns · 134 tool calls |
+| **Total tokens** | **87.1M** |
+| Token breakdown | 561.0K output · 770 input · 1.8M cache-write · 84.7M cache-read |
+| Agent time | ~2h 36m active (23h 1m wall-clock) |
+| Turns | 315 assistant turns · 152 tool calls |
 | Agents / models | Claude Code — claude-opus-5-5 |
 | As of | 2026-09-26 → 2026-09-27 |
 
