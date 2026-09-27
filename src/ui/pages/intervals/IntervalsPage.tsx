@@ -41,6 +41,8 @@ const ALL_INTERVALS: readonly IntervalId[] = INTERVALS.map((i) => i.id)
 
 type Task = 'name' | 'play'
 
+const article = (word: string) => (/^[aeiou]/i.test(word) ? 'an' : 'a')
+
 export function IntervalsPage() {
   return (
     <GameLayout
@@ -255,6 +257,9 @@ function IntervalRun({ mode, task, allowed, filter, rng }: RunProps) {
     Math.ceil((INTERVAL_PLAY_LIMIT_MS - (view.round?.elapsedMs ?? 0)) / 1000),
   )
   const offered = INTERVALS.filter((i) => allowed.includes(i.id))
+  const playTask = q
+    ? `${article(q.interval.name)} ${q.interval.name.toLowerCase()} above ${noteName(q.low, spelling)}`
+    : ''
 
   return (
     <>
@@ -266,7 +271,11 @@ function IntervalRun({ mode, task, allowed, filter, rng }: RunProps) {
             ▶ Start
           </button>
         )}
-        {view.phase === 'prompt' && <p className={styles.prompt}>Listen…</p>}
+        {view.phase === 'prompt' && (
+          <p className={styles.prompt}>
+            {task === 'play' ? `Listen… then play ${playTask}` : 'Listen…'}
+          </p>
+        )}
         {view.phase === 'answer' && (
           <>
             <p className={styles.prompt}>Which interval?</p>
@@ -281,7 +290,7 @@ function IntervalRun({ mode, task, allowed, filter, rng }: RunProps) {
         )}
         {view.phase === 'listening' && (
           <>
-            <p className={styles.prompt}>Play the second note</p>
+            <p className={styles.prompt}>Play {playTask}</p>
             <HoldMeter progress={view.round?.progress ?? 0} />
             {mode === 'scored' && <p className={styles.hint}>{secondsLeft} s left</p>}
           </>
@@ -300,7 +309,7 @@ function IntervalRun({ mode, task, allowed, filter, rng }: RunProps) {
         )}
         {view.phase !== 'idle' && (
           <div className={styles.actions}>
-            {q && (
+            {q && view.phase !== 'prompt' && (
               <button type="button" onClick={() => void audio.playSequence(promptNotes(q))}>
                 🔊 Replay
               </button>

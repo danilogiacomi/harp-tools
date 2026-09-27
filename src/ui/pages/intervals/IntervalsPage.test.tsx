@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { scriptedRng } from '../../../core/games/random'
-import { fakeAudio, hold } from '../../../test/fakeGameAudio'
+import { fakeAudio, finishPlayback, hold } from '../../../test/fakeGameAudio'
 import { SettingsProvider } from '../../settings/SettingsContext'
 import { IntervalGame } from './IntervalsPage'
 
@@ -57,7 +57,7 @@ describe('IntervalGame', () => {
     renderGame()
     fireEvent.click(screen.getByRole('button', { name: 'Play it' }))
     start()
-    expect(await screen.findByText('Play the second note')).toBeInTheDocument()
+    expect(await screen.findByText('Play a minor 2nd above B4')).toBeInTheDocument()
     expect(fakeAudio.played).toEqual([[71]])
     hold(72, 0, 500)
     expect(screen.getByText('✓ C5 — Minor 2nd')).toBeInTheDocument()
@@ -65,6 +65,40 @@ describe('IntervalGame', () => {
       'data-highlight',
       'correct',
     )
+  })
+
+  it('in play mode, names the interval to play while the low note sounds', async () => {
+    fakeAudio.deferPlayback = true
+    renderGame()
+    fireEvent.click(screen.getByRole('button', { name: 'Play it' }))
+    start()
+    expect(screen.getByText('Listen… then play a minor 2nd above B4')).toBeInTheDocument()
+    await finishPlayback()
+    expect(screen.getByText('Play a minor 2nd above B4')).toBeInTheDocument()
+  })
+
+  it('does not hang when Replay is pressed while the prompt plays', async () => {
+    fakeAudio.deferPlayback = true
+    renderGame()
+    start()
+    expect(screen.getByText('Listen…')).toBeInTheDocument()
+    const replay = screen.queryByRole('button', { name: /Replay/ })
+    if (replay) fireEvent.click(replay)
+    await finishPlayback()
+    expect(screen.getByText('Which interval?')).toBeInTheDocument()
+  })
+
+  it('stops cleanly while the prompt plays, and starts again', async () => {
+    fakeAudio.deferPlayback = true
+    renderGame()
+    start()
+    fireEvent.click(screen.getByRole('button', { name: '■ Stop' }))
+    await finishPlayback()
+    expect(screen.queryByText('Which interval?')).toBeNull()
+    start()
+    await finishPlayback()
+    expect(screen.getByText('Which interval?')).toBeInTheDocument()
+    expect(fakeAudio.played).toHaveLength(2)
   })
 
   it('offers only the enabled intervals', async () => {
