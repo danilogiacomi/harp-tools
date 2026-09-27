@@ -1,0 +1,35 @@
+.meter {
+  position: relative;
+  width: 10rem;
+  height: 16rem;
+  margin: 0.5rem 0;
+  border-left: 4px solid var(--border);
+}
+
+.marker {
+  position: absolute;
+  left: 0;
+  right: 0;
+  padding-left: 0.75rem;
+  border-top: 1px dashed var(--border);
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  line-height: 0;
+}
+
+.marker[data-target] {
+  border-top: 2px solid var(--target);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.dot {
+  position: absolute;
+  left: -0.8rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  background: var(--c-bend);
+  transform: translateY(-50%);
+  transition: top 50ms linear;
+}

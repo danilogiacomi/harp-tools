@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import { Header } from './components/Header'
+import { BendTrainerPage } from './pages/bend/BendTrainerPage'
 import { EchoNotePage } from './pages/echo/EchoNotePage'
 import { HomePage } from './pages/HomePage'
 import { MetronomePage } from './pages/metronome/MetronomePage'
@@ -13,6 +14,7 @@ const ROUTES: Record<string, ComponentType> = {
   '/tuner': TunerPage,
   '/metronome': MetronomePage,
   '/echo': EchoNotePage,
+  '/bend': BendTrainerPage,
 }
 
 function CurrentPage() {
