@@ -23,8 +23,10 @@ import { pickNote } from '../../../core/harmonica/positions'
 import { noteName } from '../../../core/music/noteNames'
 import { HarmonicaDiagram, type Highlight } from '../../components/HarmonicaDiagram'
 import { MicErrorNotice } from '../../components/MicErrorNotice'
+import { TabText } from '../../components/TabText'
 import { GameLayout } from '../../components/game/GameLayout'
 import { ModeToggle } from '../../components/game/ModeToggle'
+import { NoteSlots, type SlotState } from '../../components/game/NoteSlots'
 import { PoolFilterPanel } from '../../components/game/PoolFilterPanel'
 import { PlayAgain, ScorePanel } from '../../components/game/ScorePanel'
 import { Stage } from '../../components/game/Stage'
@@ -212,7 +214,7 @@ function MelodyRun({ audio, mode, filter, practiceLength, rng }: RunProps) {
 
   const { phrase, state } = view
   const reveal = view.phase === 'result'
-  const slotState = (i: number) => {
+  const slotState = (i: number): SlotState => {
     if (state?.wrongIndex === i) return 'wrong'
     if (i < (state?.index ?? 0)) return 'done'
     if (view.phase === 'listening' && i === (state?.index ?? 0)) return 'current'
@@ -223,7 +225,7 @@ function MelodyRun({ audio, mode, filter, practiceLength, rng }: RunProps) {
     pickNote(harp, midi, { includeOver: true, showAdvanced: settings.showAdvanced })
   const slotLabel = (m: number, i: number) => {
     const hole = view.showHoles ? holeFor(m) : null
-    if (hole) return tabLabel(hole)
+    if (hole) return <TabText tab={tabLabel(hole)} />
     return reveal || slotState(i) === 'done' ? noteName(m, spelling) : i + 1
   }
 
@@ -316,19 +318,14 @@ function MelodyRun({ audio, mode, filter, practiceLength, rng }: RunProps) {
         detail={mode === 'scored' && !isFinished(scoring.session) && `Phrase length: ${length}`}
       />
       {/* Always rendered: before the first phrase, numbered slots show how long it will be. */}
-      <ol className={styles.slots} aria-label="Phrase">
-        {phrase.length > 0
-          ? phrase.map((m, i) => (
-              <li key={i} className={styles.slot} data-state={slotState(i)}>
-                {slotLabel(m, i)}
-              </li>
-            ))
-          : Array.from({ length }, (_, i) => (
-              <li key={i} className={styles.slot} data-state="todo">
-                {i + 1}
-              </li>
-            ))}
-      </ol>
+      <NoteSlots
+        label="Phrase"
+        slots={
+          phrase.length > 0
+            ? phrase.map((m, i) => ({ label: slotLabel(m, i), state: slotState(i) }))
+            : Array.from({ length }, (_, i) => ({ label: i + 1, state: 'todo' as const }))
+        }
+      />
       <HarmonicaDiagram
         harp={harp}
         spelling={spelling}

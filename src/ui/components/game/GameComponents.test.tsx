@@ -8,6 +8,7 @@ import { SettingsProvider } from '../../settings/SettingsContext'
 import { HoldMeter } from './HoldMeter'
 import { MatchSettings } from './MatchSettings'
 import { ModeToggle } from './ModeToggle'
+import { NoteSlots } from './NoteSlots'
 import { PoolFilterPanel } from './PoolFilterPanel'
 import { PlayAgain, ScorePanel } from './ScorePanel'
 import { Stage } from './Stage'
@@ -186,5 +187,27 @@ describe('HoldMeter', () => {
   it('shows progress as a percentage', () => {
     render(<HoldMeter progress={0.456} />)
     expect(screen.getByRole('progressbar', { name: 'Hold' })).toHaveAttribute('aria-valuenow', '46')
+  })
+})
+
+describe('NoteSlots', () => {
+  it('renders one slot per note with its state', () => {
+    render(
+      <NoteSlots
+        label="Lick"
+        slots={[
+          { label: 'G4', state: 'done' },
+          { label: 2, state: 'current' },
+          { label: 3, state: 'todo' },
+        ]}
+      />,
+    )
+    const items = screen.getAllByRole('listitem')
+    expect(items.map((li) => [li.textContent, li.dataset.state])).toEqual([
+      ['G4', 'done'],
+      ['2', 'current'],
+      ['3', 'todo'],
+    ])
+    expect(screen.getByRole('list', { name: 'Lick' })).toBeInTheDocument()
   })
 })

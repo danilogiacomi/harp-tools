@@ -144,4 +144,10 @@ describe('HarmonicaDiagram', () => {
     expect(screen.getByRole('button', { name: "-3'' A4" })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '1 blow' })).toBeNull()
   })
+
+  it('marks hint notes with their own, weaker highlight', () => {
+    const g4 = harp.find((n) => n.hole === 2 && n.technique === 'draw')!
+    renderDiagram({ highlights: new Map([[noteId(g4), 'hint']]) })
+    expect(screen.getByRole('button', { name: '-2 G4' })).toHaveAttribute('data-highlight', 'hint')
+  })
 })

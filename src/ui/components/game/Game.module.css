@@ -179,18 +179,20 @@ strong.scoreLine {
   margin-bottom: 1rem;
 }
 
-/* One row of slots, always rendered: MAX_PHRASE (5) slots fit at 390 px. */
+/* One row of slots, always rendered: 5 slots fit at 390 px; longer rows (licks) scroll. */
 .slots {
   display: flex;
   height: 2.75rem;
   margin: 0 0 1rem;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   gap: 0.5rem;
   padding: 0;
   list-style: none;
 }
 
 .slot {
+  flex: none;
   min-width: 3.5rem;
   padding: 0.4rem 0.6rem;
   border: 2px solid var(--border);
@@ -210,6 +212,15 @@ strong.scoreLine {
 .slot[data-state='wrong'] {
   border-color: var(--bad);
   background: color-mix(in srgb, var(--bad) 20%, var(--surface));
+}
+
+/* A reserved line under a slot row (the lick trainer's "Show tab"). */
+.tabLine {
+  height: 1.5rem;
+  margin: -0.5rem 0 1rem;
+  overflow: hidden;
+  color: var(--text-dim);
+  white-space: nowrap;
 }
 
 /* A note name as the whole prompt (hole finder, note quiz); fits the 3.6rem headline row. */

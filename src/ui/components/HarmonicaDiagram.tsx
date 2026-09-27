@@ -5,7 +5,8 @@ import { noteName, type Spelling } from '../../core/music/noteNames'
 import type { LabelMode } from '../settings/settings'
 import styles from './HarmonicaDiagram.module.css'
 
-export type Highlight = 'detected' | 'target' | 'correct' | 'wrong'
+/** `hint` is a weaker suggestion than `target` (the jam page's blues-scale notes). */
+export type Highlight = 'detected' | 'target' | 'correct' | 'wrong' | 'hint'
 
 interface Props {
   harp: readonly HarpNote[]

@@ -21,7 +21,12 @@
   --target: #4da3ff;
 
   --radius: 8px;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   line-height: 1.5;
   background: var(--bg);
   color: var(--text);
@@ -92,4 +97,11 @@ select {
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* The mic's "waiting for permission" line: always one line tall, empty once listening. */
+.micStatus {
+  min-height: 1.5em;
+  margin: 0.5rem 0;
+  color: var(--text-dim);
 }
