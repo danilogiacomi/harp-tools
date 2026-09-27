@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
+import { HOME_GROUPS, entryHref } from './pages/homeGroups'
 
 const timers = vi.hoisted(() => ({
   calls: [] as [string, { requireAudio?: boolean } | undefined][],
@@ -16,25 +17,33 @@ afterEach(() => {
 })
 
 describe('App', () => {
-  it('shows the home page with links to the tools and games', () => {
+  it('shows the home page with one card list per non-empty group', () => {
     window.location.hash = '#/'
     render(<App />)
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/diatonic harmonica/i)
-    // The header nav also links to the tools, so look inside the card lists.
-    const tools = screen.getByRole('list', { name: 'Tools' })
-    expect(within(tools).getByRole('link', { name: /Tuner/ })).toHaveAttribute('href', '#/tuner')
-    expect(within(tools).getByRole('link', { name: /Metronome/ })).toHaveAttribute(
-      'href',
-      '#/metronome',
-    )
-    const games = screen.getByRole('list', { name: 'Games' })
-    expect(
-      within(games)
-        .getAllByRole('link')
-        .map((a) => a.getAttribute('href')),
-    ).toEqual(['#/echo', '#/bend', '#/scales', '#/intervals', '#/melody'])
-    expect(screen.queryByText('Coming soon')).toBeNull()
+    for (const group of HOME_GROUPS) {
+      if (group.entries.length === 0) {
+        expect(screen.queryByRole('list', { name: group.title })).toBeNull()
+        continue
+      }
+      // The header nav also links to some pages, so look inside the card list.
+      const list = screen.getByRole('list', { name: group.title })
+      expect(
+        within(list)
+          .getAllByRole('link')
+          .map((a) => a.getAttribute('href')),
+      ).toEqual(group.entries.map(entryHref))
+    }
   })
+
+  it.each(HOME_GROUPS.flatMap((g) => g.entries.map((e) => [entryHref(e), e.title])))(
+    'the Home card %s opens its own page',
+    (hash) => {
+      window.location.hash = hash
+      render(<App />)
+      expect(screen.getByRole('heading', { level: 1 })).not.toHaveTextContent(/diatonic harmonica/i)
+    },
+  )
 
   it.each([
     ['#/echo', 'Echo the note'],
