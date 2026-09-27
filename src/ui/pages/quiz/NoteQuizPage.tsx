@@ -279,7 +279,8 @@ function QuizRun({ mode, task, filter, rng, now }: RunProps) {
           ))}
         </div>
       )}
-      {/* Tab labels only: note names would give the answer away. The chart never plays sound. */}
+      {/* Tab labels only, and concealed from screen readers too: note names, visible or
+          announced, would give the answer away. The chart never plays sound. */}
       <HarmonicaDiagram
         harp={harp}
         spelling={spelling}
@@ -287,6 +288,7 @@ function QuizRun({ mode, task, filter, rng, now }: RunProps) {
         showAdvanced={settings.showAdvanced}
         highlights={highlights}
         onNoteDown={task === 'find' ? answerHole : undefined}
+        concealNotes
       />
     </>
   )

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { scriptedRng } from '../../../core/games/random'
 import { fakeAudio, hold } from '../../../test/fakeGameAudio'
@@ -33,7 +33,7 @@ describe('HoleFinderGame', () => {
     start()
     expect(target()).toBe('C4')
     expect(fakeAudio.played).toEqual([])
-    expect(box('1 C4')).not.toHaveAttribute('data-highlight')
+    expect(box('1 blow')).not.toHaveAttribute('data-highlight')
   })
 
   it('accepts the note played on any hole that has it', () => {
@@ -42,8 +42,8 @@ describe('HoleFinderGame', () => {
     expect(target()).toBe('G4')
     hold(67, 0, 500)
     expect(screen.getByText('✓ G4 (-2 or 3)')).toBeInTheDocument()
-    expect(box('-2 G4')).toHaveAttribute('data-highlight', 'correct')
-    expect(box('3 G4')).toHaveAttribute('data-highlight', 'correct')
+    expect(box('-2 draw')).toHaveAttribute('data-highlight', 'correct')
+    expect(box('3 blow')).toHaveAttribute('data-highlight', 'correct')
   })
 
   it('reveals where the note is in practice', () => {
@@ -52,8 +52,18 @@ describe('HoleFinderGame', () => {
     expect(screen.queryByText(/Hole 1/)).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: /Show me/ }))
     expect(screen.getByText('C4: Hole 1 · blow (1)')).toBeInTheDocument()
-    expect(box('1 C4')).toHaveAttribute('data-highlight', 'target')
+    expect(box('1 blow')).toHaveAttribute('data-highlight', 'target')
     expect(screen.queryByRole('button', { name: /Show me/ })).toBeNull()
+  })
+
+  it('never lets a chart button announce its own note name', () => {
+    renderGame()
+    start()
+    expect(target()).toBe('C4')
+    const chart = within(screen.getByRole('group', { name: 'Harmonica chart' }))
+    for (const button of chart.getAllByRole('button')) {
+      expect(button.getAttribute('aria-label')).not.toContain('C4')
+    }
   })
 
   it('skips to a different note', () => {

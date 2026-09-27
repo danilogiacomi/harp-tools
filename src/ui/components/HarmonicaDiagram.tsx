@@ -16,6 +16,8 @@ interface Props {
   highlights?: ReadonlyMap<string, Highlight>
   onNoteDown?: (note: HarpNote) => void
   onNoteUp?: (note: HarpNote) => void
+  /** Games where the note is the answer: hide it from every cell's accessible name too. */
+  concealNotes?: boolean
 }
 
 const COLOR: Record<Technique, string> = {
@@ -23,6 +25,16 @@ const COLOR: Record<Technique, string> = {
   draw: 'draw',
   blowBend: 'bend',
   drawBend: 'bend',
+  overblow: 'overblow',
+  overdraw: 'overdraw',
+}
+
+/** A plain technique description, with no pitch — for `concealNotes`. */
+const TECHNIQUE_WORDS: Record<Technique, string> = {
+  blow: 'blow',
+  draw: 'draw',
+  blowBend: 'blow bend',
+  drawBend: 'draw bend',
   overblow: 'overblow',
   overdraw: 'overdraw',
 }
@@ -45,6 +57,7 @@ export function HarmonicaDiagram({
   highlights,
   onNoteDown,
   onNoteUp,
+  concealNotes = false,
 }: Props) {
   const { above, below } = diagramLayout(harp, showAdvanced)
 
@@ -62,7 +75,7 @@ export function HarmonicaDiagram({
         data-advanced={note.common ? undefined : 'true'}
         data-highlight={highlights?.get(noteId(note))}
         data-interactive={onNoteDown ? 'true' : undefined}
-        aria-label={`${tab} ${name}`}
+        aria-label={concealNotes ? `${tab} ${TECHNIQUE_WORDS[note.technique]}` : `${tab} ${name}`}
         onPointerDown={(e) => e.button === 0 && onNoteDown?.(note)}
         onPointerUp={() => onNoteUp?.(note)}
         onPointerCancel={() => onNoteUp?.(note)}

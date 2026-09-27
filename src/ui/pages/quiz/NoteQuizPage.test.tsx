@@ -33,11 +33,11 @@ describe('QuizGame — name the note', () => {
     renderGame()
     start()
     expect(screen.getByText('Which note is this?')).toBeInTheDocument()
-    expect(box('1 C4')).toHaveAttribute('data-highlight', 'target')
-    expect(box('1 C4')).toHaveTextContent('1') // tab labels: the name isn't given away
+    expect(box('1 blow')).toHaveAttribute('data-highlight', 'target')
+    expect(box('1 blow')).toHaveTextContent('1') // tab labels: the name isn't given away
     fireEvent.click(screen.getByRole('button', { name: 'C' }))
     expect(screen.getByText('✓ C')).toBeInTheDocument()
-    expect(box('1 C4')).toHaveAttribute('data-highlight', 'correct')
+    expect(box('1 blow')).toHaveAttribute('data-highlight', 'correct')
   })
 
   it('shows the right name after a wrong answer', () => {
@@ -45,7 +45,7 @@ describe('QuizGame — name the note', () => {
     start()
     fireEvent.click(screen.getByRole('button', { name: 'D' }))
     expect(screen.getByText('✗ It was C')).toBeInTheDocument()
-    expect(box('1 C4')).toHaveAttribute('data-highlight', 'wrong')
+    expect(box('1 blow')).toHaveAttribute('data-highlight', 'wrong')
   })
 
   it('always shows the 12 answers, enabled only while answering', () => {
@@ -67,8 +67,8 @@ describe('QuizGame — name the note', () => {
     expect(screen.getByText('✓ C')).toBeInTheDocument()
     act(() => vi.advanceTimersByTime(1))
     expect(screen.getByText('Which note is this?')).toBeInTheDocument()
-    expect(box('-1 D4')).toHaveAttribute('data-highlight', 'target')
-    expect(box('1 C4')).not.toHaveAttribute('data-highlight')
+    expect(box('-1 draw')).toHaveAttribute('data-highlight', 'target')
+    expect(box('1 blow')).not.toHaveAttribute('data-highlight')
   })
 
   it('spells the answers for the harp key', () => {
@@ -114,8 +114,17 @@ describe('QuizGame — name the note', () => {
   it('does not take answers from the chart in this task', () => {
     renderGame()
     start()
-    fireEvent.pointerDown(box('1 C4'))
+    fireEvent.pointerDown(box('1 blow'))
     expect(screen.getByText('Which note is this?')).toBeInTheDocument()
+  })
+
+  it('never lets the highlighted box announce its own note name', () => {
+    renderGame()
+    start()
+    const chart = within(screen.getByRole('group', { name: 'Harmonica chart' }))
+    for (const button of chart.getAllByRole('button')) {
+      expect(button.getAttribute('aria-label')).not.toContain('C4')
+    }
   })
 })
 
@@ -130,30 +139,30 @@ describe('QuizGame — find the hole', () => {
     findTask()
     start()
     expect(screen.getByTestId('target-note')).toHaveTextContent('G4')
-    fireEvent.pointerDown(box('3 G4'))
+    fireEvent.pointerDown(box('3 blow'))
     expect(screen.getByText('✓ G4 — 3')).toBeInTheDocument()
-    expect(box('3 G4')).toHaveAttribute('data-highlight', 'correct')
+    expect(box('3 blow')).toHaveAttribute('data-highlight', 'correct')
   })
 
   it('marks a wrong hole and shows the right ones', () => {
     renderGame()
     findTask()
     start()
-    fireEvent.pointerDown(box('-1 D4'))
+    fireEvent.pointerDown(box('-1 draw'))
     expect(screen.getByText('✗ C4 is 1')).toBeInTheDocument()
-    expect(box('-1 D4')).toHaveAttribute('data-highlight', 'wrong')
-    expect(box('1 C4')).toHaveAttribute('data-highlight', 'target')
+    expect(box('-1 draw')).toHaveAttribute('data-highlight', 'wrong')
+    expect(box('1 blow')).toHaveAttribute('data-highlight', 'target')
   })
 
   it('ignores the chart before Start and after answering', () => {
     renderGame()
     findTask()
     fireEvent.click(screen.getByRole('button', { name: 'Scored' }))
-    fireEvent.pointerDown(box('1 C4'))
+    fireEvent.pointerDown(box('1 blow'))
     expect(screen.queryByText(/✓|✗/)).toBeNull()
     start()
-    fireEvent.pointerDown(box('1 C4'))
-    fireEvent.pointerDown(box('-1 D4'))
+    fireEvent.pointerDown(box('1 blow'))
+    fireEvent.pointerDown(box('-1 draw'))
     expect(screen.getByText(/✓ C4 — 1/)).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('Round 2 of 10 · Score 200')
   })
@@ -162,6 +171,17 @@ describe('QuizGame — find the hole', () => {
     renderGame()
     findTask()
     expect(screen.queryByRole('group', { name: 'Answers' })).toBeNull()
+  })
+
+  it('never lets a chart button announce the asked note, even the right one', () => {
+    renderGame()
+    findTask()
+    start()
+    expect(screen.getByTestId('target-note')).toHaveTextContent('C4')
+    const chart = within(screen.getByRole('group', { name: 'Harmonica chart' }))
+    for (const button of chart.getAllByRole('button')) {
+      expect(button.getAttribute('aria-label')).not.toContain('C4')
+    }
   })
 })
 
@@ -219,7 +239,7 @@ describe('QuizGame — layout and filters', () => {
 
   it.each([
     ['Name the note', 'C'],
-    ['Find the hole', '1 C4'],
+    ['Find the hole', '1 blow'],
   ])('keeps the same layout in every phase (%s)', (task, answer) => {
     const { container } = renderGame()
     fireEvent.click(screen.getByRole('button', { name: task }))

@@ -109,4 +109,26 @@ describe('HarmonicaDiagram', () => {
     fireEvent.pointerDown(screen.getByRole('button', { name: '1 C4' }), { button: 2 })
     expect(onNoteDown).not.toHaveBeenCalled()
   })
+
+  it('conceals note names from every accessible name when asked', () => {
+    renderDiagram({ concealNotes: true, showAdvanced: true })
+    expect(screen.getByRole('button', { name: '1 blow' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '-1 draw' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: "-3'' draw bend" })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: "10'' blow bend" })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '6o overblow' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '7od overdraw' })).toBeInTheDocument()
+    // No accessible name spells a note (a letter A–G, optional # or b, then a digit).
+    for (const button of screen.getAllByRole('button')) {
+      expect(button.getAttribute('aria-label')).not.toMatch(/[A-G](#|b)?-?\d/)
+      expect(button).not.toHaveAttribute('title')
+    }
+  })
+
+  it('keeps note names in accessible names by default', () => {
+    renderDiagram()
+    expect(screen.getByRole('button', { name: '1 C4' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: "-3'' A4" })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '1 blow' })).toBeNull()
+  })
 })

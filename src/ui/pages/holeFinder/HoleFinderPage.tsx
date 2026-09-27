@@ -243,13 +243,15 @@ function HoleFinderRun({ audio, mode, filter, rng }: RunProps) {
           </>
         }
       />
-      {/* Tab labels only: note names on the chart would give the answer away (decision 6). */}
+      {/* Tab labels only: note names on the chart, visible or announced, would give the answer
+          away (decision 6). */}
       <HarmonicaDiagram
         harp={harp}
         spelling={spelling}
         labelMode="tab"
         showAdvanced={settings.showAdvanced}
         highlights={highlights}
+        concealNotes
       />
     </>
   )
