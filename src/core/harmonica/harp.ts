@@ -1,4 +1,5 @@
 import { keyOffset, type HarpKey } from './keys'
+import { tuningById, type TuningId } from './tunings'
 
 export type Hole = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
 export type Technique = 'blow' | 'draw' | 'drawBend' | 'blowBend' | 'overblow' | 'overdraw'
@@ -14,22 +15,28 @@ export interface HarpNote {
   readonly common: boolean
 }
 
-// Standard Richter C harmonica, holes 1–10, as MIDI numbers. Other keys transpose this.
-const C_BLOW = [60, 64, 67, 72, 76, 79, 84, 88, 91, 96]
-const C_DRAW = [62, 67, 71, 74, 77, 81, 83, 86, 89, 93]
-
 const COMMON_OVERBLOWS: ReadonlySet<number> = new Set([1, 4, 5, 6])
 const COMMON_OVERDRAWS: ReadonlySet<number> = new Set([7, 9, 10])
 
-export function buildHarp(key: HarpKey): HarpNote[] {
-  const offset = keyOffset(key)
+/**
+ * Every note of a harp whose holes 1–10 have these blow and draw reeds (MIDI on a C harp),
+ * transposed by `offset` semitones.
+ */
+export function harpFromReeds(
+  blowReeds: readonly number[],
+  drawReeds: readonly number[],
+  offset: number,
+): HarpNote[] {
   const notes: HarpNote[] = []
   for (let i = 0; i < 10; i++) {
     const hole = (i + 1) as Hole
-    const blow = C_BLOW[i] + offset
-    const draw = C_DRAW[i] + offset
+    const blow = blowReeds[i] + offset
+    const draw = drawReeds[i] + offset
     notes.push({ hole, technique: 'blow', bendSteps: 0, midi: blow, common: true })
     notes.push({ hole, technique: 'draw', bendSteps: 0, midi: draw, common: true })
+
+    // Equal reeds: nothing to bend towards and no over-note.
+    if (draw === blow) continue
 
     // Bends pull the higher reed down, one semitone per step, stopping short of the lower
     // reed. Over-notes sound a semitone above the higher reed.
@@ -71,6 +78,12 @@ export function buildHarp(key: HarpKey): HarpNote[] {
     }
   }
   return notes
+}
+
+/** The harp for `key` in `tuning` (spec §1); Richter unless told otherwise. */
+export function buildHarp(key: HarpKey, tuning: TuningId = 'richter'): HarpNote[] {
+  const t = tuningById(tuning)
+  return harpFromReeds(t.blow, t.draw, keyOffset(key))
 }
 
 export function findNotes(harp: readonly HarpNote[], midi: number): HarpNote[] {
