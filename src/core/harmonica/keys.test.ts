@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { HARP_KEYS, keyForPitchClass, keyOffset, keySpelling } from './keys'
+import { HARP_KEYS, harpSpelling, keyForPitchClass, keyOffset, keySpelling } from './keys'
 
 describe('harp keys', () => {
   it('lists all 12 keys from lowest to highest', () => {
@@ -16,6 +16,20 @@ describe('harp keys', () => {
     for (const k of ['F', 'Bb', 'Eb', 'Ab', 'Db'] as const) expect(keySpelling(k)).toBe('flat')
     for (const k of ['C', 'G', 'D', 'A', 'E', 'B', 'F#'] as const)
       expect(keySpelling(k)).toBe('sharp')
+  })
+})
+
+describe('harpSpelling', () => {
+  it('spells a natural-minor harp by its relative major', () => {
+    // C natural minor's relative major is Eb major (flats).
+    expect(harpSpelling('C', 'naturalMinor')).toBe('flat')
+    // G natural minor's relative major is Bb major (flats).
+    expect(harpSpelling('G', 'naturalMinor')).toBe('flat')
+  })
+  it('matches keySpelling for every other tuning, for every key', () => {
+    for (const tuning of ['richter', 'paddy', 'country'] as const) {
+      for (const key of HARP_KEYS) expect(harpSpelling(key, tuning)).toBe(keySpelling(key))
+    }
   })
 })
 

@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
 import { findNotes, noteId, tabLabel, type HarpNote } from '../../../core/harmonica/harp'
-import { keySpelling } from '../../../core/harmonica/keys'
 import { noteName, type Spelling } from '../../../core/music/noteNames'
 import { freqToMidi } from '../../../core/music/pitch'
 import { AudioGate } from '../../components/AudioGate'
 import { HarmonicaDiagram, type Highlight } from '../../components/HarmonicaDiagram'
 import { MicErrorNotice } from '../../components/MicErrorNotice'
 import { SoundToggle } from '../../components/SoundToggle'
-import { useHarp } from '../../hooks/useHarp'
+import { useHarp, useSpelling } from '../../hooks/useHarp'
 import { useNotePlayer } from '../../hooks/useNotePlayer'
 import { usePitch } from '../../hooks/usePitch'
 import { usePracticeTimer } from '../../hooks/usePracticeTimer'
@@ -39,7 +38,7 @@ export function TunerPage() {
 function Tuner() {
   const { settings, update } = useSettings()
   const harp = useHarp()
-  const spelling = keySpelling(settings.key)
+  const spelling = useSpelling()
   const [mode, setMode] = useState<Mode>('listen')
 
   return (

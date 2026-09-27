@@ -12,7 +12,6 @@ import {
 import type { Rng } from '../../../core/games/random'
 import { isFinished, type GameMode } from '../../../core/games/session'
 import { describeNote, findNotes, noteId, tabLabel } from '../../../core/harmonica/harp'
-import { keySpelling } from '../../../core/harmonica/keys'
 import { noteName } from '../../../core/music/noteNames'
 import { HarmonicaDiagram, type Highlight } from '../../components/HarmonicaDiagram'
 import { MicErrorNotice } from '../../components/MicErrorNotice'
@@ -23,7 +22,7 @@ import { PlayAgain, ScorePanel } from '../../components/game/ScorePanel'
 import { Stage } from '../../components/game/Stage'
 import styles from '../../components/game/Game.module.css'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
-import { useHarp } from '../../hooks/useHarp'
+import { useHarp, useSpelling } from '../../hooks/useHarp'
 import { usePracticeTimer } from '../../hooks/usePracticeTimer'
 import { useScoring } from '../../hooks/useScoring'
 import { useSlot } from '../../hooks/useSlot'
@@ -97,7 +96,7 @@ function HoleFinderRun({ audio, mode, filter, rng }: RunProps) {
     () => uniqueMidis(buildPool(harp, filter, settings.showAdvanced)),
     [harp, filter, settings.showAdvanced],
   )
-  const spelling = keySpelling(settings.key)
+  const spelling = useSpelling()
   const scoring = useScoring(
     mode,
     bestScoreKey('hole-finder', {

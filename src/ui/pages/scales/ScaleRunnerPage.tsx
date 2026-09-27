@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { ScaleRun, runStepPoints } from '../../../core/games/scaleRunner'
 import { isFinished, type GameMode } from '../../../core/games/session'
 import { findNotes, noteId, tabLabel, type HarpNote } from '../../../core/harmonica/harp'
-import { keySpelling } from '../../../core/harmonica/keys'
 import {
   POSITIONS,
   easiestOctave,
@@ -23,7 +22,7 @@ import { PlayAgain, ScorePanel } from '../../components/game/ScorePanel'
 import { Stage } from '../../components/game/Stage'
 import styles from '../../components/game/Game.module.css'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
-import { useHarp } from '../../hooks/useHarp'
+import { useHarp, useSpelling } from '../../hooks/useHarp'
 import { useMetronome } from '../../hooks/useMetronome'
 import { usePracticeTimer } from '../../hooks/usePracticeTimer'
 import { useScoring } from '../../hooks/useScoring'
@@ -63,7 +62,7 @@ export function ScaleGame() {
   const [withMetronome, setWithMetronome] = useState(false)
 
   const harp = useHarp()
-  const spelling = keySpelling(settings.key)
+  const spelling = useSpelling()
   const octaves = useMemo(
     () =>
       scaleOctaves(harp, settings.key, scaleById(scaleId), position, {
@@ -246,7 +245,7 @@ function ScaleSession({
   bestKey,
 }: SessionProps) {
   const { settings } = useSettings()
-  const spelling = keySpelling(settings.key)
+  const spelling = useSpelling()
   const sequence = useMemo(() => runSequence(path, direction), [path, direction])
   const scoring = useScoring(mode, bestKey, sequence.length)
   const slot = useSlot<ScaleRun>()

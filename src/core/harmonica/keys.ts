@@ -1,4 +1,5 @@
 import type { Spelling } from '../music/noteNames'
+import type { TuningId } from './tunings'
 
 /** Lowest to highest: G–B harps are pitched below C, Db–F# above. */
 export const HARP_KEYS = ['G', 'Ab', 'A', 'Bb', 'B', 'C', 'Db', 'D', 'Eb', 'E', 'F', 'F#'] as const
@@ -28,6 +29,15 @@ export function keyOffset(key: HarpKey): number {
 
 export function keySpelling(key: HarpKey): Spelling {
   return FLAT_KEYS.has(key) ? 'flat' : 'sharp'
+}
+
+/**
+ * Spelling for a harp in `key` tuned to `tuning` (spec's flats/sharps rule). A natural-minor
+ * harp is labelled by its blow key but is spelled like its relative major, three semitones up.
+ */
+export function harpSpelling(key: HarpKey, tuning: TuningId): Spelling {
+  if (tuning !== 'naturalMinor') return keySpelling(key)
+  return keySpelling(keyForPitchClass(keyOffset(key) + 3))
 }
 
 const mod12 = (n: number) => ((n % 12) + 12) % 12
