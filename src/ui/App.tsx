@@ -4,6 +4,7 @@ import { BendTrainerPage } from './pages/bend/BendTrainerPage'
 import { EchoNotePage } from './pages/echo/EchoNotePage'
 import { HomePage } from './pages/HomePage'
 import { MetronomePage } from './pages/metronome/MetronomePage'
+import { ScaleRunnerPage } from './pages/scales/ScaleRunnerPage'
 import { TunerPage } from './pages/tuner/TunerPage'
 import { useHashRoute } from './router'
 import { SettingsProvider } from './settings/SettingsContext'
@@ -15,6 +16,7 @@ const ROUTES: Record<string, ComponentType> = {
   '/metronome': MetronomePage,
   '/echo': EchoNotePage,
   '/bend': BendTrainerPage,
+  '/scales': ScaleRunnerPage,
 }
 
 function CurrentPage() {
