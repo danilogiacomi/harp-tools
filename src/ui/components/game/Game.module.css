@@ -1,0 +1,167 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.segmented {
+  display: flex;
+}
+
+.segmented button {
+  border-radius: 0;
+}
+
+.segmented button + button {
+  border-left: none;
+}
+
+.segmented button:first-child {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.segmented button:last-child {
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.intro,
+.hint {
+  color: var(--text-dim);
+}
+
+.pool {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  margin: 0 0 1rem;
+  padding: 0.5rem 1rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.stage {
+  display: grid;
+  justify-items: start;
+  gap: 0.75rem;
+  min-height: 8rem;
+  margin-bottom: 1rem;
+}
+
+.prompt {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.feedback {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.feedback[data-result='ok'] {
+  color: var(--ok);
+}
+
+.feedback[data-result='bad'] {
+  color: var(--bad);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.primary {
+  padding: 0.75rem 1.75rem;
+  font-size: 1.1rem;
+}
+
+.hold {
+  width: min(20rem, 100%);
+  height: 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.holdBar {
+  height: 100%;
+  background: var(--ok);
+  transition: width 60ms linear;
+}
+
+.score {
+  margin: 0 0 1rem;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.summary {
+  display: grid;
+  justify-items: start;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.settings {
+  margin-top: 2rem;
+  color: var(--text-dim);
+}
+
+.settings > label {
+  margin-top: 0.5rem;
+}
+
+.answers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.slot {
+  min-width: 3.5rem;
+  padding: 0.4rem 0.6rem;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.slot[data-state='done'] {
+  border-color: var(--ok);
+}
+
+.slot[data-state='current'] {
+  border-color: var(--target);
+}
+
+.slot[data-state='wrong'] {
+  border-color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 20%, var(--surface));
+}
