@@ -4,7 +4,7 @@
 
 **Practice tools and ear-training games for diatonic harmonica players — right in your browser.**
 
-Tuner · Metronome · Bend trainer · Ear games
+Tuner · Metronome · Positions & keys · Ear games · Note quiz · Practice log
 
 **[▶ Try it live](https://danilogiacomi.github.io/harp-tools/)**
 
@@ -19,8 +19,8 @@ Tuner · Metronome · Bend trainer · Ear games
 
 Harp Tools listens to your harmonica through the microphone, tells you exactly which
 hole and technique you're playing, and turns that into games that train your ear, your
-bends, and your knowledge of the instrument. It supports **all 12 keys** in standard
-Richter tuning, including **bends, overblows and overdraws**.
+bends, and your knowledge of the instrument. It supports **all 12 keys** in Richter, Paddy Richter, Country and Natural minor
+tuning, including **bends, overblows and overdraws**.
 
 No accounts, no server, no installs — it's a static site that runs entirely in your browser.
 
@@ -33,6 +33,8 @@ No accounts, no server, no installs — it's a static site that runs entirely in
 | 🥁 | **Metronome** | 30–250 BPM, tap tempo, time signatures, subdivisions, sample-accurate timing |
 | 🎯 | **Tuner — listen** | Detects the note you play, shows cents offset and lights up every matching hole |
 | 🔊 | **Tuner — play** | Click any hole on the chart to hear its reference note |
+| 🧭 | **Positions & keys** | Which harp to use for a song, and what each harp plays in every position |
+| 📈 | **Practice log** | Daily streaks, time practised per day and page, recent scores — kept in your browser |
 
 ### Games
 
@@ -43,6 +45,8 @@ No accounts, no server, no installs — it's a static site that runs entirely in
 | 🪜 | **Scale runner** | Play major, minor pentatonic and blues scales in 1st, 2nd and 3rd position |
 | 🎼 | **Interval training** | Name the interval you hear, or play the second note yourself |
 | 🔁 | **Melody echo** | Repeat short phrases that grow longer as you improve |
+| 🔎 | **Hole finder** | A note name appears — find it on your harp, no hints by ear |
+| 🎓 | **Note quiz** | Name the highlighted hole, or click the hole for a note; no mic needed |
 
 Every game has a relaxed **practice** mode and a **scored** mode with best scores saved locally.
 
@@ -109,7 +113,12 @@ for the details.
 - [x] Scale runner
 - [x] Interval training
 - [x] Melody echo
-- [ ] Later: hole finder, tab reader, alternate tunings, recorded harp samples
+- [x] Alternate tunings — Paddy Richter, Country, Natural minor
+- [x] Positions & keys, hole finder, note quiz
+- [x] Practice log with streaks
+- [x] Reed-like reference sound (Pure voice still available)
+- [ ] Next: harp health check, tone meter, rhythm trainer, tab reader, lick trainer, blues play-along
+- [ ] Later: recorded harp samples
 
 <!-- usage:self:start -->
 
@@ -121,10 +130,10 @@ Codex rollouts) on the machine that generated this section.
 
 | Metric | Value |
 |---|---|
-| **Total tokens** | **133.5M** |
-| Token breakdown | 624.9K output · 966 input · 2.8M cache-write · 130.0M cache-read |
-| Agent time | ~3h 4m active (25h 38m wall-clock) |
-| Turns | 409 assistant turns · 206 tool calls |
+| **Total tokens** | **179.2M** |
+| Token breakdown | 732.1K output · 1.2K input · 5.1M cache-write · 173.4M cache-read |
+| Agent time | ~3h 53m active (37h 23m wall-clock) |
+| Turns | 490 assistant turns · 246 tool calls |
 | Agents / models | Claude Code — claude-opus-5-5 |
 | As of | 2026-09-26 → 2026-09-27 |
 
