@@ -15,6 +15,7 @@ export function Header() {
       <nav className={styles.nav} aria-label="Main">
         <a href="#/tuner">Tuner</a>
         <a href="#/metronome">Metronome</a>
+        <a href="#/log">Log</a>
       </nav>
       <div className={styles.harp} role="group" aria-label="Your harp">
         <KeySelector value={settings.key} onChange={(key) => update({ key })} />

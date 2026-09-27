@@ -7,7 +7,7 @@ describe('HOME_GROUPS', () => {
       ['tools', 'Tools', ['tuner', 'metronome', 'positions']],
       ['games', 'Games', ['echo', 'bend', 'scales', 'intervals', 'melody', 'hole-finder', 'quiz']],
       ['jam', 'Jam', []],
-      ['progress', 'Progress', []],
+      ['progress', 'Progress', ['log']],
     ])
   })
 

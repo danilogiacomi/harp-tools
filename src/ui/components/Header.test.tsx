@@ -31,4 +31,22 @@ describe('Header', () => {
     expect(screen.getByLabelText('probe')).toHaveTextContent('C naturalMinor')
     expect(selected('Tuning')).toBe('Natural minor')
   })
+
+  it('links to the tools and the practice log', () => {
+    render(
+      <SettingsProvider storage={null}>
+        <Header />
+      </SettingsProvider>,
+    )
+    const nav = screen.getByRole('navigation', { name: 'Main' })
+    expect(
+      within(nav)
+        .getAllByRole('link')
+        .map((a) => [a.textContent, a.getAttribute('href')]),
+    ).toEqual([
+      ['Tuner', '#/tuner'],
+      ['Metronome', '#/metronome'],
+      ['Log', '#/log'],
+    ])
+  })
 })

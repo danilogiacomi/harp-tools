@@ -84,7 +84,18 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
     ],
   },
   { id: 'jam', title: 'Jam', entries: [] },
-  { id: 'progress', title: 'Progress', entries: [] },
+  {
+    id: 'progress',
+    title: 'Progress',
+    entries: [
+      {
+        id: 'log',
+        icon: '📈',
+        title: 'Practice log',
+        text: 'Streaks, time practised per day and page, and your recent scores.',
+      },
+    ],
+  },
 ]
 
 export function entryHref(entry: HomeEntry): string {

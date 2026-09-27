@@ -112,4 +112,11 @@ describe('practice time', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Note quiz')
     expect(timers.calls).toContainEqual(['quiz', { requireAudio: false }])
   })
+
+  it('#/log shows the practice log and does not count its own time', () => {
+    window.location.hash = '#/log'
+    render(<App />)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Practice log')
+    expect(timers.calls).toEqual([])
+  })
 })
