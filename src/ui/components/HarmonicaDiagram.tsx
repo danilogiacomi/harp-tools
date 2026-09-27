@@ -66,6 +66,7 @@ export function HarmonicaDiagram({
     const name = noteName(note.midi, spelling)
     const tab = tabLabel(note)
     const isKey = (e: KeyboardEvent) => e.key === 'Enter' || e.key === ' '
+    const highlight = highlights?.get(noteId(note))
     return (
       <button
         key={noteId(note)}
@@ -73,8 +74,9 @@ export function HarmonicaDiagram({
         className={styles.cell}
         data-color={COLOR[note.technique]}
         data-advanced={note.common ? undefined : 'true'}
-        data-highlight={highlights?.get(noteId(note))}
+        data-highlight={highlight}
         data-interactive={onNoteDown ? 'true' : undefined}
+        aria-current={highlight === 'target' ? 'true' : undefined}
         aria-label={concealNotes ? `${tab} ${TECHNIQUE_WORDS[note.technique]}` : `${tab} ${name}`}
         onPointerDown={(e) => e.button === 0 && onNoteDown?.(note)}
         onPointerUp={() => onNoteUp?.(note)}

@@ -32,12 +32,19 @@ describe('QuizGame — name the note', () => {
   it('highlights a hole and accepts its note name', () => {
     renderGame()
     start()
-    expect(screen.getByText('Which note is this?')).toBeInTheDocument()
+    expect(screen.getByText('Which note is 1?')).toBeInTheDocument()
     expect(box('1 blow')).toHaveAttribute('data-highlight', 'target')
     expect(box('1 blow')).toHaveTextContent('1') // tab labels: the name isn't given away
     fireEvent.click(screen.getByRole('button', { name: 'C' }))
     expect(screen.getByText('✓ C')).toBeInTheDocument()
     expect(box('1 blow')).toHaveAttribute('data-highlight', 'correct')
+  })
+
+  it('can be played with a screen reader: the target is aria-current and named in the headline', () => {
+    renderGame()
+    start()
+    expect(screen.getByText('Which note is 1?')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '1 blow', current: true })).toBe(box('1 blow'))
   })
 
   it('shows the right name after a wrong answer', () => {
@@ -66,7 +73,7 @@ describe('QuizGame — name the note', () => {
     act(() => vi.advanceTimersByTime(1499))
     expect(screen.getByText('✓ C')).toBeInTheDocument()
     act(() => vi.advanceTimersByTime(1))
-    expect(screen.getByText('Which note is this?')).toBeInTheDocument()
+    expect(screen.getByText('Which note is -1?')).toBeInTheDocument()
     expect(box('-1 draw')).toHaveAttribute('data-highlight', 'target')
     expect(box('1 blow')).not.toHaveAttribute('data-highlight')
   })
@@ -111,11 +118,23 @@ describe('QuizGame — name the note', () => {
     expect(screen.getByText('✓ F')).toBeInTheDocument()
   })
 
+  it('spells the answers by the relative major on a natural-minor harp', () => {
+    localStorage.setItem('harp-tools:settings', JSON.stringify({ tuning: 'naturalMinor' }))
+    renderGame([0], localStorage)
+    const names = answers().map((b) => b.textContent)
+    expect(names).toContain('Eb')
+    expect(names).toContain('Ab')
+    expect(names).toContain('Bb')
+    expect(names).not.toContain('D#')
+    expect(names).not.toContain('G#')
+    expect(names).not.toContain('A#')
+  })
+
   it('does not take answers from the chart in this task', () => {
     renderGame()
     start()
     fireEvent.pointerDown(box('1 blow'))
-    expect(screen.getByText('Which note is this?')).toBeInTheDocument()
+    expect(screen.getByText('Which note is 1?')).toBeInTheDocument()
   })
 
   it('never lets the highlighted box announce its own note name', () => {

@@ -74,6 +74,19 @@ describe('HarmonicaDiagram', () => {
     )
   })
 
+  it('marks the target cell with aria-current, for screen readers', () => {
+    const c4 = harp.find((n) => n.hole === 1 && n.technique === 'blow')!
+    const d4 = harp.find((n) => n.hole === 1 && n.technique === 'draw')!
+    renderDiagram({
+      highlights: new Map([
+        [noteId(c4), 'target'],
+        [noteId(d4), 'detected'],
+      ]),
+    })
+    expect(screen.getByRole('button', { name: '1 C4' })).toHaveAttribute('aria-current', 'true')
+    expect(screen.getByRole('button', { name: '-1 D4' })).not.toHaveAttribute('aria-current')
+  })
+
   it('reports press and release', () => {
     const onNoteDown = vi.fn()
     const onNoteUp = vi.fn()

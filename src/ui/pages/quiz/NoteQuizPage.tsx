@@ -17,7 +17,6 @@ import {
 import type { Rng } from '../../../core/games/random'
 import { isFinished, type GameMode } from '../../../core/games/session'
 import { findNotes, noteId, tabLabel, type HarpNote } from '../../../core/harmonica/harp'
-import { keySpelling } from '../../../core/harmonica/keys'
 import { noteName, pitchClassName } from '../../../core/music/noteNames'
 import { HarmonicaDiagram, type Highlight } from '../../components/HarmonicaDiagram'
 import { ModeToggle } from '../../components/game/ModeToggle'
@@ -25,7 +24,7 @@ import { PoolFilterPanel } from '../../components/game/PoolFilterPanel'
 import { PlayAgain, ScorePanel } from '../../components/game/ScorePanel'
 import { Stage } from '../../components/game/Stage'
 import styles from '../../components/game/Game.module.css'
-import { useHarp } from '../../hooks/useHarp'
+import { useHarp, useSpelling } from '../../hooks/useHarp'
 import { usePracticeTimer } from '../../hooks/usePracticeTimer'
 import { useScoring } from '../../hooks/useScoring'
 import { useSlot } from '../../hooks/useSlot'
@@ -126,7 +125,7 @@ function QuizRun({ mode, task, filter, rng, now }: RunProps) {
     [harp, filter, settings.showAdvanced],
   )
   const midis = useMemo(() => uniqueMidis(pool), [pool])
-  const spelling = keySpelling(settings.key)
+  const spelling = useSpelling()
   const scoring = useScoring(
     mode,
     bestScoreKey('quiz', {
@@ -244,7 +243,9 @@ function QuizRun({ mode, task, filter, rng, now }: RunProps) {
             </>
           ) : view.phase === 'answer' && note ? (
             task === 'name' ? (
-              'Which note is this?'
+              // The tab (e.g. "-4") isn't the answer — it's already on the chart — but a screen
+              // reader user can't see which cell is highlighted, so the headline names it too.
+              `Which note is ${tabLabel(note)}?`
             ) : (
               <span className={styles.bigNote} data-testid="target-note">
                 {noteName(note.midi, spelling)}
