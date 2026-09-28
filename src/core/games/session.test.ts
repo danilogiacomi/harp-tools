@@ -59,6 +59,12 @@ describe('scored session', () => {
     expect(isFinished(s)).toBe(true)
     expect(maxScore(s)).toBe(600)
   })
+
+  it('can cap rounds at fewer points (rhythm hits are worth up to 100)', () => {
+    const s = startSession('scored', 32, 100)
+    expect(s.roundMax).toBe(100)
+    expect(maxScore(s)).toBe(3200)
+  })
 })
 
 describe('practice session', () => {

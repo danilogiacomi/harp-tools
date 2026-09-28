@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  MAX_ROUND_POINTS,
   SCORED_ROUNDS,
   isFinished,
   maxScore,
@@ -24,9 +25,17 @@ export interface Scoring {
   restart(): void
 }
 
-/** A page's session plus its best score for `bestKey`, saved when a scored session ends. */
-export function useScoring(mode: GameMode, bestKey: string, totalRounds = SCORED_ROUNDS): Scoring {
-  const [session, setSession] = useState(() => startSession(mode, totalRounds))
+/**
+ * A page's session plus its best score for `bestKey`, saved when a scored session ends.
+ * `roundMax` is the most one round can earn (see `startSession`).
+ */
+export function useScoring(
+  mode: GameMode,
+  bestKey: string,
+  totalRounds = SCORED_ROUNDS,
+  roundMax = MAX_ROUND_POINTS,
+): Scoring {
+  const [session, setSession] = useState(() => startSession(mode, totalRounds, roundMax))
   const [best, setBest] = useState(() => loadBest(browserStorage(), bestKey))
   const [newBest, setNewBest] = useState(false)
   // The newest session, even before React re-renders (two records in one frame both count).
@@ -56,7 +65,7 @@ export function useScoring(mode: GameMode, bestKey: string, totalRounds = SCORED
   }
 
   const restart = () => {
-    const fresh = startSession(mode, totalRounds)
+    const fresh = startSession(mode, totalRounds, roundMax)
     latest.set(fresh)
     setSession(fresh)
     setNewBest(false)

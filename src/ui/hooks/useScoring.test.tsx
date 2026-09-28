@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { localDate } from '../../core/log/dates'
-import { isFinished, sessionScore } from '../../core/games/session'
+import { isFinished, maxScore, sessionScore } from '../../core/games/session'
 import { loadLog } from '../log/practiceLog'
 import { loadBest } from '../scores/bestScores'
 import { useScoring } from './useScoring'
@@ -58,6 +58,13 @@ describe('useScoring', () => {
       zero.result.current.record({ correct: false, points: 0 })
     })
     expect(localStorage.getItem('harp-tools:best-scores')).toBeNull()
+  })
+
+  it('passes the per-round maximum to the session', () => {
+    const { result } = renderHook(() => useScoring('scored', 'rhythm|x', 8, 100))
+    expect(maxScore(result.current.session)).toBe(800)
+    act(() => result.current.restart())
+    expect(maxScore(result.current.session)).toBe(800)
   })
 })
 

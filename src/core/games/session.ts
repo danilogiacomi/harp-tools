@@ -23,11 +23,17 @@ export interface RoundResult {
 export interface SessionState {
   readonly mode: GameMode
   readonly totalRounds: number
+  /** The most one round can earn (200 with the speed bonus; 100 for per-hit games). */
+  readonly roundMax: number
   readonly results: readonly RoundResult[]
 }
 
-export function startSession(mode: GameMode, totalRounds = SCORED_ROUNDS): SessionState {
-  return { mode, totalRounds, results: [] }
+export function startSession(
+  mode: GameMode,
+  totalRounds = SCORED_ROUNDS,
+  roundMax = MAX_ROUND_POINTS,
+): SessionState {
+  return { mode, totalRounds, roundMax, results: [] }
 }
 
 export function isFinished(s: SessionState): boolean {
@@ -49,5 +55,5 @@ export function correctCount(s: SessionState): number {
 }
 
 export function maxScore(s: SessionState): number {
-  return s.totalRounds * MAX_ROUND_POINTS
+  return s.totalRounds * s.roundMax
 }
