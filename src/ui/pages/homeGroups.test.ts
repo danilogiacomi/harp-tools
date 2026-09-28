@@ -21,7 +21,7 @@ describe('HOME_GROUPS', () => {
           'rhythm',
         ],
       ],
-      ['jam', 'Jam', []],
+      ['jam', 'Jam', ['jam']],
       ['progress', 'Progress', ['log']],
     ])
   })

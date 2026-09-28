@@ -113,7 +113,18 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
       },
     ],
   },
-  { id: 'jam', title: 'Jam', entries: [] },
+  {
+    id: 'jam',
+    title: 'Jam',
+    entries: [
+      {
+        id: 'jam',
+        icon: '🎷',
+        title: 'Blues play-along',
+        text: 'A 12-bar blues band in your key, with the notes that fit each bar.',
+      },
+    ],
+  },
   {
     id: 'progress',
     title: 'Progress',
