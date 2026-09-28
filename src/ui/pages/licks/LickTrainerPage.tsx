@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   MELODY_NOTE_LIMIT_MS,
   MelodyRound,
@@ -54,8 +54,8 @@ export function LickGame({ rng = Math.random }: { rng?: Rng }) {
   const [mode, setMode] = useState<GameMode>('practice')
   const [style, setStyle] = useState<LickStyle>('blues2')
   const [choice, setChoice] = useState(RANDOM)
-  const inStyle = LICKS.filter((l) => l.style === style)
-  const playable = playableLicks(inStyle, harp)
+  const inStyle = useMemo(() => LICKS.filter((l) => l.style === style), [style])
+  const playable = useMemo(() => playableLicks(inStyle, harp), [inStyle, harp])
   const runKey = [
     mode,
     style,

@@ -9,9 +9,9 @@ interface Props {
 }
 
 /**
- * Hosts `usePitch` in a component of its own: the hook re-renders its host on every mic frame,
- * so a page with a live chart keeps it here and only this status line re-renders 60 times a
- * second. The line is always rendered, so the page doesn't jump while the mic starts.
+ * The mic for a page with a live chart: frames go to `onReading` and only this status line
+ * re-renders, when the mic's status changes. The line is always rendered, so the page doesn't
+ * jump while the mic starts.
  */
 export function MicFeed({ onReading, enabled = true }: Props) {
   const { status, error } = usePitch(enabled, onReading)

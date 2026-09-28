@@ -66,9 +66,11 @@ export function TabReaderGame({ storage = browserStorage() }: { storage?: Storag
   const [yourTab, setYourTab] = useState(() => loadYourTab(storage))
 
   const song = SONGS.find((s) => s.id === songId)
-  const text = song ? song.tab : yourTab
-  const parsed = parseTab(text, harp)
-  const timeline = tabTimeline(parsed.items)
+  const { parsed, timeline } = useMemo(() => {
+    const text = SONGS.find((s) => s.id === songId)?.tab ?? yourTab
+    const parsed = parseTab(text, harp)
+    return { parsed, timeline: tabTimeline(parsed.items) }
+  }, [songId, yourTab, harp])
   const wait = mode === 'practice' && waitForMe
   const songKey = song ? song.id : `${CUSTOM}-${textHash(yourTab)}`
 

@@ -1,3 +1,4 @@
+import { Profiler } from 'react'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PitchListener } from '../../../audio/pitch/PitchDetector'
@@ -148,6 +149,30 @@ describe('HealthCheck', () => {
     skip(20)
     expect(screen.getByText('✓ Check complete')).toBeInTheDocument()
     expect(shape()).toEqual(start)
+  })
+
+  it('does not re-render on mic frames that change nothing shown', () => {
+    const onRender = vi.fn()
+    render(
+      <SettingsProvider storage={null}>
+        <Profiler id="check" onRender={onRender}>
+          <HealthCheck now={() => clock.t} storage={localStorage} />
+        </Profiler>
+      </SettingsProvider>,
+    )
+    const frame = (midi: number | null) =>
+      act(() => {
+        clock.t += 50
+        mic.listener?.(midi === null ? null : { freq: midiToFreq(midi), clarity: 1, rms: 0.1 }, 0.1)
+      })
+    frame(null)
+    let count = onRender.mock.calls.length
+    for (let i = 0; i < 20; i++) frame(null)
+    expect(onRender).toHaveBeenCalledTimes(count)
+    frame(72) // an octave above hole 1 blow: outside the ±60¢ window
+    count = onRender.mock.calls.length
+    for (let i = 0; i < 20; i++) frame(72)
+    expect(onRender).toHaveBeenCalledTimes(count)
   })
 
   it('shows mic errors', () => {

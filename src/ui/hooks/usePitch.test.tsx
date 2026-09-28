@@ -62,4 +62,30 @@ describe('usePitch', () => {
     expect(second).toHaveBeenCalledWith(null, 0.002)
     expect(first).toHaveBeenCalledTimes(1)
   })
+
+  it('with onReading, re-renders only when the status changes, not on every frame', () => {
+    let renders = 0
+    const reading = { freq: 440, clarity: 0.95, rms: 0.1 }
+    const { result } = renderHook(
+      () => {
+        renders++
+        return usePitch(true, () => {})
+      },
+      { wrapper },
+    )
+    act(() => detector.pitchListener?.(reading, 0.1))
+    expect(result.current.status).toBe('listening')
+    const before = renders
+    for (let i = 0; i < 60; i++) act(() => detector.pitchListener?.(reading, 0.1))
+    expect(renders).toBe(before)
+  })
+
+  it('without onReading (the tuner), returns every reading', () => {
+    const reading = { freq: 440, clarity: 0.95, rms: 0.1 }
+    const { result } = renderHook(() => usePitch(true), { wrapper })
+    act(() => detector.pitchListener?.(reading, 0.1))
+    expect(result.current).toMatchObject({ status: 'listening', reading, rms: 0.1 })
+    act(() => detector.pitchListener?.(null, 0.002))
+    expect(result.current).toMatchObject({ reading: null, rms: 0.002 })
+  })
 })

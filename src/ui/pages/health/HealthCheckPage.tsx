@@ -61,6 +61,8 @@ export function HealthCheck({ now = perfNow, storage = browserStorage() }: Props
 const TECHNIQUES = ['blow', 'draw'] as const
 const HOLES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 const WAITING: MeasureState = { status: 'waiting', progress: 0, cents: null, result: null }
+const sameShown = (a: MeasureState, b: MeasureState) =>
+  a.status === b.status && a.progress === b.progress && a.cents === b.cents
 
 function HealthRun({ now, storage }: Required<Props>) {
   const { settings, update } = useSettings()
@@ -101,8 +103,10 @@ function HealthRun({ now, storage }: Required<Props>) {
   const pitch = usePitch(!finished, (reading) => {
     const m = measure.get()
     if (!m) return
+    const before = m.state
     const state = m.push(reading?.freq ?? null, now())
-    setLive(state)
+    // Frames arrive 60 times a second: only re-render when something shown changes.
+    if (!sameShown(before, state)) setLive(state)
     if (state.status === 'done') record(state.result)
   })
 
