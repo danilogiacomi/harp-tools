@@ -234,3 +234,11 @@ strong.scoreLine {
 .noteAnswers {
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
+
+/* Room for the widest value ("250 BPM"), so 99 → 100 doesn't re-wrap the toolbar. */
+.tempoValue {
+  display: inline-block;
+  min-width: 7ch;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}

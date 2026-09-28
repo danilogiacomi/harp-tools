@@ -24,7 +24,7 @@ export function TempoField({ min = BPM_MIN, max = BPM_MAX }: Props) {
         value={bpm}
         onChange={(e) => update({ bpm: clamp(Number(e.target.value)) })}
       />
-      <span>{bpm} BPM</span>
+      <span className={styles.tempoValue}>{bpm} BPM</span>
     </label>
   )
 }
