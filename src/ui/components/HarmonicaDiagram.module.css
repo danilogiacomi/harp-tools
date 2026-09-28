@@ -83,10 +83,10 @@
   box-shadow: 0 0 0 3px var(--target);
 }
 
-/* Weaker than target: the technique colour filled in at low opacity, with no ring. */
+/* Weaker than target's ring: only a little more of the technique colour than a plain cell. */
 .cell[data-highlight='hint'] {
   opacity: 1;
-  background: color-mix(in srgb, var(--c) 55%, var(--surface));
+  background: color-mix(in srgb, var(--c) 42%, var(--surface));
 }
 
 .cell[data-highlight='correct'] {

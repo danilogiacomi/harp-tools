@@ -69,7 +69,7 @@
 }
 
 .swatch[data-kind='scale'] {
-  background: color-mix(in srgb, var(--c-draw) 55%, var(--surface));
+  background: color-mix(in srgb, var(--c-draw) 42%, var(--surface));
   border: 2px solid var(--c-draw);
 }
 
