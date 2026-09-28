@@ -125,6 +125,52 @@ describe('HealthCheck', () => {
     expect(screen.getByLabelText('A4')).toHaveTextContent('442')
   })
 
+  it('keeps a finished check when its A4 suggestion is applied, re-read at the new A4', () => {
+    renderCheck()
+    ;[60, 62, 64, 67, 67].forEach((midi) => {
+      play(null, 100)
+      play(midi, 1100, 8)
+    })
+    skip(15)
+    expect(cell('Blow', 1)).toHaveTextContent('+8¢')
+    fireEvent.click(screen.getByRole('button', { name: 'Use 442 Hz' }))
+    expect(screen.getByLabelText('A4')).toHaveTextContent('442')
+    expect(screen.getByText('✓ Check complete')).toBeInTheDocument()
+    // +8¢ against 440 Hz is +0.15¢ against 442 Hz.
+    expect(cell('Blow', 1)).toHaveTextContent('0¢')
+    expect(cell('Draw', 2)).toHaveTextContent('0¢')
+    expect(screen.getByText('5 of 20 reeds measured.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Use \d+ Hz/ })).toBeNull()
+  })
+
+  it('measures the rest of a check against an A4 applied part way', () => {
+    renderCheck()
+    ;[60, 62, 64, 67, 67].forEach((midi) => {
+      play(null, 100)
+      play(midi, 1100, 8)
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Use 442 Hz' }))
+    expect(screen.getByText('Play hole 3 draw (B4)')).toBeInTheDocument()
+    expect(cell('Blow', 3)).toHaveTextContent('0¢')
+    play(null, 100)
+    play(71, 1100, 8) // +8¢ against 440 Hz
+    expect(cell('Draw', 3)).toHaveTextContent('0¢')
+  })
+
+  it('compares with a previous check made at another A4', () => {
+    localStorage.setItem(
+      HEALTH_KEY,
+      JSON.stringify({
+        'C|richter': { date: '2026-09-20', a4: 442, cents: [2, ...Array(19).fill(null)] },
+      }),
+    )
+    renderCheck()
+    expect(screen.getByText(/Δ against the previous check \(2026-09-20\)/)).toBeInTheDocument()
+    play(60, 1100, 4)
+    // +2¢ at 442 Hz is +9.85¢ at 440 Hz.
+    expect(cell('Blow', 1)).toHaveTextContent('+4¢Δ -6¢')
+  })
+
   it('shows the change since the previous check at the same A4', () => {
     localStorage.setItem(
       HEALTH_KEY,

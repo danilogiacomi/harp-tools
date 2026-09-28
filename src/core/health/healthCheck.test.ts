@@ -3,6 +3,7 @@ import { buildHarp } from '../harmonica/harp'
 import { midiToFreq } from '../music/pitch'
 import {
   ReedMeasure,
+  centsAtA4,
   healthReeds,
   summarizeHealth,
   type MeasureState,
@@ -136,5 +137,13 @@ describe('summarizeHealth', () => {
       worst: [],
       suggestedA4: null,
     })
+  })
+})
+
+describe('centsAtA4', () => {
+  it('re-reads cents against another reference pitch', () => {
+    expect(centsAtA4(8, 440, 442)).toBeCloseTo(0.15, 2)
+    expect(centsAtA4(0, 442, 440)).toBeCloseTo(7.85, 2)
+    expect(centsAtA4(-3, 440, 440)).toBe(-3)
   })
 })

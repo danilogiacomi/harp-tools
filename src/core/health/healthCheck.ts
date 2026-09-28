@@ -53,7 +53,7 @@ export class ReedMeasure {
    */
   constructor(
     readonly midi: number,
-    private readonly a4 = 440,
+    readonly a4 = 440,
     { afterSilence = false }: { afterSilence?: boolean } = {},
   ) {
     this.heardSilence = !afterSilence
@@ -98,6 +98,11 @@ export class ReedMeasure {
     this.runStart = null
     this.lastInWindow = null
   }
+}
+
+/** Cents measured against A4 = `fromA4`, re-read against `toA4`. */
+export function centsAtA4(cents: number, fromA4: number, toA4: number): number {
+  return cents + 1200 * Math.log2(fromA4 / toA4)
 }
 
 export interface ReedResult extends Reed {

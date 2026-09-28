@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
   ReedMeasure,
+  centsAtA4,
   healthReeds,
   summarizeHealth,
   type MeasureState,
@@ -48,14 +49,8 @@ const perfNow = () => performance.now()
 
 export function HealthCheck({ now = perfNow, storage = browserStorage() }: Props) {
   const { settings } = useSettings()
-  // A new key, tuning or reference pitch makes every measurement so far meaningless.
-  return (
-    <HealthRun
-      key={[settings.key, settings.tuning, settings.a4].join('|')}
-      now={now}
-      storage={storage}
-    />
-  )
+  // A new key or tuning makes every measurement so far meaningless; a new A4 only re-reads them.
+  return <HealthRun key={[settings.key, settings.tuning].join('|')} now={now} storage={storage} />
 }
 
 const TECHNIQUES = ['blow', 'draw'] as const
@@ -72,7 +67,10 @@ function HealthRun({ now, storage }: Required<Props>) {
   const id = healthId(settings.key, settings.tuning)
   const [previous] = useState(() => loadHealth(storage, id))
   const [step, setStep] = useState(0)
+  /** Median cents per reed, measured against A4 = `resultsA4`. */
   const [results, setResults] = useState<(number | null)[]>(() => reeds.map(() => null))
+  const [resultsA4, setResultsA4] = useState(settings.a4)
+  const shown = results.map((c) => (c === null ? null : centsAtA4(c, resultsA4, settings.a4)))
   const [live, setLive] = useState<MeasureState>(WAITING)
   const [measure] = useState(() => {
     const slot = new Slot<ReedMeasure>()
@@ -94,15 +92,25 @@ function HealthRun({ now, storage }: Required<Props>) {
       saveHealth(storage, id, { date: localDate(Date.now()), a4: settings.a4, cents: values })
     }
   }
-  const record = (value: number | null) => {
-    const values = results.map((c, i) => (i === step ? value : c))
+  /** Stores `values` (against the current A4). */
+  const keep = (values: (number | null)[]) => {
     setResults(values)
+    setResultsA4(settings.a4)
+  }
+  const record = (value: number | null) => {
+    const values = shown.map((c, i) => (i === step ? value : c))
+    keep(values)
     goTo(step + 1, values)
   }
 
   const pitch = usePitch(!finished, (reading) => {
-    const m = measure.get()
+    let m = measure.get()
     if (!m) return
+    if (m.a4 !== settings.a4) {
+      // The A4 suggestion was applied part way: measure this reed against the new A4.
+      m = new ReedMeasure(m.midi, settings.a4, { afterSilence: step > 0 })
+      measure.set(m)
+    }
     const before = m.state
     const state = m.push(reading?.freq ?? null, now())
     // Frames arrive 60 times a second: only re-render when something shown changes.
@@ -112,15 +120,13 @@ function HealthRun({ now, storage }: Required<Props>) {
 
   const redo = () => {
     const back = Math.max(0, step - 1)
-    const values = results.map((c, i) => (i === back ? null : c))
-    setResults(values)
+    keep(shown.map((c, i) => (i === back ? null : c)))
     setLive(WAITING)
     setStep(back)
     measure.set(new ReedMeasure(reeds[back].midi, settings.a4, { afterSilence: true }))
   }
   const restart = () => {
-    const values = reeds.map(() => null)
-    setResults(values)
+    keep(reeds.map(() => null))
     setLive(WAITING)
     setStep(0)
     measure.set(new ReedMeasure(reeds[0].midi, settings.a4, { afterSilence: true }))
@@ -128,11 +134,10 @@ function HealthRun({ now, storage }: Required<Props>) {
 
   const reed: Reed | undefined = reeds[step]
   const summary = summarizeHealth(
-    reeds.map((r, i) => ({ ...r, cents: results[i] })),
+    reeds.map((r, i) => ({ ...r, cents: shown[i] })),
     settings.a4,
     A4_RANGE,
   )
-  const comparable = previous !== null && previous.a4 === settings.a4
   const indexOf = (hole: number, technique: Reed['technique']) =>
     reeds.findIndex((r) => r.hole === hole && r.technique === technique)
   const reedName = (r: Reed) => `${r.hole} ${r.technique}`
@@ -185,7 +190,7 @@ function HealthRun({ now, storage }: Required<Props>) {
         <table className={styles.table}>
           <caption className={styles.caption}>
             Cents off per reed
-            {comparable && ` · Δ against the previous check (${previous.date})`}
+            {previous && ` · Δ against the previous check (${previous.date})`}
           </caption>
           <thead>
             <tr>
@@ -203,8 +208,10 @@ function HealthRun({ now, storage }: Required<Props>) {
                 <th scope="row">{technique === 'blow' ? 'Blow' : 'Draw'}</th>
                 {HOLES.map((hole) => {
                   const i = indexOf(hole, technique)
-                  const cents = i >= 0 ? results[i] : null
-                  const before = comparable && i >= 0 ? previous.cents[i] : null
+                  const cents = i >= 0 ? shown[i] : null
+                  const saved = previous && i >= 0 ? previous.cents[i] : null
+                  const before =
+                    previous && saved !== null ? centsAtA4(saved, previous.a4, settings.a4) : null
                   return (
                     <td
                       key={hole}
