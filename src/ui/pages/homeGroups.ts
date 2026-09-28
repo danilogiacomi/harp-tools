@@ -33,6 +33,12 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
         text: 'Steady time with tap tempo, accents and subdivisions.',
       },
       {
+        id: 'tone',
+        icon: '🌬️',
+        title: 'Tone & breath meter',
+        text: 'See how steady your pitch and breath are, and measure your vibrato.',
+      },
+      {
         id: 'health',
         icon: '🩺',
         title: 'Harp health check',

@@ -12,6 +12,7 @@ import { MetronomePage } from './pages/metronome/MetronomePage'
 import { PositionsPage } from './pages/positions/PositionsPage'
 import { NoteQuizPage } from './pages/quiz/NoteQuizPage'
 import { ScaleRunnerPage } from './pages/scales/ScaleRunnerPage'
+import { ToneMeterPage } from './pages/tone/ToneMeterPage'
 import { TunerPage } from './pages/tuner/TunerPage'
 import { useHashRoute } from './router'
 import { SettingsProvider } from './settings/SettingsContext'
@@ -22,6 +23,7 @@ const ROUTES: Record<string, ComponentType> = {
   '/tuner': TunerPage,
   '/metronome': MetronomePage,
   '/health': HealthCheckPage,
+  '/tone': ToneMeterPage,
   '/positions': PositionsPage,
   '/echo': EchoNotePage,
   '/bend': BendTrainerPage,
