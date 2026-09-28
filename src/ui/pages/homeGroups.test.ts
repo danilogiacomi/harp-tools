@@ -8,7 +8,17 @@ describe('HOME_GROUPS', () => {
       [
         'games',
         'Games',
-        ['echo', 'bend', 'scales', 'intervals', 'melody', 'hole-finder', 'quiz', 'rhythm'],
+        [
+          'echo',
+          'bend',
+          'scales',
+          'intervals',
+          'melody',
+          'hole-finder',
+          'quiz',
+          'tab-reader',
+          'rhythm',
+        ],
       ],
       ['jam', 'Jam', []],
       ['progress', 'Progress', ['log']],

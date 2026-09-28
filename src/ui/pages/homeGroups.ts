@@ -94,6 +94,12 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
         text: 'Name the highlighted hole, or find the hole for a note. No mic needed.',
       },
       {
+        id: 'tab-reader',
+        icon: '📜',
+        title: 'Tab reader',
+        text: 'Play songs from scrolling tab, or type in your own.',
+      },
+      {
         id: 'rhythm',
         icon: '⏱️',
         title: 'Rhythm trainer',

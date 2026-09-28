@@ -1,7 +1,15 @@
 import type { TuningId } from '../../core/harmonica/tunings'
 
 export type GameId =
-  'echo' | 'bend' | 'scales' | 'intervals' | 'melody' | 'hole-finder' | 'quiz' | 'rhythm'
+  | 'echo'
+  | 'bend'
+  | 'scales'
+  | 'intervals'
+  | 'melody'
+  | 'hole-finder'
+  | 'quiz'
+  | 'rhythm'
+  | 'tab-reader'
 
 export const BEST_SCORES_KEY = 'harp-tools:best-scores'
 

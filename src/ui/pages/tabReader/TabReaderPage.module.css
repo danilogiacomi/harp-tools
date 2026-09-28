@@ -1,0 +1,98 @@
+.yourTab {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+}
+
+.yourTab textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+/* A fixed-height window onto the scrolling track; the playhead never moves. */
+.lane {
+  position: relative;
+  height: 4rem;
+  margin: 0 0 1rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  width: 2px;
+  background: var(--target);
+}
+
+.track {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+.countIn {
+  position: absolute;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border);
+}
+
+.note {
+  --c: var(--c-blow);
+  position: absolute;
+  top: 0.9rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  padding: 0 0.4rem;
+  overflow: hidden;
+  border: 2px solid var(--c);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--c) 28%, var(--surface));
+  font-size: 0.85rem;
+}
+
+.note[data-color='draw'] {
+  --c: var(--c-draw);
+}
+.note[data-color='drawBend'],
+.note[data-color='blowBend'] {
+  --c: var(--c-bend);
+}
+.note[data-color='overblow'] {
+  --c: var(--c-overblow);
+}
+.note[data-color='overdraw'] {
+  --c: var(--c-overdraw);
+}
+
+.note[data-state='current'] {
+  box-shadow: 0 0 0 3px var(--target);
+}
+.note[data-state='done'] {
+  border-color: var(--ok);
+}
+.note[data-state='wrong'] {
+  border-color: var(--bad);
+  opacity: 0.7;
+}

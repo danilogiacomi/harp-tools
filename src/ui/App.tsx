@@ -13,6 +13,7 @@ import { PositionsPage } from './pages/positions/PositionsPage'
 import { NoteQuizPage } from './pages/quiz/NoteQuizPage'
 import { RhythmTrainerPage } from './pages/rhythm/RhythmTrainerPage'
 import { ScaleRunnerPage } from './pages/scales/ScaleRunnerPage'
+import { TabReaderPage } from './pages/tabReader/TabReaderPage'
 import { ToneMeterPage } from './pages/tone/ToneMeterPage'
 import { TunerPage } from './pages/tuner/TunerPage'
 import { useHashRoute } from './router'
@@ -34,6 +35,7 @@ const ROUTES: Record<string, ComponentType> = {
   '/hole-finder': HoleFinderPage,
   '/quiz': NoteQuizPage,
   '/rhythm': RhythmTrainerPage,
+  '/tab-reader': TabReaderPage,
   '/log': PracticeLogPage,
 }
 
