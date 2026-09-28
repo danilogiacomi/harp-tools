@@ -42,6 +42,22 @@ describe('song library', () => {
     const tabs = SONGS.flatMap((s) => tabsOf(s.tab))
     expect(tabs.filter((t) => !/^-?[4-9]$/.test(t))).toEqual(['-2'])
   })
+
+  it('pins the opening of every song to its well-known melody', () => {
+    const openings: Record<string, string[]> = {
+      mary: ['5', '-4', '4', '-4', '5', '5', '5', '-4'],
+      twinkle: ['4', '4', '6', '6', '-6', '-6', '6', '-5'],
+      ode: ['5', '5', '-5', '6', '6', '-5', '5', '-4'],
+      susanna: ['4', '-4', '5', '6', '6', '-6', '6', '5'],
+      saints: ['4', '5', '-5', '6', '4', '5', '-5', '6'],
+      'amazing-grace': ['6', '7', '8', '7', '8', '-8', '7', '-6'],
+      'red-river': ['6', '7', '8', '8', '8', '-8', '8', '-8'],
+      'swing-low': ['5', '4', '5', '5', '5', '5', '6', '-6'],
+    }
+    for (const song of SONGS) {
+      expect([song.id, tabsOf(song.tab).slice(0, 8)]).toEqual([song.id, openings[song.id]])
+    }
+  })
 })
 
 describe('lick library', () => {
