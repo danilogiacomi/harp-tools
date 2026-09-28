@@ -4,7 +4,7 @@ import { fakeAudio, hold } from '../../../test/fakeGameAudio'
 import { layoutShape } from '../../../test/layout'
 import { loadBest } from '../../scores/bestScores'
 import { SettingsProvider } from '../../settings/SettingsContext'
-import { RhythmGame } from './RhythmTrainerPage'
+import { RhythmGame, RhythmTrainerPage } from './RhythmTrainerPage'
 
 vi.mock('../../hooks/useGameAudio', () => import('../../../test/fakeGameAudio'))
 // The metronome's first beat was heard at 1000 ms: at 120 BPM the count-in bar is 1000–2999
@@ -121,6 +121,16 @@ describe('RhythmGame', () => {
     expect(shape()).toEqual(idle)
     hold(null, 3500, 4000)
     expect(shape()).toEqual(idle)
+  })
+
+  it('has no note-matching settings: pitch does not matter here', () => {
+    render(
+      <SettingsProvider storage={null}>
+        <RhythmTrainerPage />
+      </SettingsProvider>,
+    )
+    expect(screen.getByRole('heading', { name: 'Rhythm trainer' })).toBeInTheDocument()
+    expect(screen.queryByText('Note matching')).toBeNull()
   })
 
   it('waits for the microphone before offering Start', () => {

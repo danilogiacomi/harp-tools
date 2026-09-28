@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { scriptedRng } from '../../../core/games/random'
 import { fakeAudio, finishPlayback, hold } from '../../../test/fakeGameAudio'
 import { layoutShape } from '../../../test/layout'
-import { SettingsProvider } from '../../settings/SettingsContext'
+import { SettingsProvider, useSettings } from '../../settings/SettingsContext'
 import { LickGame } from './LickTrainerPage'
 
 vi.mock('../../hooks/useGameAudio', () => import('../../../test/fakeGameAudio'))
@@ -30,7 +30,32 @@ const playLick = () => {
   hold(74, 900, 1150)
 }
 
+function Tuning() {
+  const { update } = useSettings()
+  return (
+    <button type="button" onClick={() => update({ tuning: 'naturalMinor' })}>
+      set natural minor
+    </button>
+  )
+}
+
 describe('LickGame', () => {
+  it('sets the tempo here, and warns that licks are written for Richter', () => {
+    render(
+      <SettingsProvider storage={null}>
+        <Tuning />
+        <LickGame rng={scriptedRng([0.25])} />
+      </SettingsProvider>,
+    )
+    fireEvent.change(screen.getByRole('slider', { name: /Tempo/ }), { target: { value: '90' } })
+    expect(screen.getByText('90 BPM')).toBeInTheDocument()
+    expect(screen.queryByText(/Written for a Richter harp/)).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'set natural minor' }))
+    expect(
+      screen.getByText('Written for a Richter harp — on Natural minor some notes sound different.'),
+    ).toBeInTheDocument()
+  })
+
   beforeEach(() => {
     fakeAudio.reset()
     localStorage.clear()

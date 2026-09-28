@@ -4,7 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { DEFAULT_POOL_FILTER } from '../../../core/games/notePool'
 import { recordRound, startSession, type SessionState } from '../../../core/games/session'
 import type { Scoring } from '../../hooks/useScoring'
-import { SettingsProvider } from '../../settings/SettingsContext'
+import { SettingsProvider, useSettings } from '../../settings/SettingsContext'
+import { GameLayout } from './GameLayout'
 import { HoldMeter } from './HoldMeter'
 import { MatchSettings } from './MatchSettings'
 import { ModeToggle } from './ModeToggle'
@@ -12,6 +13,8 @@ import { NoteSlots } from './NoteSlots'
 import { PoolFilterPanel } from './PoolFilterPanel'
 import { PlayAgain, ScorePanel } from './ScorePanel'
 import { Stage } from './Stage'
+import { TempoField } from './TempoField'
+import { WrittenForRichter } from './WrittenForRichter'
 
 const withSettings = (ui: ReactNode) =>
   render(<SettingsProvider storage={null}>{ui}</SettingsProvider>)
@@ -209,5 +212,82 @@ describe('NoteSlots', () => {
       ['3', 'todo'],
     ])
     expect(screen.getByRole('list', { name: 'Lick' })).toBeInTheDocument()
+  })
+})
+
+function SettingsProbe() {
+  const { settings, update } = useSettings()
+  return (
+    <>
+      <output aria-label="BPM setting">{settings.bpm}</output>
+      <button type="button" onClick={() => update({ bpm: 200 })}>
+        200 BPM elsewhere
+      </button>
+      <button type="button" onClick={() => update({ tuning: 'country' })}>
+        Country tuning
+      </button>
+    </>
+  )
+}
+
+describe('TempoField', () => {
+  it('sets the shared tempo', () => {
+    withSettings(
+      <>
+        <SettingsProbe />
+        <TempoField />
+      </>,
+    )
+    fireEvent.change(screen.getByRole('slider', { name: /Tempo/ }), { target: { value: '132' } })
+    expect(screen.getByLabelText('BPM setting')).toHaveTextContent('132')
+    expect(screen.getByText('132 BPM')).toBeInTheDocument()
+  })
+
+  it('keeps the tempo inside its own range', () => {
+    withSettings(
+      <>
+        <SettingsProbe />
+        <TempoField min={60} max={160} />
+      </>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: '200 BPM elsewhere' }))
+    expect(screen.getByRole('slider', { name: /Tempo/ })).toHaveValue('160')
+    expect(screen.getByText('160 BPM')).toBeInTheDocument()
+    fireEvent.change(screen.getByRole('slider', { name: /Tempo/ }), { target: { value: '40' } })
+    expect(screen.getByLabelText('BPM setting')).toHaveTextContent('60')
+  })
+})
+
+describe('WrittenForRichter', () => {
+  it('warns only when the tuning is not Richter', () => {
+    withSettings(
+      <>
+        <SettingsProbe />
+        <WrittenForRichter />
+      </>,
+    )
+    expect(screen.queryByText(/Written for a Richter harp/)).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Country tuning' }))
+    expect(screen.getByText(/Written for a Richter harp/)).toHaveTextContent(
+      'Written for a Richter harp — on Country some notes sound different.',
+    )
+  })
+})
+
+describe('GameLayout', () => {
+  it('shows the note-matching settings unless the game has no use for them', () => {
+    const { unmount } = withSettings(
+      <GameLayout title="Game" intro="Play.">
+        <p>game</p>
+      </GameLayout>,
+    )
+    expect(screen.getByText('Note matching')).toBeInTheDocument()
+    unmount()
+    withSettings(
+      <GameLayout title="Game" intro="Play." matchSettings={false}>
+        <p>game</p>
+      </GameLayout>,
+    )
+    expect(screen.queryByText('Note matching')).toBeNull()
   })
 })

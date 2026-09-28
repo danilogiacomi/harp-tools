@@ -20,6 +20,8 @@ import { ModeToggle } from '../../components/game/ModeToggle'
 import { NoteSlots, type SlotState } from '../../components/game/NoteSlots'
 import { PlayAgain, ScorePanel } from '../../components/game/ScorePanel'
 import { Stage } from '../../components/game/Stage'
+import { TempoField } from '../../components/game/TempoField'
+import { WrittenForRichter } from '../../components/game/WrittenForRichter'
 import styles from '../../components/game/Game.module.css'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
 import { useHarp, useSpelling } from '../../hooks/useHarp'
@@ -103,8 +105,9 @@ export function LickGame({ rng = Math.random }: { rng?: Rng }) {
             </select>
           </label>
         )}
-        <span className={styles.hint}>{settings.bpm} BPM</span>
+        <TempoField />
       </div>
+      <WrittenForRichter />
       {playable.length === 0 ? (
         <p role="alert" className="notice">
           None of these licks can be played in this tuning. Choose another style or tuning.

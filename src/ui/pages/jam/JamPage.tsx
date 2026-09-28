@@ -16,6 +16,7 @@ import { AudioGate } from '../../components/AudioGate'
 import { HarmonicaDiagram, type Highlight } from '../../components/HarmonicaDiagram'
 import { MicFeed } from '../../components/MicFeed'
 import gameStyles from '../../components/game/Game.module.css'
+import { TempoField } from '../../components/game/TempoField'
 import { useBacking } from '../../hooks/useBacking'
 import { useHarp, useSpelling } from '../../hooks/useHarp'
 import { usePracticeTimer } from '../../hooks/usePracticeTimer'
@@ -50,7 +51,7 @@ export function JamPage() {
 }
 
 export function Jam() {
-  const { settings, update } = useSettings()
+  const { settings } = useSettings()
   const harp = useHarp()
   const spelling = useSpelling()
   const [position, setPosition] = useState<Position>(2)
@@ -132,18 +133,7 @@ export function Jam() {
           />
           Quick change
         </label>
-        <label className={gameStyles.field}>
-          Tempo
-          <input
-            type="range"
-            min={JAM_BPM[0]}
-            max={JAM_BPM[1]}
-            step={1}
-            value={bpm}
-            onChange={(e) => update({ bpm: Number(e.target.value) })}
-          />
-          <span>{bpm} BPM</span>
-        </label>
+        <TempoField min={JAM_BPM[0]} max={JAM_BPM[1]} />
       </div>
 
       <div className={styles.now}>

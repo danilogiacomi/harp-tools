@@ -13,12 +13,12 @@ import {
 } from '../../../core/rhythm/rhythmTrainer'
 import { isFinished, type GameMode } from '../../../core/games/session'
 import { TIME_SIGNATURES, type MetronomeConfig } from '../../../core/rhythm/schedule'
-import { BPM_MAX, BPM_MIN, clampBpm } from '../../../core/rhythm/tempo'
 import { MicErrorNotice } from '../../components/MicErrorNotice'
 import { GameLayout } from '../../components/game/GameLayout'
 import { ModeToggle } from '../../components/game/ModeToggle'
 import { PlayAgain, ScorePanel } from '../../components/game/ScorePanel'
 import { Stage } from '../../components/game/Stage'
+import { TempoField } from '../../components/game/TempoField'
 import styles from '../../components/game/Game.module.css'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
 import { useMetronome } from '../../hooks/useMetronome'
@@ -39,6 +39,7 @@ export function RhythmTrainerPage() {
     <GameLayout
       title="Rhythm trainer"
       intro="Play any note on every hit of the pattern, in time with the metronome. Pitch doesn't matter."
+      matchSettings={false}
     >
       <RhythmGame />
     </GameLayout>
@@ -46,7 +47,7 @@ export function RhythmTrainerPage() {
 }
 
 export function RhythmGame() {
-  const { settings, update } = useSettings()
+  const { settings } = useSettings()
   // Owned here, not by the keyed run, so a settings change doesn't restart the mic.
   const audio = useGameAudio(true)
   const [mode, setMode] = useState<GameMode>('practice')
@@ -70,18 +71,7 @@ export function RhythmGame() {
             ))}
           </select>
         </label>
-        <label className={styles.field}>
-          Tempo
-          <input
-            type="range"
-            min={BPM_MIN}
-            max={BPM_MAX}
-            step={1}
-            value={settings.bpm}
-            onChange={(e) => update({ bpm: clampBpm(Number(e.target.value)) })}
-          />
-          <span>{settings.bpm} BPM</span>
-        </label>
+        <TempoField />
       </div>
       <RhythmRun key={runKey} audio={audio} mode={mode} pattern={patternById(patternId)} />
     </>

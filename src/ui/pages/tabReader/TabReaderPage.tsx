@@ -22,6 +22,8 @@ import { ModeToggle } from '../../components/game/ModeToggle'
 import { NoteSlots, type NoteSlot } from '../../components/game/NoteSlots'
 import { PlayAgain, ScorePanel } from '../../components/game/ScorePanel'
 import { Stage } from '../../components/game/Stage'
+import { TempoField } from '../../components/game/TempoField'
+import { WrittenForRichter } from '../../components/game/WrittenForRichter'
 import styles from '../../components/game/Game.module.css'
 import { useAnimationFrame } from '../../hooks/useAnimationFrame'
 import { useGameAudio, type GameAudio, type HeardListener } from '../../hooks/useGameAudio'
@@ -114,8 +116,9 @@ export function TabReaderGame({ storage = browserStorage() }: { storage?: Storag
             Wait for me
           </label>
         )}
-        <span className={styles.hint}>{settings.bpm} BPM (set it on the metronome)</span>
+        <TempoField />
       </div>
+      <WrittenForRichter />
       {!song && (
         <label className={laneStyles.yourTab}>
           Your tab

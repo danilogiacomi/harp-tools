@@ -31,6 +31,9 @@ function Tempo() {
       <button type="button" onClick={() => update({ bpm: 100 })}>
         set 100 BPM
       </button>
+      <button type="button" onClick={() => update({ tuning: 'country' })}>
+        set Country tuning
+      </button>
     </>
   )
 }
@@ -99,6 +102,17 @@ describe('TabReaderGame', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Final score: 275 / 300')
     expect(metronome.running).toBe(false)
     expect(loadBest(localStorage, `tab-reader|song=custom-${textHash('4 -4 5')}`)).toBe(275)
+  })
+
+  it('sets the tempo here, and warns that songs are written for Richter', () => {
+    renderGame()
+    fireEvent.change(screen.getByRole('slider', { name: /Tempo/ }), { target: { value: '90' } })
+    expect(screen.getByText('90 BPM')).toBeInTheDocument()
+    expect(screen.queryByText(/Written for a Richter harp/)).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'set Country tuning' }))
+    expect(
+      screen.getByText('Written for a Richter harp — on Country some notes sound different.'),
+    ).toBeInTheDocument()
   })
 
   it('reports tab errors and offers no Start', () => {
