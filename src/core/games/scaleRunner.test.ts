@@ -42,6 +42,23 @@ describe('ScaleRun', () => {
     expect(run.push(midiToFreq(60), 250).progress).toBeCloseTo(0.5)
   })
 
+  it('merges repeated notes into one hold by default', () => {
+    const run = new ScaleRun([60, 60], CONFIG, 0)
+    expect(hold(run, 60, 0, 1050)).toMatchObject({ index: 2, done: true })
+  })
+
+  it('with rearticulate, a repeated note needs a break or another pitch first', () => {
+    const run = new ScaleRun([64, 64, 64, 62], { ...CONFIG, rearticulate: true }, 0)
+    expect(hold(run, 64, 0, 2000)).toMatchObject({ index: 1, progress: 0, completed: null })
+    run.push(null, 2050)
+    expect(hold(run, 64, 2100, 2600)).toMatchObject({ index: 2, completed: { onsetMs: 2100 } })
+    // A frame of another pitch also counts as a break.
+    run.push(midiToFreq(67), 2650)
+    expect(hold(run, 64, 2700, 3200)).toMatchObject({ index: 3, completed: { index: 2 } })
+    // A different next note starts matching at once.
+    expect(hold(run, 62, 3250, 3750)).toMatchObject({ index: 4, done: true })
+  })
+
   it('is done at once for an empty sequence', () => {
     expect(new ScaleRun([], CONFIG, 0).state.done).toBe(true)
   })

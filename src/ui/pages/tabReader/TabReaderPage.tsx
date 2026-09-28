@@ -212,7 +212,7 @@ function TabRun({ audio, mode, wait, timeline, beatsPerBar, bestKey }: RunProps)
       const matcher = { toleranceCents: settings.toleranceCents, holdMs: TAB_HOLD_MS }
       const follower = new ScaleRun(
         notes.map((n) => n.note.midi),
-        { matcher, a4: settings.a4 },
+        { matcher, a4: settings.a4, rearticulate: true },
         audio.now(),
       )
       runtime.set({ kind: 'wait', follower, clock: new WaitClock(audio.now(), beat) })

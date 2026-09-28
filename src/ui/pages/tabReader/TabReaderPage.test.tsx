@@ -73,6 +73,19 @@ describe('TabReaderGame', () => {
     expect(screen.getByText('✓ Done — 3 of 3 notes')).toBeInTheDocument()
   })
 
+  it('waits for a break between repeated notes (Mary: 5 5 5)', () => {
+    renderGame('5 5 5:2 -4')
+    start()
+    hold(76, 0, 650) // one unbroken breath
+    expect(screen.getByText(/^Note \d of 4/)).toHaveTextContent('Note 2 of 4')
+    hold(null, 700, 700)
+    hold(76, 750, 1000)
+    expect(screen.getByText(/^Note \d of 4/)).toHaveTextContent('Note 3 of 4')
+    hold(null, 1050, 1050)
+    hold(76, 1100, 1350)
+    expect(screen.getByText('Next: -4 (D5)')).toBeInTheDocument()
+  })
+
   it('scores notes at tempo by their timing, and saves the best per tab', () => {
     renderGame()
     fireEvent.click(screen.getByRole('button', { name: 'Scored' }))

@@ -1,9 +1,15 @@
+import { centsOff } from '../music/pitch'
 import { NoteMatcher, type MatcherConfig } from './noteMatcher'
 import { roundPoints, speedBonus } from './session'
 
 export interface ScaleRunConfig {
   matcher: MatcherConfig
   a4: number
+  /**
+   * A note repeating the previous pitch only starts matching after a frame of silence or of
+   * another pitch, so one long breath can't play `5 5 5` (the tab reader).
+   */
+  rearticulate?: boolean
 }
 
 export interface RunStep {
@@ -28,6 +34,8 @@ export class ScaleRun {
   private index = 0
   private matcher: NoteMatcher | null
   private noteStartMs: number
+  /** Waiting for the break before a repeated note. */
+  private awaitBreak = false
   private current: ScaleRunState
 
   constructor(
@@ -49,6 +57,14 @@ export class ScaleRun {
       if (this.current.completed) this.current = { ...this.current, completed: null }
       return this.current
     }
+    if (this.awaitBreak) {
+      const cents = freq === null ? null : centsOff(freq, this.matcher.target, this.config.a4)
+      if (cents !== null && Math.abs(cents) <= this.config.matcher.toleranceCents) {
+        this.current = { index: this.index, done: false, progress: 0, completed: null }
+        return this.current
+      }
+      this.awaitBreak = false
+    }
     const m = this.matcher.push(freq, timeMs)
     if (!m.matched) {
       this.current = { index: this.index, done: false, progress: m.progress, completed: null }
@@ -62,6 +78,9 @@ export class ScaleRun {
     this.index += 1
     this.noteStartMs = timeMs
     this.matcher = this.matcherAt(this.index)
+    this.awaitBreak =
+      this.config.rearticulate === true &&
+      this.sequence[this.index] === this.sequence[this.index - 1]
     this.current = { index: this.index, done: this.matcher === null, progress: 0, completed }
     return this.current
   }
