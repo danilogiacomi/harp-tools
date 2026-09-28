@@ -6,6 +6,7 @@ import { HealthCheckPage } from './pages/health/HealthCheckPage'
 import { HomePage } from './pages/HomePage'
 import { HoleFinderPage } from './pages/holeFinder/HoleFinderPage'
 import { IntervalsPage } from './pages/intervals/IntervalsPage'
+import { LickTrainerPage } from './pages/licks/LickTrainerPage'
 import { MelodyEchoPage } from './pages/melody/MelodyEchoPage'
 import { PracticeLogPage } from './pages/log/PracticeLogPage'
 import { MetronomePage } from './pages/metronome/MetronomePage'
@@ -36,6 +37,7 @@ const ROUTES: Record<string, ComponentType> = {
   '/quiz': NoteQuizPage,
   '/rhythm': RhythmTrainerPage,
   '/tab-reader': TabReaderPage,
+  '/licks': LickTrainerPage,
   '/log': PracticeLogPage,
 }
 

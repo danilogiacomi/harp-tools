@@ -54,6 +54,7 @@ describe('App', () => {
     ['#/health', 'Harp health check'],
     ['#/tone', 'Tone & breath meter'],
     ['#/tab-reader', 'Tab reader'],
+    ['#/licks', 'Lick trainer'],
     ['#/rhythm', 'Rhythm trainer'],
   ])('routes %s to its game', (hash, title) => {
     window.location.hash = hash

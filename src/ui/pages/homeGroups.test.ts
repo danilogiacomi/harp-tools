@@ -17,6 +17,7 @@ describe('HOME_GROUPS', () => {
           'hole-finder',
           'quiz',
           'tab-reader',
+          'licks',
           'rhythm',
         ],
       ],

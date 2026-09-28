@@ -100,6 +100,12 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
         text: 'Play songs from scrolling tab, or type in your own.',
       },
       {
+        id: 'licks',
+        icon: '🎸',
+        title: 'Lick trainer',
+        text: 'Hear a blues, folk or minor lick at your tempo, then play it back.',
+      },
+      {
         id: 'rhythm',
         icon: '⏱️',
         title: 'Rhythm trainer',
