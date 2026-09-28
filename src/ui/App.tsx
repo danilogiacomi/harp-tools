@@ -11,6 +11,7 @@ import { PracticeLogPage } from './pages/log/PracticeLogPage'
 import { MetronomePage } from './pages/metronome/MetronomePage'
 import { PositionsPage } from './pages/positions/PositionsPage'
 import { NoteQuizPage } from './pages/quiz/NoteQuizPage'
+import { RhythmTrainerPage } from './pages/rhythm/RhythmTrainerPage'
 import { ScaleRunnerPage } from './pages/scales/ScaleRunnerPage'
 import { ToneMeterPage } from './pages/tone/ToneMeterPage'
 import { TunerPage } from './pages/tuner/TunerPage'
@@ -32,6 +33,7 @@ const ROUTES: Record<string, ComponentType> = {
   '/melody': MelodyEchoPage,
   '/hole-finder': HoleFinderPage,
   '/quiz': NoteQuizPage,
+  '/rhythm': RhythmTrainerPage,
   '/log': PracticeLogPage,
 }
 

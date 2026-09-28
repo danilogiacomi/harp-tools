@@ -93,6 +93,12 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
         title: 'Note quiz',
         text: 'Name the highlighted hole, or find the hole for a note. No mic needed.',
       },
+      {
+        id: 'rhythm',
+        icon: '⏱️',
+        title: 'Rhythm trainer',
+        text: 'Play in time with the metronome: quarters, shuffles, the train beat.',
+      },
     ],
   },
   { id: 'jam', title: 'Jam', entries: [] },
