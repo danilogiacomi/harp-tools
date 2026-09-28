@@ -60,6 +60,26 @@ describe('song library', () => {
   })
 })
 
+describe('corrected melodies', () => {
+  it('pins the whole chorus of Oh! Susanna', () => {
+    const song = SONGS.find((s) => s.id === 'susanna')!
+    // “Oh, Susanna, oh don't you cry for me, for I come from Alabama with my banjo on my knee.”
+    expect(tabsOf(song.tab).slice(-25)).toEqual(
+      '-5 -5 -6 -6 -6 6 6 5 4 -4 4 -4 5 6 6 -6 6 5 4 -4 5 5 -4 -4 4'.split(' '),
+    )
+  })
+
+  it('pins all of Red River Valley', () => {
+    const song = SONGS.find((s) => s.id === 'red-river')!
+    expect(tabsOf(song.tab)).toEqual(
+      (
+        '6 7 8 8 8 -8 8 -8 7 6 7 8 7 8 9 -9 8 -8 ' +
+        '9 -9 8 8 -8 7 -8 8 9 -9 -6 -6 6 -7 7 -8 8 -8 7'
+      ).split(' '),
+    )
+  })
+})
+
 describe('lick library', () => {
   it('has 10 blues, 3 folk and 3 minor licks with unique ids', () => {
     const count = (style: string) => LICKS.filter((l) => l.style === style).length

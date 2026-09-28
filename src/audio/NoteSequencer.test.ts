@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { FEEDBACK_TAIL_MS } from '../core/games/feedbackGate'
 import type { NotePlayer } from './NotePlayer'
 import { NoteSequencer } from './NoteSequencer'
 
@@ -74,6 +75,24 @@ describe('NoteSequencer', () => {
       { midi: 70, durationMs: 900 },
     ])
     expect(waits).toEqual([50, 250, 100])
+  })
+
+  it('keeps the silence between long notes under the feedback gate’s tail', async () => {
+    const { player, played } = fakePlayer()
+    const waits: number[] = []
+    const seq = new NoteSequencer(player, async (ms) => {
+      waits.push(ms)
+    })
+    await seq.playTimed([
+      { midi: 67, ms: 2000 },
+      { midi: 67, ms: 600 },
+    ])
+    expect(played).toEqual([
+      { midi: 67, durationMs: 1900 },
+      { midi: 67, durationMs: 540 },
+    ])
+    expect(waits).toEqual([100, 60])
+    expect(Math.max(...waits)).toBeLessThan(FEEDBACK_TAIL_MS)
   })
 
   it('abandons a timed prompt when cancelled or superseded', async () => {

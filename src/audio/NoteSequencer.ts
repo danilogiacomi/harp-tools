@@ -8,8 +8,13 @@ export interface TimedPrompt {
   ms: number
 }
 
-/** Share of a timed note that sounds; the rest is silence, so repeated notes are heard apart. */
-export const LEGATO = 0.9
+/**
+ * The silence at the end of a timed note, so repeated notes are heard apart: 10% of it, but at
+ * most 100 ms — a longer one would outlast the feedback gate's 150 ms tail and let the mic in
+ * mid-prompt.
+ */
+export const LEGATO_GAP = 0.1
+export const MAX_GAP_MS = 100
 
 /** Plays prompt notes one after another. A new play() or cancel() abandons the running one. */
 export class NoteSequencer {
@@ -39,7 +44,7 @@ export class NoteSequencer {
       if (n.midi === null) {
         await this.wait(n.ms)
       } else {
-        const soundMs = n.ms * LEGATO
+        const soundMs = n.ms - Math.min(n.ms * LEGATO_GAP, MAX_GAP_MS)
         await this.player.play(n.midi, { durationMs: soundMs })
         if (generation !== this.generation) return false
         await this.wait(n.ms - soundMs)
