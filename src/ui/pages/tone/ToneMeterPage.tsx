@@ -50,10 +50,13 @@ export function ToneMeter({ now = perfNow }: { now?: () => number }) {
   const [view, setView] = useState<View>({ stats: null, active: false })
 
   // Every mic frame lands here, outside render, and only updates the buffers.
-  const onReading: PitchListener = (reading) => {
+  const onReading: PitchListener = (reading, rms) => {
     const tMs = now()
     if (!reading) {
-      history.push({ tMs, cents: null, db: null })
+      // rms is reported even when the pitch is too unclear to read (an attack, a breathy note,
+      // a bend): the level line keeps drawing, only the pitch line breaks.
+      const db = rms > 0 ? Math.min(0, Math.max(-60, 20 * Math.log10(Math.max(rms, 1e-6)))) : null
+      history.push({ tMs, cents: null, db })
       return
     }
     const { midi, cents } = freqToMidi(reading.freq, settings.a4)

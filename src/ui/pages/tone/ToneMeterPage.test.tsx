@@ -5,6 +5,7 @@ import type { PitchListener } from '../../../audio/pitch/PitchDetector'
 import { midiToFreq } from '../../../core/music/pitch'
 import type { PitchState } from '../../hooks/usePitch'
 import { SettingsProvider } from '../../settings/SettingsContext'
+import { layoutShape } from '../../../test/layout'
 import { STATS_REFRESH_MS, ToneMeter } from './ToneMeterPage'
 
 // A static mic state: frames only arrive through the listener, so any re-render the test sees
@@ -84,9 +85,25 @@ describe('ToneMeter', () => {
     expect(container.querySelector('path.level')!.getAttribute('d')).toMatch(/^M/)
   })
 
+  it('keeps drawing the level line when the pitch is unclear but breath is present', () => {
+    const { container } = renderMeter()
+    // No pitched reading (an attack, a breathy note…), but rms shows sound is still there.
+    act(() => play(null, 500, 0, 0.1))
+    act(() => vi.advanceTimersByTime(100))
+    expect(container.querySelector('path.pitch')!.getAttribute('d')).toBe('')
+    expect(container.querySelector('path.level')!.getAttribute('d')).toMatch(/^M/)
+  })
+
+  it('breaks the level line too on true silence', () => {
+    const { container } = renderMeter()
+    act(() => play(null, 500, 0, 0))
+    act(() => vi.advanceTimersByTime(100))
+    expect(container.querySelector('path.level')!.getAttribute('d')).toBe('')
+  })
+
   it('keeps the same layout with and without a note', () => {
     const { container } = renderMeter()
-    const shape = () => [...container.querySelectorAll('dd, dt, svg, p')].map((e) => e.tagName)
+    const shape = () => layoutShape(container, ['dt', 'dd', 'svg', 'p'])
     const empty = shape()
     act(() => play(67, 1200))
     act(() => vi.advanceTimersByTime(STATS_REFRESH_MS))

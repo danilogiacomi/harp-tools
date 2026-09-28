@@ -5,7 +5,8 @@ import styles from './ToneMeterPage.module.css'
 
 const W = 600
 const H = 200
-/** Spec §8: redrawn at 30 fps. */
+/** Spec §8: redrawn at 30 fps; the 3 ms margin keeps a dropped animation frame from skipping a
+ *  whole draw, so the true rate is a ceiling of ~33 fps rather than a hard 30 fps floor. */
 const FRAME_MS = 1000 / 30 - 3
 
 interface Props {
