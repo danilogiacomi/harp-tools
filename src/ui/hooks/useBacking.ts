@@ -16,7 +16,7 @@ export function useBacking(config: BackingConfig, mix: Mix) {
   useEffect(() => scheduler.setConfig(config), [scheduler, config])
   useEffect(() => scheduler.setMix(mix), [scheduler, mix])
   useEffect(() => scheduler.setA4(settings.a4), [scheduler, settings.a4])
-  useEffect(() => () => scheduler.stop(), [scheduler])
+  useEffect(() => () => scheduler.dispose(), [scheduler])
 
   const toggle = useCallback(() => {
     if (scheduler.isRunning) {

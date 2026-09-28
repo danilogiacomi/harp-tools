@@ -12,6 +12,7 @@ const fake = vi.hoisted(() => ({
   mixes: [] as unknown[],
   a4s: [] as number[],
   stops: 0,
+  disposes: 0,
 }))
 
 vi.mock('../../audio/backing/BackingScheduler', async (importOriginal) => {
@@ -39,6 +40,10 @@ vi.mock('../../audio/backing/BackingScheduler', async (importOriginal) => {
         this.isRunning = false
         fake.stops++
       }
+      dispose() {
+        this.isRunning = false
+        fake.disposes++
+      }
     },
   }
 })
@@ -60,8 +65,7 @@ describe('useBacking', () => {
     expect(result.current.bar).toBe(3)
     act(() => result.current.toggle())
     expect(result.current).toMatchObject({ running: false, bar: null })
-    const stops = fake.stops
     unmount()
-    expect(fake.stops).toBe(stops + 1)
+    expect(fake.disposes).toBe(1) // stopped and disconnected
   })
 })

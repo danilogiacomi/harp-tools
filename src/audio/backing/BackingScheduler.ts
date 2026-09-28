@@ -13,6 +13,8 @@ import { makeNoiseBuffer, playBass, playChord, playHat, playKick, playSnare } fr
 const TICK_MS = 25
 const LOOKAHEAD_S = 0.1
 const START_DELAY_S = 0.05
+/** Mixer changes glide over ~10 ms instead of jumping, which would click. */
+const GLIDE_S = 0.01
 
 export interface MixLevel {
   /** 0–1. */
@@ -64,7 +66,7 @@ export class BackingScheduler {
 
   setMix(mix: Mix): void {
     this.mix = mix
-    if (this.channels) this.applyMix(this.channels)
+    if (this.channels && this.isRunning) this.applyMix(this.channels)
   }
 
   start(): void {
@@ -74,29 +76,47 @@ export class BackingScheduler {
       const channels = {} as Record<Instrument, GainNode>
       for (const i of INSTRUMENTS) {
         channels[i] = ctx.createGain()
+        channels[i].gain.value = 0 // faded in by applyMix()
         channels[i].connect(audioEngine.master)
       }
       this.channels = channels
-      this.applyMix(channels)
     }
+    this.applyMix(this.channels)
     this.noise ??= makeNoiseBuffer(ctx)
     this.state = { nextBeatTime: audioEngine.now() + START_DELAY_S, bar: 0, beat: 0 }
     this.tick()
     this.timer = setInterval(this.tick, TICK_MS)
   }
 
+  /** Stops scheduling and fades out the notes already scheduled ahead. */
   stop(): void {
     clearInterval(this.timer)
     this.timer = undefined
     this.pendingBars.forEach(clearTimeout)
     this.pendingBars.clear()
+    if (this.channels) {
+      for (const i of INSTRUMENTS) this.glide(this.channels[i], 0)
+    }
+  }
+
+  /** Stops and disconnects the mixer; a later start() builds a new one. */
+  dispose(): void {
+    this.stop()
+    if (this.channels) {
+      for (const i of INSTRUMENTS) this.channels[i].disconnect()
+    }
+    this.channels = null
   }
 
   private applyMix(channels: Record<Instrument, GainNode>): void {
     for (const i of INSTRUMENTS) {
       const { volume, muted } = this.mix[i]
-      channels[i].gain.value = muted ? 0 : volume
+      this.glide(channels[i], muted ? 0 : volume)
     }
+  }
+
+  private glide(channel: GainNode, value: number): void {
+    channel.gain.setTargetAtTime(value, audioEngine.ctx.currentTime, GLIDE_S)
   }
 
   private tick = (): void => {

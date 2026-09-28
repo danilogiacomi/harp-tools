@@ -7,10 +7,14 @@ import { BackingScheduler, DEFAULT_MIX } from './BackingScheduler'
 const param = () => ({
   value: 0,
   setValueAtTime: vi.fn(),
+  setTargetAtTime: vi.fn(),
   linearRampToValueAtTime: vi.fn(),
   exponentialRampToValueAtTime: vi.fn(),
 })
-const node = () => ({ connect: vi.fn((dest: unknown) => dest) })
+const node = () => ({ connect: vi.fn((dest: unknown) => dest), disconnect: vi.fn() })
+/** Where each channel is gliding to: the last setTargetAtTime value (value itself stays 0). */
+const targets = (gains: { gain: ReturnType<typeof param> }[]) =>
+  gains.map((g) => g.gain.setTargetAtTime.mock.calls.at(-1)?.[0])
 
 /** Records every source node the voices start, with its type and frequency. */
 class FakeAudioContext {
@@ -114,17 +118,45 @@ describe('BackingScheduler', () => {
     expect(s.isRunning).toBe(false)
   })
 
-  it('sets one mixer channel per instrument, live', () => {
+  it('sets one mixer channel per instrument, live, gliding so a change never clicks', () => {
     const s = new BackingScheduler(CONFIG, vi.fn())
     s.start()
-    const channels = ctx.gains.slice(0, 5).map((g) => g.gain.value)
-    expect(channels).toEqual([0.8, 0.6, 0.4, 0.8, 0.5])
+    const channels = ctx.gains.slice(0, 5)
+    expect(targets(channels)).toEqual([0.8, 0.6, 0.4, 0.8, 0.5])
+    ctx.currentTime = 1.5
     s.setMix({
       ...DEFAULT_MIX,
       bass: { volume: 0.3, muted: true },
       hat: { volume: 0.9, muted: false },
     })
-    expect(ctx.gains.slice(0, 5).map((g) => g.gain.value)).toEqual([0.8, 0.6, 0.9, 0, 0.5])
+    expect(targets(channels)).toEqual([0.8, 0.6, 0.9, 0, 0.5])
+    expect(channels[2].gain.setTargetAtTime).toHaveBeenLastCalledWith(0.9, 1.5, 0.01)
+    expect(channels.map((g) => g.gain.value)).toEqual([0, 0, 0, 0, 0])
+  })
+
+  it('fades its channels out on stop, so notes already scheduled go quiet, and back on start', () => {
+    const s = new BackingScheduler(CONFIG, vi.fn())
+    s.start()
+    const channels = ctx.gains.slice(0, 5)
+    ctx.currentTime = 2
+    s.stop()
+    expect(targets(channels)).toEqual([0, 0, 0, 0, 0])
+    expect(channels[0].gain.setTargetAtTime).toHaveBeenLastCalledWith(0, 2, 0.01)
+    s.setMix({ ...DEFAULT_MIX, kick: { volume: 0.2, muted: false } })
+    expect(targets(channels)).toEqual([0, 0, 0, 0, 0]) // stays quiet while stopped
+    s.start()
+    expect(targets(channels)).toEqual([0.2, 0.6, 0.4, 0.8, 0.5])
+  })
+
+  it('disconnects its channels when disposed, and builds new ones if started again', () => {
+    const s = new BackingScheduler(CONFIG, vi.fn())
+    s.start()
+    const channels = ctx.gains.slice(0, 5) as unknown as ReturnType<typeof node>[]
+    s.dispose()
+    expect(s.isRunning).toBe(false)
+    for (const ch of channels) expect(ch.disconnect).toHaveBeenCalled()
+    s.start()
+    expect(ctx.gains.length).toBeGreaterThan(5)
   })
 
   it('tunes to the A4 setting', () => {
