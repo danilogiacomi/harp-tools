@@ -4,7 +4,7 @@
 
 **Practice tools and ear-training games for diatonic harmonica players — right in your browser.**
 
-Tuner · Metronome · Positions & keys · Ear games · Note quiz · Practice log
+Tuner · Tone meter · Ear games · Tab reader · Lick trainer · Blues play-along · Practice log
 
 **[▶ Try it live](https://danilogiacomi.github.io/harp-tools/)**
 
@@ -34,6 +34,8 @@ No accounts, no server, no installs — it's a static site that runs entirely in
 | 🎯 | **Tuner — listen** | Detects the note you play, shows cents offset and lights up every matching hole |
 | 🔊 | **Tuner — play** | Click any hole on the chart to hear its reference note |
 | 🧭 | **Positions & keys** | Which harp to use for a song, and what each harp plays in every position |
+| 🌬️ | **Tone & breath meter** | A live pitch and level chart, with steadiness and vibrato for the note you hold |
+| 🩺 | **Harp health check** | Measures all 20 reeds and shows which ones are out of tune |
 | 📈 | **Practice log** | Daily streaks, time practised per day and page, recent scores — kept in your browser |
 
 ### Games
@@ -47,8 +49,17 @@ No accounts, no server, no installs — it's a static site that runs entirely in
 | 🔁 | **Melody echo** | Repeat short phrases that grow longer as you improve |
 | 🔎 | **Hole finder** | A note name appears — find it on your harp, no hints by ear |
 | 🎓 | **Note quiz** | Name the highlighted hole, or click the hole for a note; no mic needed |
+| 📜 | **Tab reader** | Play songs from scrolling tab — it can wait for you — or type your own |
+| 🎸 | **Lick trainer** | Hear a short blues, folk or minor lick at your tempo, then play it back |
+| ⏱️ | **Rhythm trainer** | Play any note on every hit of a pattern, graded against the metronome |
 
 Every game has a relaxed **practice** mode and a **scored** mode with best scores saved locally.
+
+### Jam
+
+| | | |
+|---|---|---|
+| 🎷 | **Blues play-along** | A synthesised 12-bar band in your harp's 2nd-position key; the chart shows the chord tones of every bar |
 
 ### The harmonica chart
 
@@ -117,7 +128,9 @@ for the details.
 - [x] Positions & keys, hole finder, note quiz
 - [x] Practice log with streaks
 - [x] Reed-like reference sound (Pure voice still available)
-- [ ] Next: harp health check, tone meter, rhythm trainer, tab reader, lick trainer, blues play-along
+- [x] Harp health check, tone & breath meter
+- [x] Rhythm trainer, tab reader, lick trainer
+- [x] Blues play-along
 - [ ] Later: recorded harp samples
 
 <!-- usage:self:start -->
@@ -130,12 +143,12 @@ Codex rollouts) on the machine that generated this section.
 
 | Metric | Value |
 |---|---|
-| **Total tokens** | **190.3M** |
-| Token breakdown | 752.7K output · 1.2K input · 5.2M cache-write · 184.3M cache-read |
-| Agent time | ~4h 7m active (37h 48m wall-clock) |
-| Turns | 507 assistant turns · 255 tool calls |
+| **Total tokens** | **251.9M** |
+| Token breakdown | 861.3K output · 1.5K input · 6.7M cache-write · 244.3M cache-read |
+| Agent time | ~4h 47m active (48h 1m wall-clock) |
+| Turns | 593 assistant turns · 301 tool calls |
 | Agents / models | Claude Code — claude-opus-5-5 |
-| As of | 2026-09-26 → 2026-09-27 |
+| As of | 2026-09-26 → 2026-09-28 |
 
 > 💡 Most of those tokens are *cache reads* — re-reading the growing conversation each
 > turn — which is why the total dwarfs the tokens actually written.
