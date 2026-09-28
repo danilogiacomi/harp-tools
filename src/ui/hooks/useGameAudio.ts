@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { MicErrorKind } from '../../audio/Microphone'
 import type { NotePlayer } from '../../audio/NotePlayer'
-import { NoteSequencer } from '../../audio/NoteSequencer'
+import { NoteSequencer, type TimedPrompt } from '../../audio/NoteSequencer'
 import type { PitchReading } from '../../audio/pitch/PitchDetector'
 import { FeedbackGate } from '../../core/games/feedbackGate'
 import { freqToMidi } from '../../core/music/pitch'
@@ -26,6 +26,8 @@ export interface GameAudio {
    */
   listen: (listener: HeardListener) => () => void
   playSequence: (midis: readonly number[], noteMs?: number, gapMs?: number) => Promise<boolean>
+  /** Plays notes and rests with their own lengths; resolves false if cancelled or superseded. */
+  playTimed: (notes: readonly TimedPrompt[]) => Promise<boolean>
   cancelPlayback: () => void
 }
 
@@ -93,6 +95,7 @@ export function useGameAudio(listening: boolean): GameAudio {
     now,
     listen: router.listen,
     playSequence: sequencer.play,
+    playTimed: sequencer.playTimed,
     cancelPlayback: sequencer.cancel,
   }
 }

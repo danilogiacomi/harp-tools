@@ -54,4 +54,38 @@ describe('NoteSequencer', () => {
     await expect(second).resolves.toBe(true)
     expect(played.map((p) => p.midi)).toEqual([60, 70])
   })
+
+  it('plays timed notes and rests with their own lengths', async () => {
+    const { player, played } = fakePlayer()
+    const waits: number[] = []
+    const seq = new NoteSequencer(player, (ms) => {
+      waits.push(ms)
+      return instant()
+    })
+    await expect(
+      seq.playTimed([
+        { midi: 67, ms: 500 },
+        { midi: null, ms: 250 },
+        { midi: 70, ms: 1000 },
+      ]),
+    ).resolves.toBe(true)
+    expect(played).toEqual([
+      { midi: 67, durationMs: 450 },
+      { midi: 70, durationMs: 900 },
+    ])
+    expect(waits).toEqual([50, 250, 100])
+  })
+
+  it('abandons a timed prompt when cancelled or superseded', async () => {
+    const { player, played } = fakePlayer()
+    const seq = new NoteSequencer(player, instant)
+    const first = seq.playTimed([
+      { midi: 60, ms: 100 },
+      { midi: 62, ms: 100 },
+    ])
+    const second = seq.play([70])
+    await expect(first).resolves.toBe(false)
+    await expect(second).resolves.toBe(true)
+    expect(played.map((p) => p.midi)).toEqual([60, 70])
+  })
 })

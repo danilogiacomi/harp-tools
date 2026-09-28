@@ -116,4 +116,12 @@ describe('useGameAudio', () => {
     expect(second).toHaveBeenCalledTimes(1)
     expect(first).not.toHaveBeenCalled()
   })
+
+  it('plays timed prompts through the same player, so the feedback gate covers them', async () => {
+    const { result } = renderHook(() => useGameAudio(true), { wrapper })
+    await act(async () => {
+      await result.current.playTimed([{ midi: 67, ms: 10 }])
+    })
+    expect(player.play).toHaveBeenCalledWith(67, { durationMs: 9 })
+  })
 })

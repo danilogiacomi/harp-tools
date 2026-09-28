@@ -2,19 +2,22 @@ import { act } from '@testing-library/react'
 import { useEffect } from 'react'
 import { midiToFreq } from '../core/music/pitch'
 import type { NotePlayer } from '../audio/NotePlayer'
+import type { TimedPrompt } from '../audio/NoteSequencer'
 import type { GameAudio, HeardListener } from '../ui/hooks/useGameAudio'
 import type { PitchStatus } from '../ui/hooks/usePitch'
 
 /**
  * Stand-in for useGameAudio in page tests:
  *   vi.mock('../../hooks/useGameAudio', () => import('../../../test/fakeGameAudio'))
- * Tests read `fakeAudio.played` and drive the game with hold(). With `deferPlayback`, prompts
- * stay pending until finishPlayback(); a new prompt or cancelPlayback() abandons them (false).
+ * Tests read `fakeAudio.played` (the pitches of every prompt, timed or not; `timed` keeps the
+ * timed prompts whole) and drive the game with hold(). With `deferPlayback`, prompts stay
+ * pending until finishPlayback(); a new prompt or cancelPlayback() abandons them (false).
  */
 export const fakeAudio = {
   listener: null as HeardListener | null,
   time: 0,
   played: [] as number[][],
+  timed: [] as TimedPrompt[][],
   error: null as GameAudio['error'],
   /** Mic status while listening and error-free, e.g. 'starting' before the first frame. */
   micStatus: 'listening' as PitchStatus,
@@ -27,6 +30,7 @@ export const fakeAudio = {
     this.listener = null
     this.time = 0
     this.played = []
+    this.timed = []
     this.error = null
     this.micStatus = 'listening'
     this.micStarts = 0
@@ -57,11 +61,16 @@ const listen = (listener: HeardListener) => {
     if (fakeAudio.listener === listener) fakeAudio.listener = null
   }
 }
-const playSequence = (midis: readonly number[]) => {
+const prompt = (midis: readonly number[]) => {
   fakeAudio.played.push([...midis])
   if (!fakeAudio.deferPlayback) return Promise.resolve(true)
   abandonPending()
   return new Promise<boolean>((resolve) => fakeAudio.pending.push(resolve))
+}
+const playSequence = (midis: readonly number[]) => prompt(midis)
+const playTimed = (notes: readonly TimedPrompt[]) => {
+  fakeAudio.timed.push([...notes])
+  return prompt(notes.flatMap((n) => (n.midi === null ? [] : [n.midi])))
 }
 const cancelPlayback = () => {
   fakeAudio.cancels++
@@ -81,6 +90,7 @@ export function useGameAudio(listening: boolean): GameAudio {
     now,
     listen,
     playSequence,
+    playTimed,
     cancelPlayback,
   }
 }
