@@ -1,39 +1,41 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MetronomeConfig, TimeSignature } from '../core/rhythm/schedule'
 import { audioEngine } from './AudioEngine'
+import { clickSamples } from './click'
 import { Metronome } from './Metronome'
 
 const TICK_MS = 25
 
-class FakeAudioParam {
-  value = 0
-  setValueAtTime = vi.fn()
-  exponentialRampToValueAtTime = vi.fn()
-}
-
 class FakeGainNode {
-  gain = new FakeAudioParam()
   connect = vi.fn((dest: unknown) => dest)
 }
 
-class FakeOscillatorNode {
-  frequency = new FakeAudioParam()
+class FakeBuffer {
+  data: Float32Array
+  constructor(length: number) {
+    this.data = new Float32Array(length)
+  }
+  getChannelData = () => this.data
+}
+
+class FakeBufferSource {
+  buffer: FakeBuffer | null = null
   connect = vi.fn((dest: unknown) => dest)
   start = vi.fn()
-  stop = vi.fn()
 }
 
 /** Minimal stand-in for a real AudioContext, whose clock we advance by hand instead of relying
  *  on wall-clock time (jsdom doesn't provide a real AudioContext at all). */
 class FakeAudioContext {
   currentTime = 0
-  oscillators: FakeOscillatorNode[] = []
-  createOscillator = vi.fn(() => {
-    const osc = new FakeOscillatorNode()
-    this.oscillators.push(osc)
-    return osc as unknown as OscillatorNode
+  sampleRate = 48000
+  sources: FakeBufferSource[] = []
+  createBufferSource = vi.fn(() => {
+    const src = new FakeBufferSource()
+    this.sources.push(src)
+    return src as unknown as AudioBufferSourceNode
   })
-  createGain = vi.fn(() => new FakeGainNode() as unknown as GainNode)
+  createBuffer = vi.fn((_channels: number, length: number) => new FakeBuffer(length))
 }
 
 const SIGNATURE_4_4: TimeSignature = { label: '4/4', beats: 4, unit: 4 }
@@ -75,22 +77,28 @@ describe('Metronome', () => {
     const metronome = new Metronome(makeConfig(), vi.fn())
 
     metronome.start()
-    expect(ctx.oscillators).toHaveLength(1)
-    expect(ctx.oscillators[0].start).toHaveBeenCalledWith(0.05)
+    expect(ctx.sources).toHaveLength(1)
+    expect(ctx.sources[0].start).toHaveBeenCalledWith(0.05)
 
     run(500)
-    expect(ctx.oscillators.length).toBeGreaterThan(1)
+    expect(ctx.sources.length).toBeGreaterThan(1)
   })
 
-  it('follows the accent pattern for click kind and frequency', () => {
+  it('follows the accent pattern for click kind and sound', () => {
     const metronome = new Metronome(makeConfig({ signature: SIGNATURE_6_8 }), vi.fn())
 
     metronome.start()
     run(300)
 
-    const freqs = ctx.oscillators.map((o) => o.frequency.value)
+    const sounds = ctx.sources.map((s) => s.buffer?.data)
+    const [bar, beat, group] = (['bar', 'beat', 'group'] as const).map((k) =>
+      clickSamples(k, ctx.sampleRate),
+    )
     // 6/8 accents pulse 0 (bar) and pulse 3 (group, the second dotted-quarter); the rest are beats.
-    expect(freqs.slice(0, 4)).toEqual([1600, 1000, 1000, 1250])
+    expect(sounds.slice(0, 4)).toEqual([bar, beat, beat, group])
+    // Each kind's click is rendered once and reused.
+    expect(sounds[1]).toBe(sounds[2])
+    expect(ctx.createBuffer).toHaveBeenCalledTimes(3)
   })
 
   it('notifies onBeat for beat/bar clicks but never for sub clicks', () => {
@@ -112,7 +120,7 @@ describe('Metronome', () => {
     metronome.setConfig(makeConfig({ bpm: 6000 })) // step shrinks to 0.01s before the next tick
     run(300)
 
-    const times = ctx.oscillators.map((o) => o.start.mock.calls[0][0] as number)
+    const times = ctx.sources.map((o) => o.start.mock.calls[0][0] as number)
     expect(times.length).toBeGreaterThan(2)
     const gaps = times.slice(1).map((t, i) => t - times[i])
     // The first gap still reflects the old (slower) spacing; later gaps reflect the new one.
@@ -125,11 +133,11 @@ describe('Metronome', () => {
 
     metronome.start()
     metronome.stop()
-    const countAtStop = ctx.oscillators.length
+    const countAtStop = ctx.sources.length
 
     run(1000)
 
-    expect(ctx.oscillators).toHaveLength(countAtStop)
+    expect(ctx.sources).toHaveLength(countAtStop)
     expect(onBeat).not.toHaveBeenCalled()
     expect(metronome.isRunning).toBe(false)
   })
@@ -138,10 +146,10 @@ describe('Metronome', () => {
     const metronome = new Metronome(makeConfig(), vi.fn())
 
     metronome.start()
-    const countAfterFirstStart = ctx.oscillators.length
+    const countAfterFirstStart = ctx.sources.length
     metronome.start()
 
-    expect(ctx.oscillators).toHaveLength(countAfterFirstStart)
+    expect(ctx.sources).toHaveLength(countAfterFirstStart)
     expect(metronome.isRunning).toBe(true)
   })
 })

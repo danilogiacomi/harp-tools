@@ -71,6 +71,13 @@ describe('analyzeFrame', () => {
     expect(rms).toBeGreaterThan(0)
   })
 
+  it('ignores clear readings below any harp note (a transient read as the window length)', () => {
+    const lowest = { findPitch: () => [SR / N, 1] as [number, number] }
+    expect(analyzeFrame(tone(440, 'sine'), SR, lowest, GATE).reading).toBeNull()
+    const g3 = { findPitch: () => [196, 1] as [number, number] }
+    expect(analyzeFrame(tone(440, 'sine'), SR, g3, GATE).reading).not.toBeNull()
+  })
+
   it('returns null for breath-like noise', () => {
     const { reading, rms } = analyzeFrame(noise(0.3), SR, mpm, GATE)
     expect(reading).toBeNull()

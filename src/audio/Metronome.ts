@@ -6,17 +6,11 @@ import {
   type SchedulerState,
 } from '../core/rhythm/schedule'
 import { audioEngine } from './AudioEngine'
+import { clickSamples } from './click'
 
 const TICK_MS = 25
 const LOOKAHEAD_S = 0.1
 const START_DELAY_S = 0.05
-
-const CLICK_SOUND: Record<ClickKind, { freq: number; gain: number }> = {
-  bar: { freq: 1600, gain: 0.6 },
-  group: { freq: 1250, gain: 0.45 },
-  beat: { freq: 1000, gain: 0.35 },
-  sub: { freq: 800, gain: 0.15 },
-}
 
 export type BeatListener = (pulse: number, kind: ClickKind) => void
 
@@ -28,6 +22,10 @@ export class Metronome {
   private timer: ReturnType<typeof setInterval> | undefined
   private state: SchedulerState = { nextTime: 0, pulse: 0, sub: 0 }
   private pendingBeats = new Set<ReturnType<typeof setTimeout>>()
+  private clicks: {
+    ctx: BaseAudioContext
+    buffers: Partial<Record<ClickKind, AudioBuffer>>
+  } | null = null
 
   constructor(
     private config: MetronomeConfig,
@@ -67,15 +65,22 @@ export class Metronome {
   }
 
   private playClick(ctx: AudioContext, click: Click): void {
-    const { freq, gain } = CLICK_SOUND[click.kind]
-    const osc = ctx.createOscillator()
-    const env = ctx.createGain()
-    osc.frequency.value = freq
-    env.gain.setValueAtTime(gain, click.time)
-    env.gain.exponentialRampToValueAtTime(0.001, click.time + 0.04)
-    osc.connect(env).connect(audioEngine.master)
-    osc.start(click.time)
-    osc.stop(click.time + 0.05)
+    const src = ctx.createBufferSource()
+    src.buffer = this.clickBuffer(ctx, click.kind)
+    src.connect(audioEngine.master)
+    src.start(click.time)
+  }
+
+  /** Each kind's click is rendered once per audio context (see click.ts). */
+  private clickBuffer(ctx: BaseAudioContext, kind: ClickKind): AudioBuffer {
+    if (this.clicks?.ctx !== ctx) this.clicks = { ctx, buffers: {} }
+    const cached = this.clicks.buffers[kind]
+    if (cached) return cached
+    const samples = clickSamples(kind, ctx.sampleRate)
+    const buffer = ctx.createBuffer(1, samples.length, ctx.sampleRate)
+    buffer.getChannelData(0).set(samples)
+    this.clicks.buffers[kind] = buffer
+    return buffer
   }
 
   /** Fire the UI callback when the click is actually heard. */

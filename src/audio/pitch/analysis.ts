@@ -10,6 +10,12 @@ export interface FrameAnalyzer {
   findPitch(input: Float32Array, sampleRate: number): [number, number]
 }
 
+/**
+ * Far below any harp's lowest reed (G3, 196 Hz). On a short transient (a click, a knock)
+ * pitchy can report the window's own length, sampleRate / fftSize ≈ 23 Hz, as a clear pitch.
+ */
+export const MIN_FREQ_HZ = 60
+
 export function computeRms(buf: Float32Array): number {
   let sum = 0
   for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i]
@@ -25,7 +31,7 @@ export function analyzeFrame(
   const rms = computeRms(buf)
   if (rms < gate.noiseFloor) return { reading: null, rms }
   const [freq, clarity] = analyzer.findPitch(buf, sampleRate)
-  if (clarity < gate.minClarity || !Number.isFinite(freq) || freq <= 0)
+  if (clarity < gate.minClarity || !Number.isFinite(freq) || freq < MIN_FREQ_HZ)
     return { reading: null, rms }
   return { reading: { freq, clarity, rms }, rms }
 }
