@@ -4,12 +4,15 @@ import { InstallButton } from './InstallButton'
 
 const DESKTOP = { standalone: false, ios: false }
 
-function firePrompt(outcome: 'accepted' | 'dismissed' = 'accepted') {
+function firePrompt(
+  outcome: 'accepted' | 'dismissed' = 'accepted',
+  promptFn?: () => Promise<void>
+) {
   const event = new Event('beforeinstallprompt', { cancelable: true }) as Event & {
     prompt: ReturnType<typeof vi.fn>
     userChoice: Promise<{ outcome: string }>
   }
-  event.prompt = vi.fn(async () => {})
+  event.prompt = vi.fn(promptFn ?? (async () => {}))
   event.userChoice = Promise.resolve({ outcome })
   act(() => {
     window.dispatchEvent(event)
@@ -52,5 +55,16 @@ describe('InstallButton', () => {
     const { container } = render(<InstallButton env={{ standalone: true, ios: true }} />)
     firePrompt()
     expect(container).toBeEmptyDOMElement()
+  })
+
+  it('hides the button even when prompt() rejects', async () => {
+    render(<InstallButton env={DESKTOP} />)
+    firePrompt('accepted', async () => {
+      throw new DOMException('used', 'InvalidStateError')
+    })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Install app' }))
+    })
+    expect(screen.queryByRole('button', { name: 'Install app' })).toBeNull()
   })
 })

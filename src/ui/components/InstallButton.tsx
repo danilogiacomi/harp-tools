@@ -49,9 +49,14 @@ export function InstallButton({ env = browserInstallEnv() }: { env?: InstallEnv 
   if (env.standalone || installed) return null
   if (prompt) {
     const install = async () => {
-      await prompt.prompt()
-      await prompt.userChoice
-      setPrompt(null) // the event can only be used once
+      try {
+        await prompt.prompt()
+        await prompt.userChoice
+      } catch {
+        // refused or already used: nothing to show
+      } finally {
+        setPrompt(null) // the event can only be used once
+      }
     }
     return (
       <p className={styles.install}>
