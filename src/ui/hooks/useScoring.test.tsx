@@ -105,4 +105,17 @@ describe('useScoring — practice log', () => {
     })
     expect(loadLog(localStorage).sessions).toEqual([])
   })
+
+  it('logs the maximum the page gives, when rounds × round max overstates it', () => {
+    const { result } = renderHook(() => useScoring('scored', 'hero|track=t', 2, 400, 300))
+    act(() => {
+      result.current.record({ correct: true, points: 100 })
+    })
+    act(() => {
+      result.current.record({ correct: true, points: 200 })
+    })
+    expect(loadLog(localStorage).sessions).toEqual([
+      { date: localDate(Date.now()), game: 'hero', score: 300, max: 300 },
+    ])
+  })
 })

@@ -27,13 +27,16 @@ export interface Scoring {
 
 /**
  * A page's session plus its best score for `bestKey`, saved when a scored session ends.
- * `roundMax` is the most one round can earn (see `startSession`).
+ * `roundMax` is the most one round can earn (see `startSession`). `logMax`, when given, is the
+ * practice log's maximum for a finished session, for games whose best possible score is less
+ * than rounds × round max (Harp Hero's multiplier).
  */
 export function useScoring(
   mode: GameMode,
   bestKey: string,
   totalRounds = SCORED_ROUNDS,
   roundMax = MAX_ROUND_POINTS,
+  logMax?: number,
 ): Scoring {
   const [session, setSession] = useState(() => startSession(mode, totalRounds, roundMax))
   const [best, setBest] = useState(() => loadBest(browserStorage(), bestKey))
@@ -53,7 +56,7 @@ export function useScoring(
       // best-score key's first segment ("echo|key=C|…" → "echo").
       appendSession(
         browserStorage(),
-        { game: bestKey.split('|')[0], score, max: maxScore(next) },
+        { game: bestKey.split('|')[0], score, max: logMax ?? maxScore(next) },
         Date.now(),
       )
       if (score > 0 && saveBestIfHigher(browserStorage(), bestKey, score)) {

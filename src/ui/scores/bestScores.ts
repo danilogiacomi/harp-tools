@@ -11,6 +11,7 @@ export type GameId =
   | 'rhythm'
   | 'tab-reader'
   | 'licks'
+  | 'hero'
 
 export const BEST_SCORES_KEY = 'harp-tools:best-scores'
 
