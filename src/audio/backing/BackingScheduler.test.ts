@@ -135,6 +135,17 @@ describe('BackingScheduler', () => {
     expect(onBar).toHaveBeenLastCalledWith(0)
   })
 
+  it('reports a bar when it is heard: after the output latency (Bluetooth can add 200 ms)', () => {
+    const onBar = vi.fn()
+    ;(ctx as unknown as { outputLatency: number }).outputLatency = 0.2
+    const s = new BackingScheduler(CONFIG, onBar)
+    s.start()
+    run(200) // the first bar is scheduled for 0.05 s, heard at 0.25 s
+    expect(onBar).not.toHaveBeenCalled()
+    run(100)
+    expect(onBar).toHaveBeenCalledWith(0)
+  })
+
   it('stops scheduling and cancels a pending bar report', () => {
     const onBar = vi.fn()
     const s = new BackingScheduler(CONFIG, onBar)

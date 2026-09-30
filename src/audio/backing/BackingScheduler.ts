@@ -159,9 +159,13 @@ export class BackingScheduler {
     }
   }
 
-  /** Tells the page about the new bar when it is actually heard. */
+  /**
+   * Tells the page about the new bar when it is actually heard: its scheduled time plus the
+   * output latency (a few ms on speakers, up to ~250 ms on Bluetooth headphones).
+   */
   private notifyAt(ctx: AudioContext, time: number, bar: number): void {
-    const delayMs = Math.max(0, (time - ctx.currentTime) * 1000)
+    const heard = time + (ctx.outputLatency || 0)
+    const delayMs = Math.max(0, (heard - ctx.currentTime) * 1000)
     const id = setTimeout(() => {
       this.pendingBars.delete(id)
       this.onBar(bar)
