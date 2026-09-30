@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { BackingScheduler } from '../../../audio/backing/BackingScheduler'
 import type { BackingConfig } from '../../../core/jam/backingSchedule'
+import { Slot } from '../../hooks/useSlot'
 import { useSettings } from '../../settings/SettingsContext'
 
 export interface SongBand {
@@ -16,11 +17,10 @@ export interface SongBand {
  */
 export function useSongBand(config: BackingConfig, onBar: (bar: number) => void): SongBand {
   const { settings } = useSettings()
-  const latest = useRef(onBar)
-  useEffect(() => {
-    latest.current = onBar
-  })
-  const [band] = useState(() => new BackingScheduler(config, (bar) => latest.current(bar)))
+  // The latest listener, in a box rather than a ref: the band calls it long after render.
+  const [latest] = useState(() => new Slot<(bar: number) => void>())
+  useEffect(() => latest.set(onBar))
+  const [band] = useState(() => new BackingScheduler(config, (bar) => latest.get()?.(bar)))
 
   useEffect(() => band.setConfig(config), [band, config])
   useEffect(() => band.setA4(settings.a4), [band, settings.a4])
