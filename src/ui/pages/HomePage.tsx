@@ -1,3 +1,4 @@
+import { InstallButton } from '../components/InstallButton'
 import { HOME_GROUPS, entryHref, type HomeEntry } from './homeGroups'
 import styles from './HomePage.module.css'
 
@@ -26,6 +27,7 @@ export function HomePage() {
       <p className={styles.lead}>
         Pick your harp's key and tuning at the top — everything on the site follows them.
       </p>
+      <InstallButton />
       {HOME_GROUPS.filter((g) => g.entries.length > 0).map((g) => (
         <section key={g.id} aria-labelledby={`home-${g.id}`}>
           <h2 id={`home-${g.id}`}>{g.title}</h2>
