@@ -52,6 +52,17 @@ describe('useSongBand', () => {
     expect(fakeBand.running).toBe(false)
   })
 
+  it('stops by itself when a song that plays once has ended, and still reports the end', () => {
+    const onBar = vi.fn()
+    const { result } = renderHook(() => useSongBand(CONFIG, onBar), { wrapper })
+    act(() => result.current.start())
+    act(() => fakeBand.onBar?.(11))
+    expect(fakeBand.running).toBe(true)
+    act(() => fakeBand.onBar?.(12)) // form.length: the end
+    expect(fakeBand.running).toBe(false)
+    expect(onBar).toHaveBeenLastCalledWith(12)
+  })
+
   it('disposes of the band on unmount', () => {
     const { result, unmount } = renderHook(() => useSongBand(CONFIG, vi.fn()), { wrapper })
     act(() => result.current.start())

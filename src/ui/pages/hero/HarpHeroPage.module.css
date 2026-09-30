@@ -1,0 +1,93 @@
+/* Fixed height, so a score, combo or meter change never moves the stage below (stable layout). */
+.scoreRow {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem 1.25rem;
+  height: 2rem;
+  margin: 0 0 0.75rem;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.meterBox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.meterLabel {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.meter {
+  display: block;
+  width: 7rem;
+  height: 0.6rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.meterFill {
+  display: block;
+  height: 100%;
+  background: var(--ok);
+  transition: width 150ms ease-out;
+}
+
+.meter[data-level='mid'] .meterFill {
+  background: var(--warn);
+}
+
+.meter[data-level='low'] .meterFill {
+  background: var(--bad);
+}
+
+/* The grade word's slot is always there; the word itself fades after each note. */
+.grade {
+  height: 1.5rem;
+  margin: 0 0 0.25rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.grade span {
+  animation: fade 600ms ease-out forwards;
+}
+
+.grade [data-grade='perfect'] {
+  color: var(--ok);
+}
+
+.grade [data-grade='good'] {
+  color: var(--target);
+}
+
+.grade [data-grade='miss'] {
+  color: var(--bad);
+}
+
+@keyframes fade {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 30rem) {
+  .scoreRow {
+    flex-wrap: wrap;
+    align-content: center;
+    height: 4rem;
+  }
+
+  .meterBox {
+    margin-left: 0;
+  }
+}
