@@ -30,38 +30,39 @@ the screen, and the screen stays on while you play.
 
 ### Tools
 
-| | Tool | What it does |
-|---|---|---|
-| 🥁 | **Metronome** | 30–250 BPM, tap tempo, time signatures, subdivisions, sample-accurate timing |
-| 🎯 | **Tuner — listen** | Detects the note you play, shows cents offset and lights up every matching hole |
-| 🔊 | **Tuner — play** | Click any hole on the chart to hear its reference note |
-| 🧭 | **Positions & keys** | Which harp to use for a song, and what each harp plays in every position |
-| 🌬️ | **Tone & breath meter** | A live pitch and level chart, with steadiness and vibrato for the note you hold |
-| 🩺 | **Harp health check** | Measures all 20 reeds and shows which ones are out of tune |
-| 📈 | **Practice log** | Daily streaks, time practised per day and page, recent scores — kept in your browser |
+|     | Tool                    | What it does                                                                         |
+| --- | ----------------------- | ------------------------------------------------------------------------------------ |
+| 🥁  | **Metronome**           | 30–250 BPM, tap tempo, time signatures, subdivisions, sample-accurate timing         |
+| 🎯  | **Tuner — listen**      | Detects the note you play, shows cents offset and lights up every matching hole      |
+| 🔊  | **Tuner — play**        | Click any hole on the chart to hear its reference note                               |
+| 🧭  | **Positions & keys**    | Which harp to use for a song, and what each harp plays in every position             |
+| 🌬️  | **Tone & breath meter** | A live pitch and level chart, with steadiness and vibrato for the note you hold      |
+| 🩺  | **Harp health check**   | Measures all 20 reeds and shows which ones are out of tune                           |
+| 📈  | **Practice log**        | Daily streaks, time practised per day and page, recent scores — kept in your browser |
 
 ### Games
 
-| | Game | How it works |
-|---|---|---|
-| 👂 | **Echo the note** | The site plays a note — you play it back on your harp |
-| 〰️ | **Bend trainer** | Hit and hold a target bend on a live bend meter |
-| 🪜 | **Scale runner** | Play major, minor pentatonic and blues scales in 1st, 2nd and 3rd position |
-| 🎼 | **Interval training** | Name the interval you hear, or play the second note yourself |
-| 🔁 | **Melody echo** | Repeat short phrases that grow longer as you improve |
-| 🔎 | **Hole finder** | A note name appears — find it on your harp, no hints by ear |
-| 🎓 | **Note quiz** | Name the highlighted hole, or click the hole for a note; no mic needed |
-| 📜 | **Tab reader** | Play songs from scrolling tab — it can wait for you — or type your own |
-| 🎸 | **Lick trainer** | Hear a short blues, folk or minor lick at your tempo, then play it back |
-| ⏱️ | **Rhythm trainer** | Play any note on every hit of a pattern, graded against the metronome |
+|     | Game                  | How it works                                                                                       |
+| --- | --------------------- | -------------------------------------------------------------------------------------------------- |
+| 👂  | **Echo the note**     | The site plays a note — you play it back on your harp                                              |
+| 〰️  | **Bend trainer**      | Hit and hold a target bend on a live bend meter                                                    |
+| 🪜  | **Scale runner**      | Play major, minor pentatonic and blues scales in 1st, 2nd and 3rd position                         |
+| 🎼  | **Interval training** | Name the interval you hear, or play the second note yourself                                       |
+| 🔁  | **Melody echo**       | Repeat short phrases that grow longer as you improve                                               |
+| 🔎  | **Hole finder**       | A note name appears — find it on your harp, no hints by ear                                        |
+| 🎓  | **Note quiz**         | Name the highlighted hole, or click the hole for a note; no mic needed                             |
+| 📜  | **Tab reader**        | Play songs from scrolling tab — it can wait for you — or type your own                             |
+| 🎸  | **Lick trainer**      | Hear a short blues, folk or minor lick at your tempo, then play it back                            |
+| ⏱️  | **Rhythm trainer**    | Play any note on every hit of a pattern, graded against the metronome                              |
+| 🔥  | **Harp Hero**         | A band plays; notes fall down a lane per hole. Hit them on time for combos, a rock meter and stars |
 
 Every game has a relaxed **practice** mode and a **scored** mode with best scores saved locally.
 
 ### Jam
 
-| | | |
-|---|---|---|
-| 🎷 | **Blues play-along** | A synthesised 12-bar band in your harp's 2nd-position key; the chart shows the chord tones of every bar |
+|     |                      |                                                                                                         |
+| --- | -------------------- | ------------------------------------------------------------------------------------------------------- |
+| 🎷  | **Blues play-along** | A synthesised 12-bar band in your harp's 2nd-position key; the chart shows the chord tones of every bar |
 
 ### The harmonica chart
 
@@ -134,6 +135,8 @@ for the details.
 - [x] Rhythm trainer, tab reader, lick trainer
 - [x] Blues play-along
 - [x] Installable, offline, phone-friendly
+- [x] Harp Hero — six rated tracks with a band, a note highway, combos and stars
+- [ ] Later: Harp Hero endless mode and career
 - [ ] Later: recorded harp samples
 
 <!-- usage:self:start -->
@@ -144,16 +147,16 @@ This project is built largely by coding agents. The numbers below are this repo'
 development footprint, read from the local agent logs (Claude Code transcripts and
 Codex rollouts) on the machine that generated this section.
 
-| Metric | Value |
-|---|---|
-| **Total tokens** | **281.8M** |
-| Token breakdown | 903.2K output · 1.6K input · 7.6M cache-write · 273.3M cache-read |
-| Agent time | ~5h 8m active (52h 33m wall-clock) |
-| Turns | 631 assistant turns · 323 tool calls |
-| Agents / models | Claude Code — claude-opus-5-5 |
-| As of | 2026-09-26 → 2026-09-28 |
+| Metric           | Value                                                             |
+| ---------------- | ----------------------------------------------------------------- |
+| **Total tokens** | **281.8M**                                                        |
+| Token breakdown  | 903.2K output · 1.6K input · 7.6M cache-write · 273.3M cache-read |
+| Agent time       | ~5h 8m active (52h 33m wall-clock)                                |
+| Turns            | 631 assistant turns · 323 tool calls                              |
+| Agents / models  | Claude Code — claude-opus-5-5                                     |
+| As of            | 2026-09-26 → 2026-09-28                                           |
 
-> 💡 Most of those tokens are *cache reads* — re-reading the growing conversation each
+> 💡 Most of those tokens are _cache reads_ — re-reading the growing conversation each
 > turn — which is why the total dwarfs the tokens actually written.
 
 _Regenerated by `bun run usage:self` (kept fresh via the repo's pre-commit hook)._

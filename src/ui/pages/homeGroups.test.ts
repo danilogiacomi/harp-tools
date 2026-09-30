@@ -19,6 +19,7 @@ describe('HOME_GROUPS', () => {
           'tab-reader',
           'licks',
           'rhythm',
+          'hero',
         ],
       ],
       ['jam', 'Jam', ['jam']],

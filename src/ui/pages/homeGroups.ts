@@ -111,6 +111,12 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
         title: 'Rhythm trainer',
         text: 'Play in time with the metronome: quarters, shuffles, the train beat.',
       },
+      {
+        id: 'hero',
+        icon: '🔥',
+        title: 'Harp Hero',
+        text: 'Play along with the band as the notes fall towards your harp.',
+      },
     ],
   },
   {

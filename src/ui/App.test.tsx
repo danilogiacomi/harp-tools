@@ -57,6 +57,7 @@ describe('App', () => {
     ['#/licks', 'Lick trainer'],
     ['#/rhythm', 'Rhythm trainer'],
     ['#/jam', 'Blues play-along'],
+    ['#/hero', 'Harp Hero'],
   ])('routes %s to its game', (hash, title) => {
     window.location.hash = hash
     render(<App />)

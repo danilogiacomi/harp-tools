@@ -4,6 +4,7 @@ import { UpdateBar } from './components/UpdateBar'
 import { BendTrainerPage } from './pages/bend/BendTrainerPage'
 import { EchoNotePage } from './pages/echo/EchoNotePage'
 import { HealthCheckPage } from './pages/health/HealthCheckPage'
+import { HarpHeroPage } from './pages/hero/HarpHeroPage'
 import { HomePage } from './pages/HomePage'
 import { HoleFinderPage } from './pages/holeFinder/HoleFinderPage'
 import { IntervalsPage } from './pages/intervals/IntervalsPage'
@@ -41,6 +42,7 @@ const ROUTES: Record<string, ComponentType> = {
   '/tab-reader': TabReaderPage,
   '/licks': LickTrainerPage,
   '/jam': JamPage,
+  '/hero': HarpHeroPage,
   '/log': PracticeLogPage,
 }
 
