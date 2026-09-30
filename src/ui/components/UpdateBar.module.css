@@ -26,3 +26,11 @@
   background: none;
   color: var(--text-dim);
 }
+
+/* On the narrowest phones "A new version is ready" plus Reload and the dismiss button can be wider
+   than the screen: let the text wrap instead of overflowing. */
+@media (max-width: 30rem) {
+  .bar {
+    white-space: normal;
+  }
+}
