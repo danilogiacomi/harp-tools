@@ -55,25 +55,29 @@ export const TRACKS: readonly Track[]
 ### 1.3 The clock
 
 The band is the clock.
-- `BackingScheduler` gets a read-only `startTime`: the AudioContext time, in seconds, of the first beat it schedules. It's set when the scheduler starts, and `null` when stopped.
-- `songZeroMs = startTime × 1000` is in the same time base as `audio.now()` and the mic frames' `timeMs`.
-- The first bar is the count-in. Chart time 0 is `songZeroMs + 4 × beatMs(bpm)`.
+- The band schedules on the AudioContext clock, but mic frames and `audio.now()` use `performance.now()`. So the page doesn't convert audio time. It anchors on the moments the band's bars are **heard**, the same way the Tab reader anchors on the metronome's beats.
+- `BackingScheduler` already calls `onBar(bar)` when each bar sounds. The page feeds `audio.now()` at each call into a `BeatAnchor` whose period is one bar. `anchor.originMs` is then the time the count-in bar started: lane beat 0.
+- Chart time 0 is `originMs + 4 × beatMs(bpm)`, the end of the count-in.
 - Each mic frame is passed to `TabJudge.push(freq, timeMs − chartZeroMs)`. `TabJudge` already corrects for detection latency.
-- The highway position on each frame is `(audio.now() − songZeroMs) / beatMs` beats, count-in included.
+- The highway position on each frame is `(audio.now() − originMs) / beatMs` beats, count-in included.
+- Before the first bar is heard (about 50 ms after Start), frames are ignored and the highway stays at 0.
 - The metronome is not used on this page.
 
-**Band during the count-in:**
-- `BackingScheduler` plays the count-in bar with hi-hat only. This is a new `countInBars` option in `BackingConfig`, default 0, so the Jam page is unchanged.
-- In the schedule, bar numbers from `countInBars` onwards map to the form.
+**Two new options in `BackingConfig`.** Both are optional, so the Jam page is unchanged.
+- **`countInBars`** (default 0): bars of hi-hat alone, one hit per beat, before the form. They're numbered `−countInBars … −1` in `onBar`.
+- **`loop`** (default true): when false, the form plays once. The scheduler then reports the song's end once, as `onBar(form.length)` at the time the next bar would have started, and schedules nothing more.
+- A song's `form` is `bluesForm(quickChange)` repeated `choruses` times, so `form.length = choruses × 12`.
+
+**Background tabs.** The scheduler already skips beats that a throttled timer missed. It now skips them **on the beat grid**: whole beats, advancing bar and beat, instead of restarting from the current time. So the band never drifts from the anchored clock. On the Jam page this also keeps the form in step with time.
 
 **Stopping:**
-- The band stops, via the existing `stop()`, after the last bar of the last chorus.
+- `onBar(form.length)` (the end) stops the band via the existing `stop()`.
 - It also stops on Stop, on leaving the page (unmount), and on failing (§3.4).
 
 ### 1.4 Lifecycle
 
 - **idle** → Start → **running**. Start builds a `TabJudge` from the parsed part and starts the band.
-- **running** → last note judged and last bar done → **done**.
+- **running** → last note judged → **done**. The results show at once. The band plays on to the end of its last bar, then stops itself.
 - **running** → Stop → **idle**.
 - **running** → rock meter 0 in scored mode → **failed**.
 - **failed** and **done** show the end panel (§3.7), with Retry or Again.
@@ -83,23 +87,25 @@ The band is the clock.
 
 ### 2.1 Layout
 
-A `Highway` component in `src/ui/pages/hero/Highway.tsx` sits directly above the `HarmonicaDiagram`.
+A `Highway` component in `src/ui/pages/hero/Highway.tsx` is drawn **inside the chart's own grid**, as its first row.
 
-- **Columns:** the same grid as the chart. That's a row-label spacer (`minmax(6rem, auto)`) plus `repeat(10, minmax(2.75rem, 1fr))`. In the chart's compact mode (`@container (max-width: 34rem)`) it's `repeat(10, minmax(0, 1fr))`. The highway sits in the same container context, so lane *n* is always above hole *n*.
+- **Columns:** `HarmonicaDiagram` gets an optional `header` slot, rendered as the first child of its grid. The highway spans the grid (`grid-column: 1 / -1`) and uses `grid-template-columns: subgrid`. Its row-label spacer and 10 lanes are the chart's own columns, so lane *n* is exactly above hole *n* at every width. That includes the wide layout's auto-sized label column, and the chart scrolling sideways between 34rem and 38rem.
+- **Compact mode:** under the chart's `@container (max-width: 34rem)`, the spacer is hidden, like the chart's row labels.
+- **Bar lines and the strike line** go in an absolutely positioned overlay over the lanes' grid area, so they don't take part in grid auto-placement.
 - **Window:** a fixed height of 18rem, or 12rem in compact mode, with `overflow: hidden`. The strike line is at the bottom edge, touching the chart. The window's size never changes during a song.
 - **Bar lines:** faint horizontal rules across all lanes. The first bar of each 12-bar chorus gets a stronger rule. The count-in bar is labelled "count-in".
 
 ### 2.2 Motion
 
-- All notes are laid out once, at the start, in one tall `track` element. A note's bottom edge is `beatsFromStart × PX_PER_BEAT` above the track's origin, and its height is `beats × PX_PER_BEAT − 4px`.
+- All notes are laid out once, at the start, in a zero-height `track` at the bottom of their lane. A note's bottom edge is `beatsFromStart × PX_PER_BEAT` above the track, and its height is `beats × PX_PER_BEAT − 4px`.
 - `PX_PER_BEAT = 48`. This is per beat, not per second, so faster tracks scroll faster. About 3–4 bars are visible.
-- `useAnimationFrame` sets `track.style.transform = translateY(position × PX_PER_BEAT px)` through a ref. React re-renders only when a note is judged or the phase changes.
+- On each frame, `useAnimationFrame` sets one CSS variable on the highway, `--offset: position × PX_PER_BEAT px`, through a ref. Every track uses `transform: translateY(var(--offset))`. React re-renders only when a note is judged or the phase changes.
 
 ### 2.3 Notes
 
 - The lane is the note's `hole`, and `data-color` is its `technique`. These are the chart's colour tokens.
 - **Blow** notes are hollow: a coloured border on the surface colour. **Draw** notes are solid. Shape tells them apart as well as colour.
-- Each note shows its tab with `TabText` (`-3'`, `4`, `-2''`), fitted to the lane. In compact mode, if the lane is too narrow for the label, only the bend marks (`'`) are shown.
+- Each note shows its tab with `TabText` (`-3'`, `4`, `-2''`). In compact mode the label shrinks to 0.6rem and clips rather than wraps.
 - `data-state` is one of `todo`, `perfect`, `good` or `miss`:
   - A hit flashes then fades.
   - A miss turns grey and keeps falling.
@@ -107,7 +113,7 @@ A `Highway` component in `src/ui/pages/hero/Highway.tsx` sits directly above the
 
 ### 2.4 Around the highway
 
-- **Grade word:** "Perfect", "Good" or "Miss" in a fixed-size slot just above the strike line, shown for 600 ms.
+- **Grade word:** "Perfect", "Good" or "Miss" in a fixed-size slot just above the chart. It fades out over 600 ms (a CSS animation, restarted for each judged note).
 - **Chart highlights:** the harp chart below keeps the usual highlights: `target` for the next note and `detected` for the pitch heard.
 - **Accessibility:** the highway is `aria-hidden`. A visually hidden `aria-live="polite"` region announces "Next: -4 (D5)" and the last grade. Note names come from `useSpelling()`.
 
@@ -156,11 +162,11 @@ Grades come from `TabJudge`'s `JudgedNote`.
 
 ### 3.6 Saving
 
-- There's a new `GameId`, `'harp-hero'`.
-- The best key is `bestScoreKey('harp-hero', { track: track.id, ...tuningPart(tuning) })`.
+- There's a new `GameId`, `'hero'`: the same as the route and the practice-log id, as for every other page.
+- The best key is `bestScoreKey('hero', { track: track.id, ...tuningPart(tuning) })`.
 - Only a finished scored run can save a best. Scored mode is always 100% speed.
 - **Stars are never stored.** The track picker and the end panel compute them as `stars(best, maxScore(noteCount))`. Stage 3 reads them the same way.
-- **`useScoring`** is used with `totalRounds = noteCount` and `roundMax = 400`. It gains an optional `maxOverride`, which is used for the practice-log `max`, so the log records `maxScore(noteCount)` instead of `noteCount × 400`. Existing callers are unchanged.
+- **`useScoring`** is used with `totalRounds = noteCount` and `roundMax = 400`. It gains an optional fifth argument, `logMax`, which is used for the practice-log `max`, so the log records `maxScore(noteCount)` instead of `noteCount × 400`. Existing callers are unchanged.
 
 ### 3.7 End panel
 
@@ -176,18 +182,18 @@ Perfect 58 · Good 17 · Miss 5 · Longest streak 34
 
 ### 4.1 Route and registration
 
-- `/hero` → `HarpHeroPage` in `src/ui/pages/hero/`. It's listed under Games in `homeGroups.ts`, with a 🎸-style emoji distinct from the Lick trainer's, and in the practice log's page names.
-- `usePracticeTimer('harp-hero')`.
+- `/hero` → `HarpHeroPage` in `src/ui/pages/hero/`. It's listed last under Games in `homeGroups.ts`, as 🔥 **Harp Hero**. The practice log names pages from that entry.
+- `usePracticeTimer('hero')`.
 
 ### 4.2 Layout, top to bottom
 
 1. **Toolbar:** Practice/Scored `ModeToggle`; the Track select (`Porch Shuffle · ●○○○○ · ★★★☆☆`, where stars come from your best score and show ☆☆☆☆☆ if you have none); Speed (practice only).
 2. `WrittenForRichter`, parse-error notice, and `MicErrorNotice`.
 3. **Headphones hint:** "Headphones help: the band's chords can sound like harp notes to the mic."
-4. **Score row**, at a fixed height: score · ×multiplier · combo · rock meter. Below 30rem it wraps onto two fixed rows.
-5. The grade slot and the highway.
-6. The `HarmonicaDiagram`.
-7. Start / Stop / Again controls.
+4. **Score row**, at a fixed height: score · ×multiplier · combo · best (scored only) · rock meter. Below 30rem it wraps onto two fixed rows.
+5. The shared `Stage`: Start / Stop / Again / Retry controls, the "Next:" or results headline, and the detail line. It sits above the chart, as on every other game.
+6. The grade slot.
+7. The `HarmonicaDiagram`, with the highway as its first row.
 
 ### 4.3 Phones
 
@@ -205,7 +211,9 @@ All are Richter, 2nd position, 4 beats per bar.
 | 3 | low-down | Low Down | 2 | shuffle | 76 | 2 | no | -2 -3 -4 draws and blow/draw changes in holes 1–4 |
 | 4 | bent-out-of-shape | Bent Out of Shape | 3 | shuffle | 70 | 2 | no | half-step `-4'` and `-3'` bends on a slow blues |
 | 5 | second-gear | Second Gear | 4 | straight | 108 | 3 | yes | `-3''` and `-2'` bends, eighth-note runs |
-| 6 | overdrive | Overdrive | 5 | shuffle | 120 | 3 | yes | `-2''`, `-3'''`, fast runs across holes 1–6 |
+| 6 | overdrive | Overdrive | 5 | straight | 120 | 3 | yes | `-2''`, `-3'''`, fast runs across holes 1–6 |
+
+Shuffle tracks use notes of one beat or longer. Eighth-note runs are only on straight tracks, because the tab notation can't write swung eighths (⅔ + ⅓ of a beat).
 
 **Technique limits by rating** (checked by test):
 - Ratings 1–2: blow and draw only.
@@ -213,7 +221,7 @@ All are Richter, 2nd position, 4 beats per bar.
 - Ratings 4–5: any draw bend.
 - No track uses blow bends, overblows or overdraws in stage 1.
 
-Each part follows the chords: bars on IV and V land on that chord's tones on the harp.
+Each part follows the chords: every IV and V bar starts on a tone of that bar's chord.
 
 ## 5. Testing
 
@@ -233,9 +241,10 @@ TDD, as in earlier plans.
   - it uses only the techniques its rating allows;
   - ids are unique and ratings are in 1–5.
 - **Backing:**
-  - `startTime` equals the first beat's time, and is `null` after `stop()`;
-  - `countInBars: 1` schedules hi-hat only in bar 0, and the form starts at bar 1;
-  - the Jam page's config (with no `countInBars`) behaves as before.
+  - `countInBars: 1` schedules one hi-hat per beat in bar −1, and the form starts at bar 0;
+  - `loop: false` reports the end once, as bar `form.length`, then schedules nothing;
+  - missed beats are skipped on the grid;
+  - the Jam page's config (with neither option) behaves as before.
 - **`Highway` render:**
   - 10 lanes;
   - each note in its hole's lane, with its technique colour and a height matching its beats;
@@ -249,7 +258,7 @@ TDD, as in earlier plans.
   - Speed is shown in practice only;
   - a parse error on a non-Richter tuning shows the notice;
   - unmounting stops the band.
-- **`useScoring`:** `maxOverride` reaches the practice log, and callers without it are unchanged.
+- **`useScoring`:** `logMax` reaches the practice log, and callers without it are unchanged.
 - **Checks on a real harp** (by the user, after merge):
   - timing feels right at 70 and 120 BPM, with speakers and with headphones;
   - `-3''` and `-3'''` on Overdrive register as hits;
@@ -261,4 +270,4 @@ TDD, as in earlier plans.
 - **Mic denied or missing:** `MicErrorNotice`, and Start is hidden, as on other mic pages.
 - **Track can't be played on this tuning:** the parse-error notice, and no Start.
 - **Audio context suspended** (iOS): Start resumes it through the existing `AudioEngine` path before starting the band.
-- **Tab hidden mid-song:** the band keeps its audio-clock schedule and the judge keeps judging. Notes missed while the tab was hidden count as misses. The page doesn't pause.
+- **Tab hidden mid-song:** the band keeps its beat grid (§1.3) and the judge keeps judging. Notes missed while the tab was hidden count as misses. The page doesn't pause.
