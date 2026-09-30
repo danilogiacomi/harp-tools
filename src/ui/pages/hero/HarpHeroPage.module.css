@@ -1,3 +1,16 @@
+/* The track names carry a rating and stars; on a phone the select shrinks to the row instead of
+   pushing the page sideways. */
+.trackField {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.trackField select {
+  min-width: 0;
+  max-width: 100%;
+  text-overflow: ellipsis;
+}
+
 /* Fixed height, so a score, combo or meter change never moves the stage below (stable layout). */
 .scoreRow {
   display: flex;

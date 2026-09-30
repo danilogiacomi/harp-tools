@@ -99,7 +99,7 @@ export function HeroGame({ storage = browserStorage() }: { storage?: Storage | n
     <>
       <div className={gameStyles.toolbar}>
         <ModeToggle mode={mode} onChange={setMode} />
-        <label className={gameStyles.field}>
+        <label className={`${gameStyles.field} ${styles.trackField}`}>
           Track
           <select aria-label="Track" value={track.id} onChange={(e) => setTrackId(e.target.value)}>
             {TRACKS.map((t) => (
