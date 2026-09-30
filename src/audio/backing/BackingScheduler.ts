@@ -1,4 +1,5 @@
 import {
+  initialBackingState,
   INSTRUMENTS,
   scheduleBacking,
   type BackingConfig,
@@ -86,7 +87,7 @@ export class BackingScheduler {
     }
     this.applyMix(this.channels)
     this.noise ??= makeNoiseBuffer(ctx)
-    this.state = { nextBeatTime: audioEngine.now() + START_DELAY_S, bar: 0, beat: 0 }
+    this.state = initialBackingState(this.config, audioEngine.now() + START_DELAY_S)
     this.tick()
     this.timer = setInterval(this.tick, TICK_MS)
     this.releaseScreen = this.awake.hold()

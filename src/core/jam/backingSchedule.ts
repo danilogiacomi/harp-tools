@@ -10,15 +10,28 @@ export interface BackingConfig {
   form: readonly Degree[]
   /** The tonic of the I chord. */
   tonicPc: number
+  /** Bars of hi-hat alone before the form, numbered -countInBars … -1 (default 0). */
+  countInBars?: number
+  /**
+   * Repeat the form forever (default). False plays it once, then reports the end once as a
+   * `bar` event numbered `form.length`, and schedules nothing more.
+   */
+  loop?: boolean
 }
 
 /** Where the scheduler is: the next beat to schedule. */
 export interface BackingState {
   /** AudioContext time in seconds. */
   nextBeatTime: number
+  /** Negative in the count-in; past form.length once a song that doesn't loop has ended. */
   bar: number
   /** 0–3 within the bar. */
   beat: number
+}
+
+/** A backing that starts at `time`: from its first count-in bar, or bar 0. */
+export function initialBackingState(config: BackingConfig, time: number): BackingState {
+  return { nextBeatTime: time, bar: 0 - (config.countInBars ?? 0), beat: 0 }
 }
 
 export type BackingEvent =
@@ -65,18 +78,41 @@ export function scheduleBacking(
   lookahead: number,
 ): { events: BackingEvent[]; state: BackingState } {
   let { nextBeatTime, bar, beat } = state
-  // A throttled timer (background tab) can leave us behind: skip the missed beats rather than
-  // playing them all at once.
-  if (nextBeatTime < now) nextBeatTime = now
-  bar %= config.form.length
-
+  const loop = config.loop ?? true
+  const end = config.form.length
   const beatS = 60 / config.bpm
   const offS = offbeatFraction(config.feel) * beatS
+  const advance = () => {
+    beat += 1
+    if (beat === BEATS_PER_BAR) {
+      beat = 0
+      bar += 1
+      if (loop && bar === end) bar = 0
+    }
+    nextBeatTime += beatS
+  }
+  if (loop && bar >= end) bar %= end
+  // A throttled timer (background tab) can leave us behind: skip the missed beats rather than
+  // playing them all at once, staying on the beat grid (a song's clock is anchored to it).
+  while (nextBeatTime < now && bar < end) advance()
+
   const events: BackingEvent[] = []
   while (nextBeatTime < now + lookahead) {
     const t = nextBeatTime
-    const root = chordRootPc(config.tonicPc, config.form[bar])
+    if (bar >= end) {
+      // A song that doesn't loop: report its end once, then schedule nothing more.
+      if (bar === end) events.push({ kind: 'bar', time: t, bar })
+      bar = end + 1
+      break
+    }
     if (beat === 0) events.push({ kind: 'bar', time: t, bar })
+    if (bar < 0) {
+      // The count-in: the hi-hat alone, on the beat.
+      events.push({ kind: 'hat', time: t })
+      advance()
+      continue
+    }
+    const root = chordRootPc(config.tonicPc, config.form[bar])
     events.push({ kind: beat % 2 === 0 ? 'kick' : 'snare', time: t })
     events.push({ kind: 'hat', time: t }, { kind: 'hat', time: t + offS })
     if (config.feel === 'shuffle') {
@@ -103,13 +139,7 @@ export function scheduleBacking(
       })
     }
     events.push({ kind: 'chords', time: t + offS, midis: chordMidis(root), duration: STAB_S })
-
-    beat += 1
-    if (beat === BEATS_PER_BAR) {
-      beat = 0
-      bar = (bar + 1) % config.form.length
-    }
-    nextBeatTime += beatS
+    advance()
   }
   return { events, state: { nextBeatTime, bar, beat } }
 }

@@ -123,6 +123,18 @@ describe('BackingScheduler', () => {
     expect(ctx.started.filter((n) => n.type === 'sine').length).toBe(3) // kicks on beats 1 and 3
   })
 
+  it('counts in with the hi-hat alone, and reports the count-in bar as -1', () => {
+    const onBar = vi.fn()
+    const s = new BackingScheduler({ ...CONFIG, countInBars: 1 }, onBar)
+    s.start()
+    const at = (t: number) => ctx.started.filter((n) => Math.abs(n.at - t) < 1e-9)
+    expect(at(0.05).map((n) => n.type)).toEqual(['noise'])
+    run(100)
+    expect(onBar).toHaveBeenCalledWith(-1)
+    run(2000)
+    expect(onBar).toHaveBeenLastCalledWith(0)
+  })
+
   it('stops scheduling and cancels a pending bar report', () => {
     const onBar = vi.fn()
     const s = new BackingScheduler(CONFIG, onBar)

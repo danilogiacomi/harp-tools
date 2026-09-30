@@ -3,6 +3,7 @@ import { bluesForm } from './blues'
 import {
   bassMidi,
   chordMidis,
+  initialBackingState,
   offbeatFraction,
   scheduleBacking,
   type BackingConfig,
@@ -80,15 +81,60 @@ describe('scheduleBacking', () => {
     expect(bass).toEqual([{ kind: 'bass', time: 3, midi: 36, duration: 0.3 }])
   })
 
-  it('skips beats a throttled timer missed instead of playing them all at once', () => {
+  it('skips beats a throttled timer missed, staying on the beat grid', () => {
     const { events, state } = scheduleBacking(start, G_SHUFFLE, 10, 0.1)
-    expect(events[0]).toEqual({ kind: 'bar', time: 10, bar: 0 })
-    expect(state.nextBeatTime).toBe(10.5)
+    // 18 beats (4½ bars) went by: the next one is the third beat of bar 4, at 10 s exactly.
+    expect(events[0]).toEqual({ kind: 'kick', time: 10 })
+    expect(state).toEqual({ nextBeatTime: 10.5, bar: 4, beat: 3 })
   })
 
   it('applies a new tempo from the next beat', () => {
     const first = scheduleBacking(start, G_SHUFFLE, 1, 0.1)
     const next = scheduleBacking(first.state, { ...G_SHUFFLE, bpm: 60 }, 1.45, 0.1)
     expect(next.state.nextBeatTime).toBe(2.5)
+  })
+})
+
+describe('count-in and songs', () => {
+  const SONG: BackingConfig = { ...G_SHUFFLE, form: ['I', 'IV'], countInBars: 1, loop: false }
+  const ONCE: BackingConfig = { ...SONG, countInBars: 0 }
+
+  it('starts at the first count-in bar', () => {
+    expect(initialBackingState(SONG, 0.05)).toEqual({ nextBeatTime: 0.05, bar: -1, beat: 0 })
+    expect(initialBackingState(G_SHUFFLE, 0.05)).toEqual({ nextBeatTime: 0.05, bar: 0, beat: 0 })
+  })
+
+  it('plays the count-in as one hi-hat a beat, then the form', () => {
+    const { events, state } = scheduleBacking(initialBackingState(SONG, 1), SONG, 1, 2)
+    expect(round(events)).toEqual([
+      { kind: 'bar', time: 1, bar: -1 },
+      { kind: 'hat', time: 1 },
+      { kind: 'hat', time: 1.5 },
+      { kind: 'hat', time: 2 },
+      { kind: 'hat', time: 2.5 },
+    ])
+    expect(state).toEqual({ nextBeatTime: 3, bar: 0, beat: 0 })
+    const next = scheduleBacking(state, SONG, 3, 0.1)
+    expect(next.events.slice(0, 2)).toEqual([
+      { kind: 'bar', time: 3, bar: 0 },
+      { kind: 'kick', time: 3 },
+    ])
+  })
+
+  it('plays a song once, reports its end once, then schedules nothing', () => {
+    const first = scheduleBacking({ nextBeatTime: 1, bar: 0, beat: 0 }, ONCE, 1, 5)
+    const bars = first.events.flatMap((e) => (e.kind === 'bar' ? [[e.bar, e.time]] : []))
+    expect(bars).toEqual([
+      [0, 1],
+      [1, 3],
+      [2, 5],
+    ])
+    expect(first.events.filter((e) => e.time >= 5)).toEqual([{ kind: 'bar', time: 5, bar: 2 }])
+    expect(scheduleBacking(first.state, ONCE, 5.5, 5).events).toEqual([])
+  })
+
+  it('still reports the end when a throttled timer wakes up after it', () => {
+    const { events } = scheduleBacking({ nextBeatTime: 1, bar: 0, beat: 0 }, ONCE, 20, 0.1)
+    expect(events).toEqual([{ kind: 'bar', time: 5, bar: 2 }])
   })
 })
