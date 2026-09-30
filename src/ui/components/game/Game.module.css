@@ -189,6 +189,7 @@ strong.scoreLine {
   gap: 0.5rem;
   padding: 0;
   list-style: none;
+  position: relative;
 }
 
 .slot {
