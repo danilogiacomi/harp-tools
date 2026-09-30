@@ -35,7 +35,9 @@ export class ScreenAwake implements KeepAwake {
 
   constructor(
     private readonly api: WakeLockApi | undefined = browserWakeLock(),
-    doc: VisibilitySource | undefined = typeof document === 'undefined' ? undefined : (document as VisibilitySource),
+    doc: VisibilitySource | undefined = typeof document === 'undefined'
+      ? undefined
+      : (document as VisibilitySource),
   ) {
     doc?.addEventListener('visibilitychange', () => {
       if (doc.visibilityState === 'visible') this.sync()

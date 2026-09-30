@@ -6,7 +6,7 @@ const DESKTOP = { standalone: false, ios: false }
 
 function firePrompt(
   outcome: 'accepted' | 'dismissed' = 'accepted',
-  promptFn?: () => Promise<void>
+  promptFn?: () => Promise<void>,
 ) {
   const event = new Event('beforeinstallprompt', { cancelable: true }) as Event & {
     prompt: ReturnType<typeof vi.fn>

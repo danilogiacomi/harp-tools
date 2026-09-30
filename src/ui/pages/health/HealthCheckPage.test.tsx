@@ -256,11 +256,15 @@ describe('HealthCheck table on a phone', () => {
     renderCheck()
     const table = screen.getByRole('table')
     expect(table).toHaveAttribute('data-layout', 'narrow')
-    const headers = within(table).getAllByRole('columnheader').map((h) => h.textContent)
+    const headers = within(table)
+      .getAllByRole('columnheader')
+      .map((h) => h.textContent)
     expect(headers).toEqual(['Hole', 'Blow', 'Draw'])
-    expect(within(table).getAllByRole('rowheader').map((h) => h.textContent)).toEqual(
-      ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
-    )
+    expect(
+      within(table)
+        .getAllByRole('rowheader')
+        .map((h) => h.textContent),
+    ).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
   })
 
   it('keeps the wide layout on larger screens', () => {

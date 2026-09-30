@@ -14,7 +14,8 @@ export function scrollLeftToShow(
   view: { scrollLeft: number; width: number },
   margin = 8,
 ): number | null {
-  const visible = slot.left >= view.scrollLeft && slot.left + slot.width <= view.scrollLeft + view.width
+  const visible =
+    slot.left >= view.scrollLeft && slot.left + slot.width <= view.scrollLeft + view.width
   return visible ? null : Math.max(0, slot.left - margin)
 }
 

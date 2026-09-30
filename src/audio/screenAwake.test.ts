@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import { ScreenAwake, type VisibilitySource, type WakeLockApi, type WakeLockSentinelLike } from './screenAwake'
+import {
+  ScreenAwake,
+  type VisibilitySource,
+  type WakeLockApi,
+  type WakeLockSentinelLike,
+} from './screenAwake'
 
 /** A fake Wake Lock API whose requests resolve (or reject) when the test says so. */
 function fakeApi() {

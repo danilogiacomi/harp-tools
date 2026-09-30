@@ -66,6 +66,7 @@ export function InstallButton({ env = browserInstallEnv() }: { env?: InstallEnv 
       </p>
     )
   }
-  if (env.ios) return <p className={styles.install}>On iPhone or iPad: Share → Add to Home Screen</p>
+  if (env.ios)
+    return <p className={styles.install}>On iPhone or iPad: Share → Add to Home Screen</p>
   return null
 }
