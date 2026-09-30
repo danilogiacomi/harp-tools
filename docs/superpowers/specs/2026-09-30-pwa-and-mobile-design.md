@@ -97,7 +97,7 @@ Under `@media (max-width: 30rem)`:
 ### 2.4 Note slots (tab reader, licks)
 
 - They keep `overflow-x: auto`, because long licks are meant to scroll.
-- When the current slot changes, it's scrolled into view with `scrollIntoView({ block: 'nearest', inline: 'nearest' })`. `block: 'nearest'` stops the page itself from jumping.
+- When the current slot changes and it's out of view, the row sets its own `scrollLeft` (the slot's `offsetLeft` minus an 8 px margin). `scrollIntoView` was rejected because it would also scroll the page vertically when the row is off-screen mid-run.
 
 ### 2.5 Small fixes
 
@@ -168,7 +168,7 @@ Everything degrades to today's behaviour:
   - the iOS branch shows the hint.
 - `useMediaQuery`: follows a mocked `matchMedia` change.
 - Health table: the transposed layout under a mocked narrow query, with Hole/Blow/Draw headers and 10 body rows.
-- Note slots: `scrollIntoView` is called when the current index changes.
+- Note slots: a pure `scrollLeftToShow` helper, plus the row's `scrollLeft` following the current slot.
 - Chart: note labels render the octave span; tab labels don't.
 
 **Build check:** `scripts/check-pwa.ts`, run by an npm script `check:pwa` after `npm run build` and added to the deploy workflow. It asserts that `dist/sw.js` and `dist/manifest.webmanifest` exist, that manifest `start_url`, `scope` and icon `src` are relative, and that every icon file exists.
