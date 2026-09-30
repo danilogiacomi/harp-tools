@@ -49,4 +49,14 @@ describe('Header', () => {
       ['Log', '#/log'],
     ])
   })
+
+  it('keeps the GitHub link named when its text is hidden on phones', () => {
+    render(
+      <SettingsProvider storage={null}>
+        <Header />
+      </SettingsProvider>,
+    )
+    const star = screen.getByRole('link', { name: '★ Star on GitHub' })
+    expect(star.querySelector('.starText')).toHaveTextContent('★ Star on GitHub')
+  })
 })

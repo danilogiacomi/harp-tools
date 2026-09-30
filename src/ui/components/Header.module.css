@@ -3,7 +3,8 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem 1.5rem;
-  padding: 0.75rem 1rem;
+  padding: max(0.75rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) 0.75rem
+    max(1rem, env(safe-area-inset-left));
   border-bottom: 1px solid var(--border);
   background: var(--surface);
 }
@@ -57,4 +58,30 @@
 
 .dot {
   color: var(--text-dim);
+}
+
+/* Phones: brand + links on the first row, harp + an icon-only star on the second. */
+@media (max-width: 30rem) {
+  .header {
+    gap: 0.5rem 1rem;
+  }
+
+  .nav {
+    gap: 0.75rem;
+  }
+
+  .star {
+    padding: 0.35rem 0.5rem;
+  }
+
+  /* Same rules as the global .visually-hidden: still the link's accessible name. */
+  .starText {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
 }
