@@ -1,4 +1,4 @@
-import type { KeyboardEvent, PointerEvent } from 'react'
+import type { KeyboardEvent, PointerEvent, ReactNode } from 'react'
 import { noteId, tabLabel, type HarpNote, type Technique } from '../../core/harmonica/harp'
 import { diagramLayout, type DiagramRow } from '../../core/harmonica/layout'
 import { noteName, type Spelling } from '../../core/music/noteNames'
@@ -25,9 +25,12 @@ interface Props {
   onNoteUp?: (note: HarpNote) => void
   /** Games where the note is the answer: hide it from every cell's accessible name too. */
   concealNotes?: boolean
+  /** Drawn inside the chart's grid before the first row, so it can line up with the holes. */
+  header?: ReactNode
 }
 
-const COLOR: Record<Technique, string> = {
+/** The chart's colour for each technique (its data-color value). */
+export const TECHNIQUE_COLOR: Record<Technique, string> = {
   blow: 'blow',
   draw: 'draw',
   blowBend: 'bend',
@@ -75,6 +78,7 @@ export function HarmonicaDiagram({
   onNoteDown,
   onNoteUp,
   concealNotes = false,
+  header,
 }: Props) {
   const { above, below } = diagramLayout(harp, showAdvanced)
 
@@ -89,7 +93,7 @@ export function HarmonicaDiagram({
         key={noteId(note)}
         type="button"
         className={styles.cell}
-        data-color={COLOR[note.technique]}
+        data-color={TECHNIQUE_COLOR[note.technique]}
         data-advanced={note.common ? undefined : 'true'}
         data-highlight={highlight}
         data-interactive={onNoteDown ? 'true' : undefined}
@@ -117,6 +121,7 @@ export function HarmonicaDiagram({
   return (
     <div className={styles.wrap}>
       <div className={styles.grid} role="group" aria-label="Harmonica chart">
+        {header}
         {above.flatMap(row)}
         <div className={styles.rowLabel}>Hole</div>
         {HOLES.map((h) => (

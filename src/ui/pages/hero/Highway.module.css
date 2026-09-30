@@ -1,0 +1,142 @@
+/* One row of the chart's grid: the subgrid gives it the chart's own columns, so lane n is always
+   above hole n, whatever the label column's width and even while the chart scrolls sideways. */
+.highway {
+  position: relative;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-template-rows: 1fr;
+  height: 18rem;
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+}
+
+.lane {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px 6px 0 0;
+  background: var(--surface);
+}
+
+/* Absolutely positioned in the lanes' grid area, so it takes no part in auto-placement. */
+.rules {
+  position: absolute;
+  inset: 0;
+  grid-row: 1;
+  grid-column: 2 / -1;
+  pointer-events: none;
+}
+
+/* A zero-height strip at the bottom; notes stand on it at their beat and it slides down. */
+.track {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 0;
+  transform: translateY(var(--offset, 0px));
+  will-change: transform;
+}
+
+.note {
+  --c: var(--c-blow);
+  position: absolute;
+  inset-inline: 2px;
+  display: grid;
+  place-items: end center;
+  padding-bottom: 2px;
+  overflow: hidden;
+  border: 2px solid var(--c);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.note[data-color='draw'] {
+  --c: var(--c-draw);
+}
+.note[data-color='bend'] {
+  --c: var(--c-bend);
+}
+.note[data-color='overblow'] {
+  --c: var(--c-overblow);
+}
+.note[data-color='overdraw'] {
+  --c: var(--c-overdraw);
+}
+
+.note[data-breath='draw'] {
+  background: var(--c);
+}
+.note[data-breath='draw'][data-color='bend'] {
+  color: #111;
+}
+
+.note[data-state='perfect'],
+.note[data-state='good'] {
+  animation: hit 400ms ease-out forwards;
+}
+
+.note[data-state='miss'] {
+  --c: var(--text-dim);
+  opacity: 0.45;
+}
+
+@keyframes hit {
+  from {
+    box-shadow: 0 0 0 4px var(--ok);
+  }
+  to {
+    box-shadow: 0 0 0 4px transparent;
+    opacity: 0;
+  }
+}
+
+.rule {
+  position: absolute;
+  inset-inline: 0;
+  height: 1px;
+  background: var(--border);
+}
+
+.rule[data-chorus] {
+  height: 2px;
+  background: var(--text-dim);
+}
+
+.countIn {
+  position: absolute;
+  inset-inline: 0;
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.strike {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--target);
+}
+
+/* The chart's phone layout: no row labels, so no spacer either. */
+@container (max-width: 34rem) {
+  .highway {
+    height: 12rem;
+  }
+
+  .spacer {
+    display: none;
+  }
+
+  .rules {
+    grid-column: 1 / -1;
+  }
+
+  .note {
+    inset-inline: 1px;
+    font-size: 0.6rem;
+  }
+}

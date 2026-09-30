@@ -17,6 +17,12 @@ const renderDiagram = (props: Partial<Props> = {}) =>
   )
 
 describe('HarmonicaDiagram', () => {
+  it('draws a header inside the chart grid, before the first row', () => {
+    renderDiagram({ header: <div data-testid="lanes" /> })
+    const grid = screen.getByRole('group', { name: 'Harmonica chart' })
+    expect(grid.firstElementChild).toBe(screen.getByTestId('lanes'))
+  })
+
   it('renders the hole numbers', () => {
     renderDiagram()
     for (let h = 1; h <= 10; h++)
