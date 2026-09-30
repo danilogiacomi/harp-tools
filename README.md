@@ -22,7 +22,9 @@ hole and technique you're playing, and turns that into games that train your ear
 bends, and your knowledge of the instrument. It supports **all 12 keys** in Richter, Paddy Richter, Country and Natural minor
 tuning, including **bends, overblows and overdraws**.
 
-No accounts, no server, no installs — it's a static site that runs entirely in your browser.
+No accounts, no server. It's a static site that runs entirely in your browser — and you can
+**install it** on your phone or computer and practise **offline**. On a phone the whole harp fits
+the screen, and the screen stays on while you play.
 
 ## ✨ Features
 
@@ -131,6 +133,7 @@ for the details.
 - [x] Harp health check, tone & breath meter
 - [x] Rhythm trainer, tab reader, lick trainer
 - [x] Blues play-along
+- [x] Installable, offline, phone-friendly
 - [ ] Later: recorded harp samples
 
 <!-- usage:self:start -->
