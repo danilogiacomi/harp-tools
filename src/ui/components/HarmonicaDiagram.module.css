@@ -1,6 +1,7 @@
 .wrap {
   overflow-x: auto;
   padding-bottom: 0.5rem;
+  container-type: inline-size;
 }
 
 .grid {
@@ -123,4 +124,42 @@
 .swatch[data-advanced] {
   border-style: dashed;
   opacity: 0.55;
+}
+
+/* Phone widths: drop the row labels (colour, legend and accessible names carry the technique)
+   so all ten holes fit without scrolling sideways. */
+@container (max-width: 34rem) {
+  .grid {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .rowLabel {
+    display: none;
+  }
+
+  .hole {
+    padding: 0.25rem 0;
+    font-size: 0.85rem;
+  }
+
+  .cell {
+    padding: 0.35rem 0;
+    font-size: 0.7rem;
+    white-space: nowrap;
+  }
+
+  .octave {
+    font-size: 0.75em;
+    vertical-align: sub;
+    line-height: 0;
+  }
+
+  /* Nothing scrolls sideways any more, so a vertical swipe that starts on a cell scrolls the page.
+     Playable cells keep a 44 px tall touch target. */
+  .cell[data-interactive] {
+    min-height: 2.75rem;
+    touch-action: pan-y;
+  }
 }

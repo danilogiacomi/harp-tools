@@ -8,6 +8,12 @@ import styles from './HarmonicaDiagram.module.css'
 /** `hint` is a weaker suggestion than `target` (the jam page's blues-scale notes). */
 export type Highlight = 'detected' | 'target' | 'correct' | 'wrong' | 'hint'
 
+/** 'D#4' → ['D#', '4']: the octave gets its own span so compact cells can shrink it. */
+export function splitOctave(name: string): [string, string] {
+  const m = /^(.*?)(\d+)$/.exec(name)
+  return m ? [m[1], m[2]] : [name, '']
+}
+
 interface Props {
   harp: readonly HarpNote[]
   spelling: Spelling
@@ -50,6 +56,16 @@ const LEGEND = [
 
 const HOLES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
+function NoteLabel({ name }: { name: string }) {
+  const [pitch, octave] = splitOctave(name)
+  return (
+    <>
+      {pitch}
+      {octave && <span className={styles.octave}>{octave}</span>}
+    </>
+  )
+}
+
 export function HarmonicaDiagram({
   harp,
   spelling,
@@ -86,7 +102,7 @@ export function HarmonicaDiagram({
         onKeyDown={(e) => isKey(e) && !e.repeat && onNoteDown?.(note)}
         onKeyUp={(e) => isKey(e) && onNoteUp?.(note)}
       >
-        {labelMode === 'note' ? name : tab}
+        {labelMode === 'note' ? <NoteLabel name={name} /> : tab}
       </button>
     )
   }

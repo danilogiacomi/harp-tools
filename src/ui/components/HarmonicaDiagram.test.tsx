@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { buildHarp, noteId } from '../../core/harmonica/harp'
-import { HarmonicaDiagram } from './HarmonicaDiagram'
+import { HarmonicaDiagram, splitOctave } from './HarmonicaDiagram'
 
 const harp = buildHarp('C')
 type Props = Parameters<typeof HarmonicaDiagram>[0]
@@ -149,5 +149,30 @@ describe('HarmonicaDiagram', () => {
     const g4 = harp.find((n) => n.hole === 2 && n.technique === 'draw')!
     renderDiagram({ highlights: new Map([[noteId(g4), 'hint']]) })
     expect(screen.getByRole('button', { name: '-2 G4' })).toHaveAttribute('data-highlight', 'hint')
+  })
+})
+
+describe('splitOctave', () => {
+  it.each([
+    ['C4', ['C', '4']],
+    ['D#5', ['D#', '5']],
+    ['Eb6', ['Eb', '6']],
+    ['A', ['A', '']],
+  ])('%s → %j', (name, parts) => {
+    expect(splitOctave(name)).toEqual(parts)
+  })
+})
+
+describe('HarmonicaDiagram octave digits', () => {
+  it('puts the octave digit of a note label in its own span, keeping the text and name', () => {
+    renderDiagram()
+    const cell = screen.getByRole('button', { name: '1 C4' })
+    expect(cell).toHaveTextContent('C4')
+    expect(cell.querySelector('.octave')).toHaveTextContent('4')
+  })
+
+  it('leaves tab labels whole', () => {
+    renderDiagram({ labelMode: 'tab' })
+    expect(screen.getByRole('button', { name: '1 C4' }).querySelector('.octave')).toBeNull()
   })
 })
