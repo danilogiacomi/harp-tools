@@ -8,6 +8,7 @@ import {
 } from '../../core/jam/backingSchedule'
 import { midiToFreq } from '../../core/music/pitch'
 import { audioEngine } from '../AudioEngine'
+import { screenAwake, type KeepAwake } from '../screenAwake'
 import { makeNoiseBuffer, playBass, playChord, playHat, playKick, playSnare } from './voices'
 
 const TICK_MS = 25
@@ -45,11 +46,13 @@ export class BackingScheduler {
   private channels: Record<Instrument, GainNode> | null = null
   private noise: AudioBuffer | null = null
   private a4 = 440
+  private releaseScreen: (() => void) | null = null
 
   constructor(
     private config: BackingConfig,
     private readonly onBar: BarListener,
     private mix: Mix = DEFAULT_MIX,
+    private readonly awake: KeepAwake = screenAwake,
   ) {}
 
   get isRunning(): boolean {
@@ -71,6 +74,7 @@ export class BackingScheduler {
 
   start(): void {
     if (this.isRunning) return
+    this.releaseScreen = this.awake.hold()
     const ctx = audioEngine.ctx
     if (!this.channels) {
       const channels = {} as Record<Instrument, GainNode>
@@ -94,6 +98,8 @@ export class BackingScheduler {
     this.timer = undefined
     this.pendingBars.forEach(clearTimeout)
     this.pendingBars.clear()
+    this.releaseScreen?.()
+    this.releaseScreen = null
     if (this.channels) {
       for (const i of INSTRUMENTS) this.glide(this.channels[i], 0)
     }

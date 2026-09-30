@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { KeepAwake } from '../screenAwake'
 import { bluesForm } from '../../core/jam/blues'
 import type { BackingConfig } from '../../core/jam/backingSchedule'
 import { audioEngine } from '../AudioEngine'
@@ -52,6 +53,22 @@ class FakeAudioContext {
     }
     return src
   }
+}
+
+/** Counts how many holds are currently active. */
+function fakeAwake() {
+  let active = 0
+  const awake: KeepAwake = {
+    hold: () => {
+      active++
+      let done = false
+      return () => {
+        if (!done) active--
+        done = true
+      }
+    },
+  }
+  return { awake, active: () => active }
 }
 
 // 120 BPM: a beat every 0.5 s. G blues (C harp, 2nd position).
@@ -165,5 +182,18 @@ describe('BackingScheduler', () => {
     s.start()
     const bass = ctx.started.find((n) => n.type === 'triangle')!
     expect(bass.freq).toBeCloseTo(98.44, 2) // G2 at A4 = 442
+  })
+
+  it('holds the screen while playing, and releases it on stop and on dispose', () => {
+    const { awake, active } = fakeAwake()
+    const s = new BackingScheduler(CONFIG, vi.fn(), DEFAULT_MIX, awake)
+
+    s.start()
+    expect(active()).toBe(1)
+    s.stop()
+    expect(active()).toBe(0)
+    s.start()
+    s.dispose()
+    expect(active()).toBe(0)
   })
 })

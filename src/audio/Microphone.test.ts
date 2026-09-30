@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { KeepAwake } from './screenAwake'
 import { audioEngine } from './AudioEngine'
 import { Microphone, MicrophoneError, mapMicError } from './Microphone'
 
@@ -19,6 +20,22 @@ describe('mapMicError', () => {
     expect(mapMicError(null)).toBe('unknown')
   })
 })
+
+/** Counts how many holds are currently active. */
+function fakeAwake() {
+  let active = 0
+  const awake: KeepAwake = {
+    hold: () => {
+      active++
+      let done = false
+      return () => {
+        if (!done) active--
+        done = true
+      }
+    },
+  }
+  return { awake, active: () => active }
+}
 
 /** Minimal stand-in for the AudioContext methods Microphone uses. */
 function fakeCtx() {
@@ -183,5 +200,39 @@ describe('Microphone', () => {
     first.track.end() // a stale stream ending is ignored
     second.track.end()
     expect(onEnded).toHaveBeenCalledTimes(1)
+  })
+
+  it('holds the screen while the mic is open', async () => {
+    const { stream } = fakeStream()
+    stubMediaDevices(vi.fn().mockResolvedValue(stream))
+    vi.spyOn(audioEngine, 'ctx', 'get').mockReturnValue(fakeCtx())
+    const { awake, active } = fakeAwake()
+    const mic = new Microphone(awake)
+
+    await mic.acquire()
+    expect(active()).toBe(1)
+    mic.release()
+    expect(active()).toBe(0)
+  })
+
+  it('releases the screen when the stream ends on its own', async () => {
+    const { stream, track } = fakeStream()
+    stubMediaDevices(vi.fn().mockResolvedValue(stream))
+    vi.spyOn(audioEngine, 'ctx', 'get').mockReturnValue(fakeCtx())
+    const { awake, active } = fakeAwake()
+    const mic = new Microphone(awake)
+
+    await mic.acquire()
+    track.end()
+    expect(active()).toBe(0)
+  })
+
+  it('does not hold the screen when opening fails', async () => {
+    stubMediaDevices(vi.fn().mockRejectedValue(new DOMException('no', 'NotAllowedError')))
+    const { awake, active } = fakeAwake()
+    const mic = new Microphone(awake)
+
+    await expect(mic.acquire()).rejects.toMatchObject({ kind: 'denied' })
+    expect(active()).toBe(0)
   })
 })

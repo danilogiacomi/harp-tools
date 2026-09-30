@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { KeepAwake } from './screenAwake'
 import type { MetronomeConfig, TimeSignature } from '../core/rhythm/schedule'
 import { audioEngine } from './AudioEngine'
 import { clickSamples } from './click'
@@ -43,6 +44,22 @@ const SIGNATURE_6_8: TimeSignature = { label: '6/8', beats: 6, unit: 8 }
 
 function makeConfig(overrides: Partial<MetronomeConfig> = {}): MetronomeConfig {
   return { bpm: 600, signature: SIGNATURE_4_4, subdivision: 1, ...overrides }
+}
+
+/** Counts how many holds are currently active. */
+function fakeAwake() {
+  let active = 0
+  const awake: KeepAwake = {
+    hold: () => {
+      active++
+      let done = false
+      return () => {
+        if (!done) active--
+        done = true
+      }
+    },
+  }
+  return { awake, active: () => active }
 }
 
 describe('Metronome', () => {
@@ -151,5 +168,18 @@ describe('Metronome', () => {
 
     expect(ctx.sources).toHaveLength(countAfterFirstStart)
     expect(metronome.isRunning).toBe(true)
+  })
+
+  it('holds the screen from start() to stop(), once', () => {
+    const { awake, active } = fakeAwake()
+    const metronome = new Metronome(makeConfig(), vi.fn(), awake)
+
+    metronome.start()
+    metronome.start()
+    expect(active()).toBe(1)
+    metronome.stop()
+    expect(active()).toBe(0)
+    metronome.stop()
+    expect(active()).toBe(0)
   })
 })

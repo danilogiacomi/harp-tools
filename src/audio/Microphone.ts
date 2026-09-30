@@ -1,4 +1,5 @@
 import { audioEngine } from './AudioEngine'
+import { screenAwake, type KeepAwake } from './screenAwake'
 
 export type MicErrorKind = 'insecure' | 'denied' | 'no-device' | 'busy' | 'unknown'
 
@@ -36,6 +37,9 @@ export class Microphone {
   private pending: Promise<AnalyserNode> | null = null
   private users = 0
   private endedListeners = new Set<() => void>()
+  private releaseScreen: (() => void) | null = null
+
+  constructor(private readonly awake: KeepAwake = screenAwake) {}
 
   async acquire(): Promise<AnalyserNode> {
     if (!navigator.mediaDevices?.getUserMedia) throw new MicrophoneError('insecure')
@@ -92,6 +96,7 @@ export class Microphone {
       throw new MicrophoneError('unknown')
     }
     this.stream = stream
+    this.releaseScreen = this.awake.hold()
     stream.getTracks().forEach((t) => t.addEventListener('ended', () => this.ended(stream)))
     return analyser
   }
@@ -110,6 +115,8 @@ export class Microphone {
     this.stream = null
     this.source = null
     this.pending = null
+    this.releaseScreen?.()
+    this.releaseScreen = null
   }
 }
 

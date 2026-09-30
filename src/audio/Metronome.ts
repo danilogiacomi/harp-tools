@@ -6,6 +6,7 @@ import {
   type SchedulerState,
 } from '../core/rhythm/schedule'
 import { audioEngine } from './AudioEngine'
+import { screenAwake, type KeepAwake } from './screenAwake'
 import { clickSamples } from './click'
 
 const TICK_MS = 25
@@ -26,10 +27,12 @@ export class Metronome {
     ctx: BaseAudioContext
     buffers: Partial<Record<ClickKind, AudioBuffer>>
   } | null = null
+  private releaseScreen: (() => void) | null = null
 
   constructor(
     private config: MetronomeConfig,
     private readonly onBeat: BeatListener,
+    private readonly awake: KeepAwake = screenAwake,
   ) {}
 
   get isRunning(): boolean {
@@ -42,6 +45,7 @@ export class Metronome {
 
   start(): void {
     if (this.isRunning) return
+    this.releaseScreen = this.awake.hold()
     this.state = { nextTime: audioEngine.now() + START_DELAY_S, pulse: 0, sub: 0 }
     this.tick()
     this.timer = setInterval(this.tick, TICK_MS)
@@ -52,6 +56,8 @@ export class Metronome {
     this.timer = undefined
     this.pendingBeats.forEach(clearTimeout)
     this.pendingBeats.clear()
+    this.releaseScreen?.()
+    this.releaseScreen = null
   }
 
   private tick = (): void => {
