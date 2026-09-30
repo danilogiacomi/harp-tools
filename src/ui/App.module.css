@@ -1,5 +1,6 @@
 .main {
   max-width: 64rem;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1rem max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
 }

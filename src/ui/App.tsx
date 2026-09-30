@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import { Header } from './components/Header'
+import { UpdateBar } from './components/UpdateBar'
 import { BendTrainerPage } from './pages/bend/BendTrainerPage'
 import { EchoNotePage } from './pages/echo/EchoNotePage'
 import { HealthCheckPage } from './pages/health/HealthCheckPage'
@@ -55,6 +56,7 @@ export function App() {
       <main className={styles.main}>
         <CurrentPage />
       </main>
+      <UpdateBar />
     </SettingsProvider>
   )
 }
