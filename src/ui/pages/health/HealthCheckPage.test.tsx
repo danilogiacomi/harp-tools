@@ -1,6 +1,6 @@
 import { Profiler } from 'react'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PitchListener } from '../../../audio/pitch/PitchDetector'
 import { midiToFreq } from '../../../core/music/pitch'
 import { layoutShape } from '../../../test/layout'
@@ -49,6 +49,24 @@ const cell = (technique: 'Blow' | 'Draw', hole: number) =>
   ]
 const skip = (n: number) => {
   for (let i = 0; i < n; i++) fireEvent.click(screen.getByRole('button', { name: /Skip reed/ }))
+}
+
+/** A controllable matchMedia: `set(true)` flips every query and fires 'change'. */
+function stubMatchMedia(initial: boolean) {
+  let matches = initial
+  const listeners = new Set<() => void>()
+  window.matchMedia = ((query: string) => ({
+    get matches() {
+      return matches
+    },
+    media: query,
+    addEventListener: (_: 'change', l: () => void) => listeners.add(l),
+    removeEventListener: (_: 'change', l: () => void) => listeners.delete(l),
+  })) as unknown as typeof window.matchMedia
+  return (next: boolean) => {
+    matches = next
+    listeners.forEach((l) => l())
+  }
 }
 
 describe('HealthCheck', () => {
@@ -225,5 +243,29 @@ describe('HealthCheck', () => {
     mic.state = { reading: null, rms: 0, status: 'error', error: 'denied' }
     renderCheck()
     expect(screen.getByRole('alert')).toHaveTextContent('Microphone permission was denied')
+  })
+})
+
+describe('HealthCheck table on a phone', () => {
+  afterEach(() => {
+    delete (window as { matchMedia?: unknown }).matchMedia
+  })
+
+  it('lists holes as rows with Blow and Draw columns', () => {
+    stubMatchMedia(true)
+    renderCheck()
+    const table = screen.getByRole('table')
+    expect(table).toHaveAttribute('data-layout', 'narrow')
+    const headers = within(table).getAllByRole('columnheader').map((h) => h.textContent)
+    expect(headers).toEqual(['Hole', 'Blow', 'Draw'])
+    expect(within(table).getAllByRole('rowheader').map((h) => h.textContent)).toEqual(
+      ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+    )
+  })
+
+  it('keeps the wide layout on larger screens', () => {
+    stubMatchMedia(false)
+    renderCheck()
+    expect(screen.getByRole('table')).toHaveAttribute('data-layout', 'wide')
   })
 })

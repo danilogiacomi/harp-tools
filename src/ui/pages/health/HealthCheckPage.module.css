@@ -5,10 +5,13 @@
 
 .table {
   width: 100%;
-  min-width: 34rem;
   border-collapse: separate;
   border-spacing: 4px;
   font-variant-numeric: tabular-nums;
+}
+
+.table[data-layout='wide'] {
+  min-width: 34rem;
 }
 
 .caption {

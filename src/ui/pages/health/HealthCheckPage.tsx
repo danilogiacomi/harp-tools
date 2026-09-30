@@ -15,6 +15,7 @@ import { Stage } from '../../components/game/Stage'
 import gameStyles from '../../components/game/Game.module.css'
 import { healthId, loadHealth, saveHealth } from '../../health/healthStore'
 import { useHarp, useSpelling } from '../../hooks/useHarp'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { usePitch } from '../../hooks/usePitch'
 import { usePracticeTimer } from '../../hooks/usePracticeTimer'
 import { Slot } from '../../hooks/useSlot'
@@ -55,12 +56,15 @@ export function HealthCheck({ now = perfNow, storage = browserStorage() }: Props
 
 const TECHNIQUES = ['blow', 'draw'] as const
 const HOLES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+/** Below this width the table lists holes as rows, so it fits without scrolling. */
+export const NARROW_TABLE = '(max-width: 34rem)'
 const WAITING: MeasureState = { status: 'waiting', progress: 0, cents: null, result: null }
 const sameShown = (a: MeasureState, b: MeasureState) =>
   a.status === b.status && a.progress === b.progress && a.cents === b.cents
 
 function HealthRun({ now, storage }: Required<Props>) {
   const { settings, update } = useSettings()
+  const narrow = useMediaQuery(NARROW_TABLE)
   const harp = useHarp()
   const reeds = useMemo(() => healthReeds(harp), [harp])
   const spelling = useSpelling()
@@ -142,6 +146,26 @@ function HealthRun({ now, storage }: Required<Props>) {
     reeds.findIndex((r) => r.hole === hole && r.technique === technique)
   const reedName = (r: Reed) => `${r.hole} ${r.technique}`
 
+  const reedCell = (hole: number, technique: (typeof TECHNIQUES)[number], key: string | number) => {
+    const i = indexOf(hole, technique)
+    const cents = i >= 0 ? shown[i] : null
+    const saved = previous && i >= 0 ? previous.cents[i] : null
+    const before = previous && saved !== null ? centsAtA4(saved, previous.a4, settings.a4) : null
+    return (
+      <td
+        key={key}
+        className={styles.cell}
+        data-quality={cents === null ? undefined : tuneQuality(cents)}
+        data-current={i === step || undefined}
+      >
+        <span>{cents === null ? '–' : formatCents(cents)}</span>
+        <small className={styles.delta}>
+          {cents !== null && before !== null && `Δ ${formatCents(cents - before)}`}
+        </small>
+      </td>
+    )
+  }
+
   return (
     <>
       {pitch.error && <MicErrorNotice kind={pitch.error} />}
@@ -187,48 +211,51 @@ function HealthRun({ now, storage }: Required<Props>) {
         }
       />
       <div className={styles.tableWrap}>
-        <table className={styles.table}>
+        <table className={styles.table} data-layout={narrow ? 'narrow' : 'wide'}>
           <caption className={styles.caption}>
             Cents off per reed
             {previous && ` · Δ against the previous check (${previous.date})`}
           </caption>
-          <thead>
-            <tr>
-              <th scope="col">Hole</th>
-              {HOLES.map((h) => (
-                <th key={h} scope="col">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {TECHNIQUES.map((technique) => (
-              <tr key={technique}>
-                <th scope="row">{technique === 'blow' ? 'Blow' : 'Draw'}</th>
-                {HOLES.map((hole) => {
-                  const i = indexOf(hole, technique)
-                  const cents = i >= 0 ? shown[i] : null
-                  const saved = previous && i >= 0 ? previous.cents[i] : null
-                  const before =
-                    previous && saved !== null ? centsAtA4(saved, previous.a4, settings.a4) : null
-                  return (
-                    <td
-                      key={hole}
-                      className={styles.cell}
-                      data-quality={cents === null ? undefined : tuneQuality(cents)}
-                      data-current={i === step || undefined}
-                    >
-                      <span>{cents === null ? '–' : formatCents(cents)}</span>
-                      <small className={styles.delta}>
-                        {cents !== null && before !== null && `Δ ${formatCents(cents - before)}`}
-                      </small>
-                    </td>
-                  )
-                })}
-              </tr>
-            ))}
-          </tbody>
+          {narrow ? (
+            <>
+              <thead>
+                <tr>
+                  <th scope="col">Hole</th>
+                  <th scope="col">Blow</th>
+                  <th scope="col">Draw</th>
+                </tr>
+              </thead>
+              <tbody>
+                {HOLES.map((hole) => (
+                  <tr key={hole}>
+                    <th scope="row">{hole}</th>
+                    {TECHNIQUES.map((technique) => reedCell(hole, technique, technique))}
+                  </tr>
+                ))}
+              </tbody>
+            </>
+          ) : (
+            <>
+              <thead>
+                <tr>
+                  <th scope="col">Hole</th>
+                  {HOLES.map((h) => (
+                    <th key={h} scope="col">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {TECHNIQUES.map((technique) => (
+                  <tr key={technique}>
+                    <th scope="row">{technique === 'blow' ? 'Blow' : 'Draw'}</th>
+                    {HOLES.map((hole) => reedCell(hole, technique, hole))}
+                  </tr>
+                ))}
+              </tbody>
+            </>
+          )}
         </table>
       </div>
       <div className={styles.summary} aria-label="Summary">
