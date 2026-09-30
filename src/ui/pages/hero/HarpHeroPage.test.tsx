@@ -146,6 +146,19 @@ describe('HeroGame', () => {
     expect(screen.getByRole('button', { name: '↻ Retry' })).toBeInTheDocument()
   })
 
+  it('saves nothing when a hidden tab brings the rest of a scored song in as misses at once', () => {
+    renderGame()
+    scored()
+    startSong()
+    play(0)
+    hold(null, 200000, 200000) // the tab comes back long after the end: every note left is a miss
+    // One Perfect (meter 53), then the 7th miss empties it: note 7, due at beat 20, in bar 6.
+    expect(headline()).toHaveTextContent('Song failed at bar 6 of 24')
+    expect(screen.getByText('Perfect 1 · Good 0 · Miss 7 · Longest streak 1')).toBeInTheDocument()
+    expect(loadBest(localStorage, BEST_KEY)).toBeNull()
+    expect(loadLog(localStorage).sessions).toEqual([])
+  })
+
   it('keeps going in practice with an empty meter', () => {
     renderGame()
     startSong()
@@ -253,10 +266,11 @@ describe('HeroGame', () => {
       fakeAudio.time = 2500 // 1.5 s after the count-in started: 2 beats
       act(() => vi.advanceTimersByTime(20))
       expect(offset()).toBeCloseTo(2 * 48)
-      hold(null, 4000, 17000) // fails at 16250 ms
+      hold(null, 4000, 17000) // the 7th miss (due at beat 16) empties the meter
       fakeAudio.time = 30000
       act(() => vi.advanceTimersByTime(20))
-      expect(offset()).toBeCloseTo(((16250 - 1000) / BEAT) * 48)
+      // Frozen where that note's window closed: count-in + beat 16 + 150 ms.
+      expect(offset()).toBeCloseTo((4 + 16 + 150 / BEAT) * 48)
     })
   })
 })

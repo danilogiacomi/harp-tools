@@ -25,7 +25,7 @@ import { findNotes, noteId } from '../../../core/harmonica/harp'
 import { noteName } from '../../../core/music/noteNames'
 import { BeatAnchor } from '../../../core/rhythm/beatAnchor'
 import { beatMs, parseTab, tabTimeline, type TabTimeline } from '../../../core/tab/parseTab'
-import { TabJudge } from '../../../core/tab/tabJudge'
+import { ONSET_WINDOW_MS, TabJudge } from '../../../core/tab/tabJudge'
 import { HarmonicaDiagram, type Highlight } from '../../components/HarmonicaDiagram'
 import { MicErrorNotice } from '../../components/MicErrorNotice'
 import { GameLayout } from '../../components/game/GameLayout'
@@ -252,34 +252,43 @@ function HeroRun({ audio, mode, track, speed, timeline, bestKey, onFinished }: R
 
     let arcade = rt.arcade
     const grades = new Map<number, Grade>()
+    // Scored in order, and none after the one that fails the song: a hidden tab can hand the
+    // judge every note left at once, and a failed run must record nothing more (spec §3.4).
+    let failedAt: number | null = null
     for (const j of judged) {
       const step = scoreNote(arcade, j, mode)
       arcade = step.state
       grades.set(j.index, step.grade)
       scoring.record({ correct: step.grade !== 'miss', points: step.points })
+      if (arcade.failed) {
+        failedAt = j.index
+        break
+      }
     }
     rt.arcade = arcade
 
     let phase: Phase = 'running'
     let failedBar: number | null = null
-    if (arcade.failed) {
+    if (failedAt !== null) {
+      // Freeze where the failing note was decided (its window closed), not at this frame.
+      const note = notes[failedAt]
       phase = 'failed'
-      rt.frozenAt = (timeMs - origin) / beat
-      const heardBar = Math.floor((timeMs - origin) / barMs) - COUNT_IN_BARS + 1
-      failedBar = Math.min(bars, Math.max(1, heardBar))
+      rt.frozenAt = countInBeats + note.startBeat + ONSET_WINDOW_MS / beat
+      failedBar = Math.min(bars, Math.floor(note.startBeat / TRACK_BEATS_PER_BAR) + 1)
       band.stop()
     } else if (rt.judge.done) {
       // The results show now; the band plays out its last bar and stops itself.
       phase = 'done'
       onFinished()
     }
-    const last = judged[judged.length - 1].index
+    const counted = [...grades.keys()]
+    const last = counted[counted.length - 1]
     setView((v) => ({
       phase,
       failedBar,
       arcade,
       index: rt.judge.current,
-      judged: v.judged + judged.length,
+      judged: v.judged + counted.length,
       grade: grades.get(last) ?? null,
       states: v.states.map((s, k) => grades.get(k) ?? s),
     }))
