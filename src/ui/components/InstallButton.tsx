@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import styles from './InstallButton.module.css'
 
 /** Chrome/Edge/Android's install event (not in TypeScript's DOM types). */
@@ -25,26 +25,44 @@ export function browserInstallEnv(): InstallEnv {
   return { standalone, ios }
 }
 
-export function InstallButton({ env = browserInstallEnv() }: { env?: InstallEnv }) {
-  const [prompt, setPrompt] = useState<InstallPromptEvent | null>(null)
-  const [installed, setInstalled] = useState(false)
+interface InstallState {
+  prompt: InstallPromptEvent | null
+  installed: boolean
+}
 
-  useEffect(() => {
-    const onPrompt = (e: Event) => {
-      e.preventDefault()
-      setPrompt(e as InstallPromptEvent)
-    }
-    const onInstalled = () => {
-      setPrompt(null)
-      setInstalled(true)
-    }
-    window.addEventListener('beforeinstallprompt', onPrompt)
-    window.addEventListener('appinstalled', onInstalled)
-    return () => {
-      window.removeEventListener('beforeinstallprompt', onPrompt)
-      window.removeEventListener('appinstalled', onInstalled)
-    }
-  }, [])
+const INITIAL: InstallState = { prompt: null, installed: false }
+let state = INITIAL
+const listeners = new Set<() => void>()
+
+function setState(next: InstallState) {
+  state = next
+  listeners.forEach((l) => l())
+}
+
+// Chrome fires beforeinstallprompt once per page load, and hash navigation never reloads: capture
+// it at module load so it survives the home page unmounting (or never being the landing page).
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault()
+    setState({ ...state, prompt: e as InstallPromptEvent })
+  })
+  window.addEventListener('appinstalled', () => setState({ prompt: null, installed: true }))
+}
+
+function subscribe(onChange: () => void) {
+  listeners.add(onChange)
+  return () => {
+    listeners.delete(onChange)
+  }
+}
+
+/** Forgets any captured install offer; for tests only. */
+export function resetInstallPromptForTests(): void {
+  setState(INITIAL)
+}
+
+export function InstallButton({ env = browserInstallEnv() }: { env?: InstallEnv }) {
+  const { prompt, installed } = useSyncExternalStore(subscribe, () => state)
 
   if (env.standalone || installed) return null
   if (prompt) {
@@ -55,7 +73,7 @@ export function InstallButton({ env = browserInstallEnv() }: { env?: InstallEnv 
       } catch {
         // refused or already used: nothing to show
       } finally {
-        setPrompt(null) // the event can only be used once
+        setState({ ...state, prompt: null }) // the event can only be used once
       }
     }
     return (

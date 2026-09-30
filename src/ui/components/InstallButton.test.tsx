@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
-import { InstallButton } from './InstallButton'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { InstallButton, resetInstallPromptForTests } from './InstallButton'
 
 const DESKTOP = { standalone: false, ios: false }
 
@@ -21,6 +21,8 @@ function firePrompt(
 }
 
 describe('InstallButton', () => {
+  beforeEach(() => resetInstallPromptForTests())
+
   it('shows nothing until the browser offers installation', () => {
     const { container } = render(<InstallButton env={DESKTOP} />)
     expect(container).toBeEmptyDOMElement()
@@ -66,5 +68,19 @@ describe('InstallButton', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Install app' }))
     })
     expect(screen.queryByRole('button', { name: 'Install app' })).toBeNull()
+  })
+
+  it('keeps the offer across a remount', () => {
+    const first = render(<InstallButton env={DESKTOP} />)
+    firePrompt()
+    first.unmount()
+    render(<InstallButton env={DESKTOP} />)
+    expect(screen.getByRole('button', { name: 'Install app' })).toBeInTheDocument()
+  })
+
+  it('shows the offer that fired before the page mounted', () => {
+    firePrompt()
+    render(<InstallButton env={DESKTOP} />)
+    expect(screen.getByRole('button', { name: 'Install app' })).toBeInTheDocument()
   })
 })

@@ -196,4 +196,18 @@ describe('BackingScheduler', () => {
     s.dispose()
     expect(active()).toBe(0)
   })
+
+  it('holds nothing when start() throws, so a retry cannot leak a hold', () => {
+    const { awake, active } = fakeAwake()
+    const s = new BackingScheduler(CONFIG, vi.fn(), DEFAULT_MIX, awake)
+    vi.spyOn(audioEngine, 'ctx', 'get').mockImplementationOnce(() => {
+      throw new Error('engine not ready')
+    })
+
+    expect(() => s.start()).toThrow()
+    expect(active()).toBe(0)
+    s.start()
+    s.stop()
+    expect(active()).toBe(0)
+  })
 })

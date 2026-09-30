@@ -45,10 +45,10 @@ export class Metronome {
 
   start(): void {
     if (this.isRunning) return
-    this.releaseScreen = this.awake.hold()
     this.state = { nextTime: audioEngine.now() + START_DELAY_S, pulse: 0, sub: 0 }
     this.tick()
     this.timer = setInterval(this.tick, TICK_MS)
+    this.releaseScreen = this.awake.hold()
   }
 
   stop(): void {

@@ -74,7 +74,6 @@ export class BackingScheduler {
 
   start(): void {
     if (this.isRunning) return
-    this.releaseScreen = this.awake.hold()
     const ctx = audioEngine.ctx
     if (!this.channels) {
       const channels = {} as Record<Instrument, GainNode>
@@ -90,6 +89,7 @@ export class BackingScheduler {
     this.state = { nextBeatTime: audioEngine.now() + START_DELAY_S, bar: 0, beat: 0 }
     this.tick()
     this.timer = setInterval(this.tick, TICK_MS)
+    this.releaseScreen = this.awake.hold()
   }
 
   /** Stops scheduling and fades out the notes already scheduled ahead. */

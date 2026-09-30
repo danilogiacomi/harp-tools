@@ -33,4 +33,10 @@
   .bar {
     white-space: normal;
   }
+
+  /* A missed tap on the small cross would hit Reload, so give it a full touch target. */
+  .dismiss {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
 }

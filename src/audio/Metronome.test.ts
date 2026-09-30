@@ -182,4 +182,18 @@ describe('Metronome', () => {
     metronome.stop()
     expect(active()).toBe(0)
   })
+
+  it('holds nothing when start() throws, so a retry cannot leak a hold', () => {
+    const { awake, active } = fakeAwake()
+    const metronome = new Metronome(makeConfig(), vi.fn(), awake)
+    vi.spyOn(audioEngine, 'now').mockImplementationOnce(() => {
+      throw new Error('engine not ready')
+    })
+
+    expect(() => metronome.start()).toThrow()
+    expect(active()).toBe(0)
+    metronome.start()
+    metronome.stop()
+    expect(active()).toBe(0)
+  })
 })
